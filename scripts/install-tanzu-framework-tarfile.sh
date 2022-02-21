@@ -32,13 +32,19 @@ installTanzuFrameworkTarFile () {
     sleep 1
     if [[ $isinflatedTZ == 'n' ]]
     then
-        tanzuclibinary=$(ls ~/binaries/tanzu-framework-linux-amd64*)
+        tarfilenamingpattern="tanzu-framework-linux-amd64*"
+        tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
         if [[ -z $tanzuclibinary ]]
         then
-            printf "\nERROR: tanzu-framework-linux-amd64.tar is a required binary for TAP installation.\nYou must place this binary under binaries directory.\n"
+            tarfilenamingpattern="tanzu-cli-*.tar.*"
+            tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+        fi
+        if [[ -z $tanzuclibinary ]]
+        then
+            printf "\nERROR: tanzu CLI is a required binary for installation.\nYou must place this binary under binaries directory.\n"
             returnOrexit && return 1
         else
-            numberoftarfound=$(find ~/binaries/tanzu-framework-linux-amd64* -type f -printf "." | wc -c)
+            numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
                 printf "\nERROR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
