@@ -116,8 +116,10 @@ installTanzuFrameworkTarFile () {
                 printf "COMPLETE.\n"
             else
                 printf "installing (tce) tanzu...\n"
+                export ALLOW_INSTALL_AS_ROOT=true
                 chmod +x install.sh
                 ./install.sh
+                unset ALLOW_INSTALL_AS_ROOT
             fi            
         else            
             tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")        
