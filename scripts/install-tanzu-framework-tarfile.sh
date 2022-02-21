@@ -104,10 +104,11 @@ installTanzuFrameworkTarFile () {
     isexist=$(tanzu version)
     if [[ -d $DIR && -z $isexist ]]
     then
-        printf "\nLinking tanzu cli...\n"
-        if [[ $tanzuclibinary == *@("tce-")* ]]
+        tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+        if [[ -d $HOME/tanzu/$tcedirname ]]
         then
-            tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+            printf "\nLinking tanzu cli (tce)...\n"
+            
             cd $HOME/tanzu/$tcedirname || returnOrexit
             if [[ -d $HOME/.local/share/tanzu-cli ]]
             then
@@ -121,7 +122,8 @@ installTanzuFrameworkTarFile () {
                 ./install.sh
                 unset ALLOW_INSTALL_AS_ROOT
             fi            
-        else            
+        else
+            printf "\nLinking tanzu cli...\n"
             tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")        
             if [[ -z $tanzuframworkVersion ]]
             then
