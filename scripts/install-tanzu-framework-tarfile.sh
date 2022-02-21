@@ -105,11 +105,20 @@ installTanzuFrameworkTarFile () {
     if [[ -d $DIR && -z $isexist ]]
     then
         printf "\nLinking tanzu cli...\n"
-        if [[ $tanzuclibinary == *@("tce")* ]]
+        if [[ $tanzuclibinary == *@("tce-")* ]]
         then
-            tanzuframworkVersion=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
-            printf "\n\n\nTODO\n\n\n"
-            exit 1
+            tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+            cd $HOME/tanzu/$tcedirname || returnOrexit
+            if [[ -d $HOME/.local/share/tanzu-cli ]]
+            then
+                printf "linking (tce) tanzu..."
+                install bin/tanzu /usr/local/bin/tanzu || returnOrexit
+                printf "COMPLETE.\n"
+            else
+                printf "installing (tce) tanzu...\n"
+                chmod +x install.sh
+                ./install.sh
+            fi            
         else            
             tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")        
             if [[ -z $tanzuframworkVersion ]]
@@ -120,7 +129,6 @@ installTanzuFrameworkTarFile () {
             cd $HOME/tanzu || returnOrexit
             install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit
             chmod +x /usr/local/bin/tanzu || returnOrexit
-            tanzu version || returnOrexit
             if [[ ! -d $HOME/.local/share/tanzu-cli ]]
             then
                 printf "installing tanzu plugin from local..."
@@ -128,10 +136,11 @@ installTanzuFrameworkTarFile () {
                 printf "COMPLETE.\n"
                 tanzu plugin list
                 printf "\nTanzu framework installation...COMPLETE.\n\n"
-            fi
+            fi            
         fi
         
         sleep 2
+        tanzu version || returnOrexit
         printf "DONE\n\n"
     fi
 }
