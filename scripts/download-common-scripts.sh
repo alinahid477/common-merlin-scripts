@@ -1,12 +1,9 @@
 #!/bin/bash
 
-scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework.sh" "init-prechecks.sh")
+scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework-tarfile.sh" "init-prechecks.sh")
 sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/"
 
 printf "\nStarting download script...\n"
-
-
-
 
 if [[ -z $1 && -z $2 ]]
 then
@@ -21,7 +18,7 @@ fi
 
 if [[ $1 == 'install-tanzu-framework' ]]
 then
-    scripts=("install-tanzu-framework.sh")
+    scripts=("install-tanzu-framework-tarfile.sh")
 fi
 
 printf "\nDestinatin DIR: $destinationDir\n"
