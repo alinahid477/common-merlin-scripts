@@ -105,7 +105,7 @@ installTanzuFrameworkTarFile () {
     if [[ -d $DIR && -z $isexist ]]
     then
         tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
-        if [[ -d $HOME/tanzu/$tcedirname ]]
+        if [[ -n $tcedirname ]]
         then
             printf "\nLinking tanzu cli (tce)...\n"
             
