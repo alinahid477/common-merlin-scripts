@@ -3,7 +3,7 @@
 scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework.sh" "init-prechecks.sh")
 sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/"
 
-printf "\nStarting download script...\n"
+echo "Starting download script..."
 
 if [[ -z $1 && -z $2 ]]
 then
