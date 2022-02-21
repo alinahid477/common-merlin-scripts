@@ -15,7 +15,7 @@ fi
 
 sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/"
 
-scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework.sh")
+scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework.sh", "init-prechecks.sh")
 if [[ $1 == 'install-tanzu-framework' ]]
 then
     scripts=("install-tanzu-framework.sh")
