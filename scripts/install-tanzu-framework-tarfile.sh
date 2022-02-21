@@ -146,5 +146,6 @@ installTanzuFrameworkTarFile () {
         sleep 2
         tanzu version || returnOrexit
         printf "DONE\n\n"
+        cd ~
     fi
 }
