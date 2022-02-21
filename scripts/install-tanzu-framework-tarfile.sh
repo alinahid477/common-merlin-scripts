@@ -41,6 +41,11 @@ installTanzuFrameworkTarFile () {
         fi
         if [[ -z $tanzuclibinary ]]
         then
+            tarfilenamingpattern="tce-*.tar.*"
+            tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+        fi
+        if [[ -z $tanzuclibinary ]]
+        then
             printf "\nERROR: tanzu CLI is a required binary for installation.\nYou must place this binary under binaries directory.\n"
             returnOrexit && return 1
         else
@@ -100,24 +105,32 @@ installTanzuFrameworkTarFile () {
     if [[ -d $DIR && -z $isexist ]]
     then
         printf "\nLinking tanzu cli...\n"
-        tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")        
-        if [[ -z $tanzuframworkVersion ]]
+        if [[ $tanzuclibinary == *@("tce")* ]]
         then
-            printf "\nERROR: could not found version dir in the tanzu/cli/core.\n"
-            returnOrexit && return 1;
+            tanzuframworkVersion=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+            printf "\n\n\nTODO\n\n\n"
+            exit 1
+        else            
+            tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")        
+            if [[ -z $tanzuframworkVersion ]]
+            then
+                printf "\nERROR: could not found version dir in the tanzu/cli/core.\n"
+                returnOrexit && return 1;
+            fi
+            cd $HOME/tanzu || returnOrexit
+            install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit
+            chmod +x /usr/local/bin/tanzu || returnOrexit
+            tanzu version || returnOrexit
+            if [[ ! -d $HOME/.local/share/tanzu-cli ]]
+            then
+                printf "installing tanzu plugin from local..."
+                tanzu plugin install --local cli all || returnOrexit
+                printf "COMPLETE.\n"
+                tanzu plugin list
+                printf "\nTanzu framework installation...COMPLETE.\n\n"
+            fi
         fi
-        cd $HOME/tanzu || returnOrexit
-        install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit
-        chmod +x /usr/local/bin/tanzu || returnOrexit
-        tanzu version || returnOrexit
-        if [[ ! -d $HOME/.local/share/tanzu-cli ]]
-        then
-            printf "installing tanzu plugin from local..."
-            tanzu plugin install --local cli all || returnOrexit
-            printf "COMPLETE.\n"
-            tanzu plugin list
-            printf "\nTanzu framework installation...COMPLETE.\n\n"
-        fi
+        
         sleep 2
         printf "DONE\n\n"
     fi
