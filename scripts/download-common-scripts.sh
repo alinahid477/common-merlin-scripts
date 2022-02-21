@@ -5,6 +5,9 @@ sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/m
 
 echo "Starting download script..."
 
+
+
+
 if [[ -z $1 && -z $2 ]]
 then
     printf "\nYou must provide necessary parameters eg: param#1 downloads-bundle-name and param#2 location\nif param#2 is not provide the default location is current directory.\n"
