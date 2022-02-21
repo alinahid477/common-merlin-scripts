@@ -121,6 +121,8 @@ installTanzuFrameworkTarFile () {
                 chmod +x install.sh
                 ./install.sh
                 unset ALLOW_INSTALL_AS_ROOT
+                tanzu plugin list
+                printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi            
         else
             printf "\nLinking tanzu cli...\n"
@@ -135,11 +137,21 @@ installTanzuFrameworkTarFile () {
             chmod +x /usr/local/bin/tanzu || returnOrexit
             if [[ ! -d $HOME/.local/share/tanzu-cli ]]
             then
-                printf "installing tanzu plugin from local..."
-                tanzu plugin install --local cli all || returnOrexit
-                printf "COMPLETE.\n"
+                if [[ -f cli/manifest.yaml ]]
+                then
+                    printf "installing tanzu plugin from local..."
+                    tanzu plugin install --local cli all || returnOrexit
+                    printf "\nCOMPLETE.\n"
+                else
+                    printf "Removing existing plugins from any previous CLI installations..."
+                    tanzu plugin clean || returnOrexit
+                    printf "COMPLETE.\n"
+                    printf "Installing all the plugins for this release..."
+                    tanzu plugin sync || returnOrexit
+                    printf "COMPLETE.\n"
+                fi
                 tanzu plugin list
-                printf "\nTanzu framework installation...COMPLETE.\n\n"
+                printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi            
         fi
         
