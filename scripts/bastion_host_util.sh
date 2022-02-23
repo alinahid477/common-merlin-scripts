@@ -137,14 +137,14 @@ function create_bastion_tunnel_from_kubeconfig () {
 function create_bastion_tunnel_auto_tkg () {
     if [[ -n $MANAGEMENT_CLUSTER_ENDPOINT ]]
     then
-        create_bastion_tunnel_from_management_cluster_endpoint
+        create_bastion_tunnel_from_management_cluster_endpoint || returnOrexit || return 1
     else
         # $1 containing kubeconfig path
         if [[ -z $1 ]]
         then
-            create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config"
+            create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config"  || returnOrexit || return 1
         else
-            create_bastion_tunnel_from_kubeconfig $1
+            create_bastion_tunnel_from_kubeconfig $1  || returnOrexit || return 1
         fi
     fi
 }
