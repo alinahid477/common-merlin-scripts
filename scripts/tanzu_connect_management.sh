@@ -83,14 +83,26 @@ function tanzu_connect_management () {
             contextname=$(parse_yaml $kubeconfigfile | grep "\@$clustername" | awk -F= '$1=="contexts_name"{print $2}' | xargs)    
             printf "\nfound \n\tCLUSTER_NAME: $clustername\n\tCONTEXT_NAME: $contextname\n"
             sleep 1
-            create_bastion_tunnel_from_kubeconfig $kubeconfigfile
+            create_bastion_tunnel_from_kubeconfig $kubeconfigfile || returnOrexit || return 1
             printf "\ntanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername ...\n"
-            tanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername
+            tanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername || returnOrexit || return 1
+            isloggedin='y'
         else
             printf "\ntanzu login --endpoint $AUTH_ENDPOINT --name $clustername ...\n"
-            tanzu login --endpoint $AUTH_ENDPOINT --name $clustername
+            tanzu login --endpoint $AUTH_ENDPOINT --name $clustername  || returnOrexit || return 1
+            isloggedin='y'
         fi
     fi
+
+    if [[ $isloggedin == 'y' ]]
+    then
+        return 0
+    fi
+}
+
+function tanzu_connect_and_confirm () {
+
+    tanzu_connect_management || returnOrexit || return 1
 
     printf "\ntanzu connected to below ...\n"
     sleep 1
@@ -105,5 +117,5 @@ function tanzu_connect_management () {
             [Nn]* ) printf "\n\nYou said no. \n\nExiting...\n\n"; returnOrexit || return 1;;
             * ) echo "Please answer yes or no.";;
         esac
-    done  
+    done
 }
