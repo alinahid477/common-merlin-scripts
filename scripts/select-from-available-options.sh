@@ -18,7 +18,7 @@ source $HOME/binaries/scripts/contains-element.sh
 unset selectedOption
 function selectFromAvailableOptions () {
     # param #1: expects an array
-    local availableOptions=$1
+    local availableOptions=("$@")
 
     # if empty or count is less than 1
     if [[ -z $availableOptions || ${#availableOptions[@]} -lt 1 ]]
