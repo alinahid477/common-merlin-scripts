@@ -6,7 +6,7 @@ source $HOME/binaries/scripts/bastion_host_util.sh
 source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/parse_yaml.sh
 
-function tanzu_connect_management () {
+function tanzu_connect () {
 
     isloggedin='n'
     printf "\nChecking tanzu config...\n"
@@ -102,7 +102,7 @@ function tanzu_connect_management () {
 
 function tanzu_connect_and_confirm () {
 
-    tanzu_connect_management || returnOrexit || return 1
+    tanzu_connect || returnOrexit || return 1
 
     printf "\ntanzu connected to below ...\n"
     sleep 1
