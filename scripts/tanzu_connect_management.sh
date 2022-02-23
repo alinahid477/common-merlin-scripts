@@ -49,7 +49,7 @@ function tanzu_connect_management () {
         tanzuendpoint=$(tanzu config server list -o json | jq -r '.[] | select(.name=="'$tanzuname'") | .endpoint')
         if [[ -n $tanzupath ]]
         then
-            create_bastion_tunnel_from_kubeconfig $tanzupath
+            create_bastion_tunnel_auto_tkg $tanzupath
             printf "\nFound \n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tpath: $tanzupath\n"
             # sleep 1
             # tanzu login --kubeconfig $tanzupath --context $tanzucontext --name $tanzuname

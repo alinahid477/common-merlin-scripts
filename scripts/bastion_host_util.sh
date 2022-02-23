@@ -10,7 +10,7 @@ function returnOrexit()
     if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
     then
         returned='y'
-        return
+        return 1
     else
         exit
     fi
@@ -68,7 +68,7 @@ function create_bastion_tunnel () {
     
     if [[ $host == 'kubernetes' ]]
     then
-        printf "\nERROR: $host is not allowed here.exiting...\n"
+        printf "\nWARNING: found $host as the host name. Will not create tunnel with this name.\n"
         returnOrexit && return 1
     fi
 
@@ -153,7 +153,13 @@ function create_bastion_tunnel_auto_tkg () {
     then
         create_bastion_tunnel_from_management_cluster_endpoint
     else
-        create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config"
+        # $1 containing kubeconfig path
+        if [[ -z $1 ]]
+        then
+            create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config"
+        else
+            create_bastion_tunnel_from_kubeconfig $1
+        fi
     fi
 }
 
