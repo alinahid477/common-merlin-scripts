@@ -22,7 +22,7 @@ function checkBastionHost () {
     if [[ -z $BASTION_HOST ]]
     then
         printf "\nERROR: Bastion host is not set in the environment variable.\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 
     isexists=$(ls ~/.ssh/id_rsa)
@@ -31,7 +31,7 @@ function checkBastionHost () {
         printf "\nERROR: Bastion host parameter supplied BUT no id_rsa file present in .ssh\n"
         printf "\nPlease place a id_rsa file in ~/.ssh dir"
         printf "\nQuiting...\n\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 }
 
@@ -43,7 +43,7 @@ function create_bastion_tunnel () {
     if [[ -z $1 ]]
     then
         printf "\nERROR: No host or url param passed.\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 
     unset url
@@ -69,7 +69,7 @@ function create_bastion_tunnel () {
     if [[ $host == 'kubernetes' ]]
     then
         printf "\nERROR: $host is not allowed here.exiting...\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 
     if [[ -z $port ]]
@@ -94,7 +94,7 @@ function create_bastion_tunnel_from_management_cluster_endpoint () {
     if [[ -z $MANAGEMENT_CLUSTER_ENDPOINT ]]
     then
         printf "\nERROR: MANAGEMENT_CLUSTER_ENDPOINT missing from environment variable.\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 
     proto="$(echo $MANAGEMENT_CLUSTER_ENDPOINT | grep :// | sed -e's,^\(.*://\).*,\1,g')"
@@ -116,12 +116,12 @@ function create_bastion_tunnel_from_kubeconfig () {
         if [[ -n $isurl ]]
         then
             printf "\nERROR: Supplied param is url. This is not allowed. Use method: \"create_bastion_tunnel\" instead.\n"
-            returnOrexit || return 1
+            returnOrexit && return 1
         fi    
         kubeconfigfile=$1
     else
         printf "\nERROR: required param kubeconfig file path not supplied.\n"
-        returnOrexit || return 1
+        returnOrexit && return 1
     fi
 
     printf "\nExtracting server info from kubeconfig..."
