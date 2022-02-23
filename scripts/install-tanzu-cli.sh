@@ -3,7 +3,7 @@
 
 export $(cat /root/.env | xargs)
 
-installTanzuFrameworkTarFile () {
+installTanzuCLI () {
     printf "\nChecking Tanzu Framework binary..."
     sleep 1
     isinflatedTZ='n'
