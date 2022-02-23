@@ -28,7 +28,7 @@ function tanzu_connect_management () {
         
         selectFromAvailableOptions ${tanzunames[@]}
         ret=$?
-        if [[ $ret -gt -1 ]]
+        if [[ $ret == 255 ]]
         then
             printf "\nERROR: Invalid option selected. Unable to connect.\n"
             returnOrexit && return 1

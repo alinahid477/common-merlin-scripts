@@ -38,7 +38,7 @@ function selectFromAvailableOptions () {
 
     printf "available options are: [$optionSTR]\n"
     local selectedOption=''
-    local selectedOptionIndex=-1
+    local selectedOptionIndex=255
     while [[ -z $selectedOption ]]; do
         read -p "type the appropriate option: " selectedOption
         if [[ $selectedOption == 'none' ]]
@@ -63,6 +63,6 @@ function selectFromAvailableOptions () {
             done
         fi
     done
-    printf "Selected option: $selectedOption\n"
+    printf "Selected option: $selectedOption @ index $selectedOptionIndex\n"
     return $selectedOptionIndex
 }
