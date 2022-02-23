@@ -3,20 +3,6 @@
 
 export $(cat /root/.env | xargs)
 
-isreturnorexit='n'
-returnOrexit()
-{
-    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
-    then
-        isreturnorexit='return'
-        return 1
-    else
-        isreturnorexit='exit'
-        exit 1
-    fi
-}
-
-
 installTanzuFrameworkTarFile () {
     printf "\nChecking Tanzu Framework binary..."
     sleep 1

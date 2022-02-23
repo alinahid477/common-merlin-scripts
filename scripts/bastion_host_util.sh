@@ -3,20 +3,6 @@
 export $(cat /root/.env | xargs)
 
 
-returned='n'
-function returnOrexit()
-{
-    returned='n'
-    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
-    then
-        returned='y'
-        return 1
-    else
-        exit
-    fi
-}
-
-
 function checkBastionHost () {
 
     if [[ -z $BASTION_HOST ]]

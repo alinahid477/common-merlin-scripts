@@ -1,6 +1,6 @@
 #!/bin/bash
 
-scripts=("contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework-tarfile.sh" "init-prechecks.sh" "bastion_host_util.sh" "parse_yaml.sh" "select-from-available-options.sh" "tanzu_connect_management.sh")
+scripts=("returnOrexit.sh" "contains-element.sh" "extract-and-take-input.sh" "install-tanzu-framework-tarfile.sh" "init-prechecks.sh" "bastion_host_util.sh" "parse_yaml.sh" "select-from-available-options.sh" "tanzu_connect_management.sh")
 sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/"
 
 printf "\nStarting download script...\n"

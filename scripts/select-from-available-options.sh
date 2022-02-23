@@ -1,18 +1,5 @@
 #!/bin/bash
 
-
-returned='n'
-returnOrexit()
-{
-    if [[ "${BASH_SOURCE[0]}" != "${0}" ]]
-    then
-        returned='y'
-        return
-    else
-        exit
-    fi
-}
-
 source $HOME/binaries/scripts/contains-element.sh
 
 function selectFromAvailableOptions () {
