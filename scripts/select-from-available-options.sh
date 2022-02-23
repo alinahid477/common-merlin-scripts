@@ -36,7 +36,7 @@ function selectFromAvailableOptions () {
         fi
         containsElement "$selectedOption" "${availableOptions[@]}"
         ret=$?
-        if [[ $ret == 0 ]]
+        if [[ $ret == 1 ]]
         then
             unset selectedOption
             printf "You must input a valid value from the available options.\n"
