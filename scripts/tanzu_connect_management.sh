@@ -28,12 +28,12 @@ function tanzu_connect_management () {
         
         selectFromAvailableOptions ${tanzunames[@]}
         ret=$?
-        if [[ -z $ret ]]
+        if [[ $ret -gt -1 ]]
         then
             printf "\nERROR: Invalid option selected. Must require 1. Unable to connect.\n"
             returnOrexit || return 1
         else
-            tanzuname=$ret
+            tanzuname=${tanzunames[$ret]}
         fi
     else    
         # only 1 context. Most likely the most usual.

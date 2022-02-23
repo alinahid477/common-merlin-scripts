@@ -15,7 +15,6 @@ returnOrexit()
 
 source $HOME/binaries/scripts/contains-element.sh
 
-unset selectedOption
 function selectFromAvailableOptions () {
     # param #1: expects an array
     local availableOptions=("$@")
@@ -38,6 +37,8 @@ function selectFromAvailableOptions () {
     optionSTR=$(echo "$optionSTR,none")
 
     printf "available options are: [$optionSTR]\n"
+    local selectedOption=''
+    local selectedOptionIndex=-1
     while [[ -z $selectedOption ]]; do
         read -p "type the appropriate option: " selectedOption
         if [[ $selectedOption == 'none' ]]
@@ -52,8 +53,16 @@ function selectFromAvailableOptions () {
         then
             unset selectedOption
             printf "You must input a valid value from the available options.\n"
+        else
+            for i in "${!availableOptions[@]}"; do
+                if [[ "${availableOptions[$i]}" = "${selectedOption}" ]];
+                then
+                    selectedOptionIndex=$i
+                    break
+                fi
+            done
         fi
     done
     printf "Selected option: $selectedOption\n"
-    return $selectedOption
+    return $selectedOptionIndex
 }
