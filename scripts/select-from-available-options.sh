@@ -44,7 +44,7 @@ function selectFromAvailableOptions () {
         then
             printf "You selected none. Selected option is empty.\n"
             unset selectedOption
-            returnOrexit || return ''
+            break
         fi
         containsElement "${selectedOption}" "${options[@]}"
         ret=$?
