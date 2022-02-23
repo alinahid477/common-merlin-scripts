@@ -12,6 +12,7 @@ returnOrexit()
     fi
 }
 
+source $HOME/binaries/scripts/bastion_host_util.sh
 source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/parse_yaml.sh
 
