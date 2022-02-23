@@ -12,8 +12,8 @@ returnOrexit()
     fi
 }
 
-source $HOME/scripts/select-from-available-options.sh
-source $HOME/scripts/parse_yaml.sh
+source $HOME/binaries/scripts/select-from-available-options.sh
+source $HOME/binaries/scripts/parse_yaml.sh
 
 function tanzu_connect_management () {
 
