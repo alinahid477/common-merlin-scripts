@@ -33,13 +33,13 @@ installTanzuFrameworkTarFile () {
         if [[ -z $tanzuclibinary ]]
         then
             printf "\nERROR: tanzu CLI is a required binary for installation.\nYou must place this binary under binaries directory.\n"
-            returnOrexit && return 1
+            returnOrexit || return 1
         else
             numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
-                printf "\nERROR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
-                returnOrexit && return 1
+                printf "\nERRR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
+                returnOrexit || return 1
             fi
         fi
     fi
@@ -69,12 +69,12 @@ installTanzuFrameworkTarFile () {
         fi
         if [[ $doinflate == 'n' ]]
         then
-            returnOrexit && return 1;
+            returnOrexit || return 1;
         fi
         if [ ! -d "$DIR" ]
         then
             printf "\nNot proceed further...\n"
-            returnOrexit && return 1
+            returnOrexit || return 1
         fi
         printf "\nExtracting $tanzuclibinary in $DIR....\n"
         tar -xvf $tanzuclibinary -C $HOME/tanzu/ || returnOrexit
@@ -116,7 +116,7 @@ installTanzuFrameworkTarFile () {
             if [[ -z $tanzuframworkVersion ]]
             then
                 printf "\nERROR: could not found version dir in the tanzu/cli/core.\n"
-                returnOrexit && return 1;
+                returnOrexit || return 1;
             fi
             cd $HOME/tanzu || returnOrexit
             install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit
