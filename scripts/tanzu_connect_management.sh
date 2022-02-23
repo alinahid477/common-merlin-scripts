@@ -18,7 +18,7 @@ source $HOME/binaries/scripts/parse_yaml.sh
 function tanzu_connect_management () {
 
     isloggedin='n'
-    printf "\nFound marked as complete.\nChecking tanzu config...\n"
+    printf "\nChecking tanzu config...\n"
     sleep 1
     unset tanzuname
     readarray -t tanzunames < <(tanzu config server list -o json | jq -r '.[].name')
@@ -26,7 +26,7 @@ function tanzu_connect_management () {
     then
         # prompt user to select 1
         
-        selectFromAvailableOptions $tanzunames
+        selectFromAvailableOptions ${tanzunames[@]}
         ret=$?
         if [[ -z $ret ]]
         then
