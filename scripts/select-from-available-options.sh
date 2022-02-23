@@ -46,7 +46,7 @@ function selectFromAvailableOptions () {
             unset selectedOption
             break
         fi
-        containsElement "${selectedOption}" "${options[@]}"
+        containsElement "$selectedOption" "${availableOptions[@]}"
         ret=$?
         if [[ $ret == 0 ]]
         then
