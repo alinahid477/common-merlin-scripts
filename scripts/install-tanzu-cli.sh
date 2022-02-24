@@ -90,7 +90,7 @@ installTanzuCLI () {
         printf "\n$tanzuclibinary extract in $DIR......COMPLETED.\n\n"
     fi
 
-    
+    cd ~
     isexist=$(tanzu version)
     if [[ -d $DIR && -z $isexist ]]
     then
