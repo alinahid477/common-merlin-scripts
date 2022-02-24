@@ -38,7 +38,11 @@ function tanzu_connect () {
         tanzuendpoint=$(tanzu config server list -o json | jq -r '.[] | select(.name=="'$tanzuname'") | .endpoint')
         if [[ -n $tanzupath ]]
         then
-            create_bastion_tunnel_auto_tkg $tanzupath || returnOrexit || return 1
+            if [[ -n $BASTION_HOST ]]
+            then
+                create_bastion_tunnel_auto_tkg $tanzupath || returnOrexit || return 1
+            fi
+            
             printf "\nFound \n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tpath: $tanzupath\n"
             # sleep 1
             # tanzu login --kubeconfig $tanzupath --context $tanzucontext --name $tanzuname
@@ -83,7 +87,12 @@ function tanzu_connect () {
             contextname=$(parse_yaml $kubeconfigfile | grep "\@$clustername" | awk -F= '$1=="contexts_name"{print $2}' | xargs)    
             printf "\nfound \n\tCLUSTER_NAME: $clustername\n\tCONTEXT_NAME: $contextname\n"
             sleep 1
-            create_bastion_tunnel_from_kubeconfig $kubeconfigfile || returnOrexit || return 1
+
+            if [[ -n $BASTION_HOST ]]
+            then
+                create_bastion_tunnel_from_kubeconfig $kubeconfigfile || returnOrexit || return 1
+            fi
+            
             printf "\ntanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername ...\n"
             tanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername || returnOrexit || return 1
             isloggedin='y'
