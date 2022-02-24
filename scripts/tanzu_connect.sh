@@ -90,7 +90,7 @@ function tanzu_connect () {
 
             if [[ -n $BASTION_HOST ]]
             then
-                create_bastion_tunnel_from_kubeconfig $kubeconfigfile || returnOrexit || return 1
+                create_bastion_tunnel_from_kubeconfig $kubeconfigfile "MANAGEMENT_CLUSTER_ENDPOINTS" || returnOrexit || return 1
             fi
             
             printf "\ntanzu login --kubeconfig $kubeconfigfile --context $contextname --name $clustername ...\n"

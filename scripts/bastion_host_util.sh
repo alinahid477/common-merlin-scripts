@@ -85,21 +85,22 @@ function create_bastion_tunnel () {
 }
 
 
-function create_bastion_tunnel_from_management_cluster_endpoints () {
-    if [[ -z $MANAGEMENT_CLUSTER_ENDPOINTS ]]
+function create_bastion_tunnel_for_cluster_endpoints () {
+    local CLUSTER_ENDPOINTS=$1
+    if [[ -z $CLUSTER_ENDPOINTS ]]
     then
-        printf "\nERROR: MANAGEMENT_CLUSTER_ENDPOINTS missing from environment variable.\n"
+        printf "\nERROR: endpoints missing.\n"
         returnOrexit || return 1
     fi
 
-    if [[ $MANAGEMENT_CLUSTER_ENDPOINTS == *[,]* ]]
+    if [[ $CLUSTER_ENDPOINTS == *[,]* ]]
     then
-        printf "\nMultiple management endpoint specified\n\n"
-        MANAGEMENT_CLUSTER_ENDPOINTS_ARR=$(echo $MANAGEMENT_CLUSTER_ENDPOINTS | tr "," "\n")
-        for managementClusterEndpoint in $MANAGEMENT_CLUSTER_ENDPOINTS_ARR
+        printf "\nMultiple endpoints specified\n\n"
+        CLUSTER_ENDPOINTS_ARR=$(echo $CLUSTER_ENDPOINTS | tr "," "\n")
+        for clusterEndpoint in $CLUSTER_ENDPOINTS_ARR
         do
-            proto="$(echo $managementClusterEndpoint | grep :// | sed -e's,^\(.*://\).*,\1,g')"
-            serverurl="$(echo ${managementClusterEndpoint/$proto/} | cut -d/ -f1)"
+            proto="$(echo $clusterEndpoint | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+            serverurl="$(echo ${clusterEndpoint/$proto/} | cut -d/ -f1)"
             port="$(echo $serverurl | awk -F: '{print $2}')"
             serverurl="$(echo $serverurl | awk -F: '{print $1}')"
             
@@ -109,8 +110,8 @@ function create_bastion_tunnel_from_management_cluster_endpoints () {
     else
         printf "\nSingle management cluster endpoint specified\n\n"
         
-        proto="$(echo $MANAGEMENT_CLUSTER_ENDPOINTS | grep :// | sed -e's,^\(.*://\).*,\1,g')"
-        serverurl="$(echo ${MANAGEMENT_CLUSTER_ENDPOINTS/$proto/} | cut -d/ -f1)"
+        proto="$(echo $CLUSTER_ENDPOINTS | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+        serverurl="$(echo ${CLUSTER_ENDPOINTS/$proto/} | cut -d/ -f1)"
         port="$(echo $serverurl | awk -F: '{print $2}')"
         serverurl="$(echo $serverurl | awk -F: '{print $1}')"
         
@@ -139,14 +140,25 @@ function create_bastion_tunnel_from_kubeconfig () {
         returnOrexit || return 1
     fi
 
+    # this will hold the name of the environment variable to write on .env file if needed.
+    # in the case of tkgm/tce it will have a environment variable or to be writted.
+    # but there may also be cases where it is simply about creating tunnel and env variable doesnt need to be create
+    # eg: $2 is MANAGEMENT_CLUSTER_ENDPOINTS for tkgm or tce
+    local clusterEndpointsVariableName=$2
+    local managementClusterEndpoints=''
+    if [[ -n $clusterEndpointsVariableName ]]
+    then
+        managementClusterEndpoints=${!clusterEndpointsVariableName}
+    fi
 
-    local managementClusterEndpoints=$MANAGEMENT_CLUSTER_ENDPOINTS
+    
 
     printf "\nExtracting server info from kubeconfig..."
     # serverurl=$(awk '/server/ {print $NF;exit}' $kubeconfigfile | awk -F/ '{print $3}' | awk -F: '{print $1}')
     # port=$(awk '/server/ {print $NF;exit}' $kubeconfigfile | awk -F/ '{print $3}' | awk -F: '{print $2}')
     readarray -t serveraddresses < <(parse_yaml $kubeconfigfile | awk -F= '{if ($1=="clusters__server" || $1=="clusters_name_server") print $2 }' | xargs) 
     local count=0
+    local status=''
     for serveraddress in ${serveraddresses[@]}; do
         serverurl=$(echo $serveraddress | awk -F/ '{print $3}' | awk -F: '{print $1}')
         port=$(echo $serveraddress | awk -F/ '{print $3}' | awk -F: '{print $2}')
@@ -159,24 +171,34 @@ function create_bastion_tunnel_from_kubeconfig () {
                 managementClusterEndpoints=$(echo "$managementClusterEndpoints,$serverurl:$port")
             fi
             printf "Tunnel for host: $serverurl, port: $port..."
-            create_bastion_tunnel "$serverurl:$port" $count && printf "CREATED\n" || printf "FAILED\n"
+            status=''
+            create_bastion_tunnel "$serverurl:$port" $count && status="CREATED" || status="FAILED"
+            
+
+            if [[ -n $status && -n $status='CREATED' ]]
+            then
+                printf "\nAdjusting kubeconfig for tunneling..."
+                sed -i '0,/'$serverurl'/s//kubernetes/' $kubeconfigfile
+                isexist=$(ls ~/.kube/config)
+                if [[ -n $isexist ]]
+                then
+                    sed -i '0,/'$serverurl'/s//kubernetes/' ~/.kube/config
+                fi
+            fi
+            printf "$status\n"
+
             ((count=$count+1))
         fi        
     done
        
 
-    if [[ -n $managementClusterEndpoints ]]
+    if [[ -n $managementClusterEndpoints && -n $clusterEndpointsVariableName ]]
     then
-        printf "\nAdjusting kubeconfig for tunneling..."
-        sed -i '0,/'$serverurl'/s//kubernetes/' $kubeconfigfile
-        isexist=$(ls ~/.kube/config)
-        if [[ -n $isexist ]]
-        then
-            sed -i '0,/'$serverurl'/s//kubernetes/' ~/.kube/config
-        fi
-        sleep 1
-        sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
-        printf "\nMANAGEMENT_CLUSTER_ENDPOINTS=$managementClusterEndpoints" >> $HOME/.env
+        # only wtite in env file if the env variable name is supplied.
+        # otherwise assume only tunnel create.
+        printf "Writting environment variable $clusterEndpointsVariableName in .env file..."
+        sed -i '/'$clusterEndpointsVariableName'/d' $HOME/.env
+        printf "\n$clusterEndpointsVariableName=$managementClusterEndpoints" >> $HOME/.env
         printf "DONE.\n"
     fi
 }
@@ -185,14 +207,14 @@ function create_bastion_tunnel_from_kubeconfig () {
 function create_bastion_tunnel_auto_tkg () {
     if [[ -n $MANAGEMENT_CLUSTER_ENDPOINTS ]]
     then
-        create_bastion_tunnel_from_management_cluster_endpoints || returnOrexit || return 1
+        create_bastion_tunnel_for_cluster_endpoints $MANAGEMENT_CLUSTER_ENDPOINTS || returnOrexit || return 1
     else
         # $1 containing kubeconfig path
         if [[ -z $1 ]]
         then
-            create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config"  || returnOrexit || return 1
+            create_bastion_tunnel_from_kubeconfig "$HOME/.kube-tkg/config" "MANAGEMENT_CLUSTER_ENDPOINTS" || returnOrexit || return 1
         else
-            create_bastion_tunnel_from_kubeconfig $1  || returnOrexit || return 1
+            create_bastion_tunnel_from_kubeconfig $1 "MANAGEMENT_CLUSTER_ENDPOINTS" || returnOrexit || return 1
         fi
     fi
 }
