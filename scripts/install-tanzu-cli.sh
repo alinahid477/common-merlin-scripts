@@ -62,7 +62,7 @@ installTanzuCLI () {
             mkdir $HOME/tanzu && printf "OK" || printf "FAILED"
             printf "\n"
         else
-            if [[ -z $IS_SILENT_MODE && $IS_SILENT_MODE != 'YES' ]]
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
             then
                 printf "$DIR already exits...\n"
                 while true; do
