@@ -15,16 +15,16 @@ then
     destinationDir=$2
 fi
 
-param1prompt="scripts download = all"
-readarray -t scripts < <(ls -1)
-if [[ $1 == 'install-tanzu-framework' ]]
+downloadFilesList='all'
+if [[ -z $1 ]]
 then
-    param1prompt="scripts download = $1"
-    scripts=("install-tanzu-framework-tarfile.sh")
+    downloadFilesList=$1
 fi
 
+readarray -t scripts < <(cat $sourceUrl/list.$downloadFilesList)
+
 printf "\nDestinatin DIR = $destinationDir\n"
-printf "$param1prompt\n"
+printf "\nScripts download = $downloadFilesList\n"
 
 if [[ -d $destinationDir ]]
 then
