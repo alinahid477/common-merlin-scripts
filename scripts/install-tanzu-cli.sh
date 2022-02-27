@@ -118,7 +118,6 @@ installTanzuCLI () {
                 chmod +x install.sh
                 ./install.sh
                 unset ALLOW_INSTALL_AS_ROOT
-                tanzu plugin list
                 printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi            
         else
@@ -157,14 +156,15 @@ installTanzuCLI () {
                     tanzu plugin sync || returnOrexit
                     printf "COMPLETE.\n"
                 fi
-                tanzu plugin list
                 printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi
         fi
         
         sleep 2
-        tanzu version || returnOrexit
-        printf "DONE\n\n"
+        tanzu version || returnOrexit || return 1
+        printf "\n\n"
+        tanzu plugin list || returnOrexit || return 1
+        printf "Tanzu CLI...COMPLETED\n\n"
     fi
     cd ~
     return 0
