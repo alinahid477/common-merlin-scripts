@@ -91,7 +91,7 @@ installTanzuCLI () {
     fi
 
     cd ~
-    isexist=$(tanzu version)
+    isexist=$(which tanzu)
     if [[ -d $DIR && -z $isexist ]]
     then
         # default check tce
