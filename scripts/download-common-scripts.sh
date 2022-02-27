@@ -21,7 +21,7 @@ then
     downloadFilesList=$1
 fi
 
-readarray -t scripts < <(cat $sourceUrl/list.$downloadFilesList)
+readarray -t scripts < <(curl -L $sourceUrl/list.$downloadFilesList)
 
 printf "\nDestinatin DIR = $destinationDir\n"
 printf "\nScripts download = $downloadFilesList\n"
