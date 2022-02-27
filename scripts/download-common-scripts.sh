@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/"
+sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts"
 
 printf "\nStarting download script...\n"
 
@@ -30,8 +30,8 @@ if [[ -d $destinationDir ]]
 then
     cd $destinationDir
     for i in ${scripts[@]}; do
-        printf "\ncurl -L -O $sourceUrl$i"
-        curl -L -O $sourceUrl$i
+        printf "\ncurl -L -O $sourceUrl/$i"
+        curl -L -O $sourceUrl/$i
     done
     cd ~
 else
