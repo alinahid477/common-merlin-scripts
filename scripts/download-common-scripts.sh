@@ -9,17 +9,18 @@ printf "\nStarting download script...\n"
 #     printf "\nYou must provide necessary parameters eg: param#1 downloads-bundle-name and param#2 location\nif param#2 is not provide the default location is current directory.\n"
 # fi
 
+downloadFilesList='all'
+if [[ -z $1 ]]
+then
+    downloadFilesList=$1
+fi
+
 destinationDir='.'
 if [[ -n $2 ]]
 then
     destinationDir=$2
 fi
 
-downloadFilesList='all'
-if [[ -z $1 ]]
-then
-    downloadFilesList=$1
-fi
 
 readarray -t scripts < <(curl -L $sourceUrl/list.$downloadFilesList)
 

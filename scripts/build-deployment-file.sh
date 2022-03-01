@@ -112,7 +112,7 @@ function assembleFile () {
     local normalcolor=$(tput sgr0)
 
     local baseFile=$1
-    local clusterConfigFile=$2
+    local defaultValuesFile=$2
 
     # iterate over array in json file (json file starts with array)
     # base64 decode is needed so that jq format is per line. Otherwise gettting value from the formatted item object becomes impossible 
@@ -144,7 +144,7 @@ function assembleFile () {
         then
             andconditionsJson=$(echo $(_jq '.andconditions'))
         
-            checkCondition "AND" $andconditionsJson $clusterConfigFile
+            checkCondition "AND" $andconditionsJson $defaultValuesFile
             ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
 
             if [[ $ret == 1 ]]
@@ -253,4 +253,6 @@ function assembleFile () {
             printf "\n"
         fi
     done
+
+    return 0
 }

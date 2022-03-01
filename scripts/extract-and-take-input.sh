@@ -11,6 +11,13 @@ extractVariableAndTakeInput () {
     local normalcolor=$(tput sgr0)
 
     baseVariableFile=$1
+    defaultValuesFile=$2
+
+    if [[ -z $baseVariableFile ]]
+    then
+        printf "\nERROR: Must pass base variable file as parameter\n"
+        return 1
+    fi
     
     printf "extracting variables for user input....\n"
     # extract variable from file (variable format is: <NAME-OF-THE-VARIABLE>)
@@ -100,4 +107,6 @@ extractVariableAndTakeInput () {
         printf "\nAll needed values found in environment variable. No user input needed.\n"
     fi
 
+
+    return 0
 }
