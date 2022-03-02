@@ -2,15 +2,14 @@
 
 source $HOME/binaries/scripts/contains-element.sh
 
-function selectFromAvailableOptions () {
-    # param #1: expects an array
-    local availableOptions=("$@")
 
-    # if empty or count is less than 1
-    if [[ -z $availableOptions || ${#availableOptions[@]} -lt 1 ]]
-    then
-        returnOrexit || return ''
-    fi
+function getOptionsInString () {
+    local yellowcolor=$(tput setaf 3)
+    local magentacolor=$(tput setaf 5)
+    local normalcolor=$(tput sgr0)
+
+
+    local additionalOption=$1
     local optionSTR=''
     # need to convert into comma separated string just so I can display
     for option in "${availableOptions[@]}"; do
@@ -18,12 +17,34 @@ function selectFromAvailableOptions () {
         then
             optionSTR=$option
         else
-            optionSTR=$(echo "$optionSTR,$option")
+            optionSTR=$(echo "$optionSTR, $option")
         fi
     done
-    optionSTR=$(echo "$optionSTR,none")
+    if [[ -n $additionalOption ]]
+    then
+        optionSTR=$(echo "$optionSTR, $additionalOption")
+    fi
+    
+    printf "$optionSTR"
+}
 
-    printf "available options are: [$optionSTR]\n"
+
+function selectFromAvailableOptionsWithDefault () {
+    # param #1: expects an array
+    local noneOrDefault=$1 # must be a value. If no default value is needed then pass none. Passing a default value will allow pressing enter to accept default value.
+    shift
+    local availableOptions=("$@")
+    
+    # if empty or count is less than 1
+    if [[ -z $availableOptions || ${#availableOptions[@]} -lt 1 ]]
+    then
+        returnOrexit || return 255
+    fi
+    
+    local optionSTR=$(getOptionsInString)
+
+    printf "${yellowcolor}available options are: [$optionSTR]\n${normalcolor}"
+    printf "${magentacolor}Type \"none\" for no selection.\n${normalcolor}"
     local selectedOption=''
     local selectedOptionIndex=255
     while [[ -z $selectedOption ]]; do
@@ -33,13 +54,20 @@ function selectFromAvailableOptions () {
             printf "You selected none. Selected option is empty.\n"
             unset selectedOption
             break
+        else
+            if [[ -z $selectedOption && $noneOrDefault != 'none' ]]
+            then
+                # allow 'press enter to accept default'
+                printf "Selecting default: $noneOrDefault...\n"
+                selectedOption=$noneOrDefault
+            fi
         fi
         containsElement "$selectedOption" "${availableOptions[@]}"
         ret=$?
         if [[ $ret == 1 ]]
         then
             unset selectedOption
-            printf "You must input a valid value from the available options.\n"
+            printf "error: You must input a valid value from the available options. try again..\n"
         else
             for i in "${!availableOptions[@]}"; do
                 if [[ "${availableOptions[$i]}" = "${selectedOption}" ]];
@@ -50,6 +78,11 @@ function selectFromAvailableOptions () {
             done
         fi
     done
-    printf "Selected option: $selectedOption @ index $selectedOptionIndex\n"
+    printf "Selected option: $selectedOption\n"
     return $selectedOptionIndex
+}
+
+function selectFromAvailableOptions () {
+    local availableOptions=("$@")
+    selectFromAvailableOptionsWithDefault "none" ${availableOptions[@]}
 }

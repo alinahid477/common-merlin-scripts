@@ -3,106 +3,7 @@ export $(cat /root/.env | xargs)
 
 source $HOME/binaries/scripts/contains-element.sh
 source $HOME/binaries/scripts/select-from-available-options.sh
-
-
-function findValueForKey () {
-    local key=$1
-    if [[ -z $key ]]
-    then
-        return 1
-    fi
-    # check if the value exists in environment variable
-    if [[ -z ${!key} ]]
-    then
-        # not found in environment variable
-        # fallback to check in keyValueFile (file path supplied as argument)
-        if [[ -n $keyValueFile ]]
-        then
-            # if keyValueFile supplied then read the file
-            # and check if key matches.
-            # if key matches then check if value matches
-
-            while IFS=: read -r fkey fval # keyValueFile contains in this format "key: value" in evey line. TKGm clusterconfig file.
-            do
-                if [[ $fkey == $key ]]
-                then
-                    # keyValueFile file contains the key
-                    x=$(echo $fval | sed 's,^ *,,; s, *$,,')
-                    printf "$x"
-                    break
-                fi
-            done < "$keyValueFile"
-        fi
-    else
-        # found in environment variable
-        printf "${!key}"
-    fi
-}
-
-function checkCondition () { # returns 0 if condition is met. Otherwise returns 1.
-
-    local conditionType=$1  # (Required) possible values are either 'AND' or 'OR'
-    local conditionsJson=$2 # (Required) comma separated json string
-    local keyValueFile=$3   # (Optional) filepath of the keyvalue file (single or multiple lines containing format 'key: value'. eg: tkgm clusterconfig file)
-
-
-    if [[ -z $conditionType || -z $conditionsJson || $conditionsJson == null ]] # sincce conditionsJson is extracted from json it can be null. 
-    then
-        returnOrexit || return 1
-    fi
-
-
-    readarray -t conditions < <(echo $conditionsJson | jq -rc '.[]')
-    
-
-    local istrue=''
-    for condition in ${conditions[@]}; do
-        local keyvalpair=(${condition//=/ }) # string split by delim '='
-        local key=${keyvalpair[0]}
-        local val=${keyvalpair[1]}
-
-        # value will be found either in environment variable OR in keyvaluefile.
-        # environment variable takes precidence over value found in keyvaluefile
-
-        # lets extract the value first
-        local foundval=$(findValueForKey $key)
-       
-
-        if [[ $conditionType == 'AND' ]]
-        then
-            istrue='y'
-            # after all it is an 'AND condition'. Hence, if as long as value for 1 key is missing or value does not match the condition is false.
-            if [[ -z $foundval || $foundval != $val ]]
-            then
-                # only 1 'n' makes the AND condition false
-                istrue='n'
-                break
-            fi
-        fi
-
-        if [[ $conditionType == 'OR' ]]
-        then
-            istrue='n'
-            
-            # As long as there's value for 1 key is present and it matches the contidion is true.
-            # we only need set it to 'n' once when it is empty. because it is OR condition. Hence, if I get 'y' once then the condition is true.
-            if [[ -n $foundval && $foundval == $val ]]
-            then
-                # only 1 'y' makes the OR condition true.
-                istrue='y'
-                break                
-            fi
-        fi
-    done
-
-    if [[ $istrue == 'y' ]]
-    then
-        return 0
-    fi
-
-    return 1
-}
-
+source $HOME/binaries/scripts/keyvaluefile-functions.sh
 
 # read what to prompt for user input from a json file.
 function assembleFile () {
@@ -162,7 +63,7 @@ function assembleFile () {
         # The goal here is to get a default value for the prompt.
         if [[ (( -z $defaultoptionvalue || $defaultoptionvalue == null )) && -n $defaultoptionkey && $defaultoptionkey != null ]]
         then
-            local tmp=$(findValueForKey $defaultoptionkey)
+            local tmp=$(findValueForKey $defaultoptionkey $defaultValuesFile)
             if [[ -n $tmp && $tmp != null ]]
             then
                 # so, since we have a default value, we do not need to prompt user for it
@@ -224,9 +125,9 @@ function assembleFile () {
                         selectedOption=${options[$ret]}
                     fi
                 else    
-                    # only 1 context. Most likely the most usual.
+                    # only 1 option available. No point presenting with prompt
                     selectedOption="${options[0]}"
-                    printf "No need for user input as only 1 option is available: $selectedOption"
+                    printf "No need for user input as only 1 option is available: $selectedOption\n"
                 fi
 
             fi
