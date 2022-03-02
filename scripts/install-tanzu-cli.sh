@@ -165,7 +165,7 @@ installTanzuCLI () {
         tanzu version || returnOrexit || return 1
         printf "\n\n"
         printf "\nDebug point #3\n"
-        tanzu plugin list || returnOrexit || return 1
+        #tanzu plugin list || returnOrexit || return 1
         printf "Tanzu CLI...COMPLETED\n\n"
     fi
     cd ~
