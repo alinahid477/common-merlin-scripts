@@ -10,7 +10,7 @@ extractVariableAndTakeInput () {
     local promptsForVariablesJSON='prompts-for-variables.json'
     local bluecolor=$(tput setaf 4)
     local yellowcolor=$(tput setaf 3)
-    local magentacolor=$(tput setaf 5)
+    local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
 
     variableFile=$1
@@ -170,7 +170,7 @@ extractVariableAndTakeInput () {
             local isEmptyAllowed=false
             if [[ $optional == true && -n $defaultvalue && $defaultvalue != null ]]
             then
-                printf "Press enter to accept ${magentacolor}Default value: $defaultvalue${normalcolor}\n"
+                printf "Press enter to accept ${redcolor}Default value: $defaultvalue${normalcolor}\n"
                 isEmptyAllowed=true
             fi
 

@@ -10,7 +10,7 @@ source $HOME/binaries/scripts/extract-and-take-input.sh
 
 generateTKCFile () {
     local bluecolor=$(tput setaf 4)
-    local magentacolor=$(tput setaf 5)
+    local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
 
     local tkgClusterName=''
@@ -27,15 +27,15 @@ generateTKCFile () {
     local clusterconfigfile=''
     local clusterconfigfilepath="$HOME/.config/tanzu/tkg/clusterconfigs"
     printf "\nLooking for management cluster config file in $clusterconfigfilepath/"
-    printf "\n${magentacolor}note: the management cluster config file act as a default value provider for TKG cluster config.${normalcolor}\n"
+    printf "\n${redcolor}note: the management cluster config file act as a default value provider for TKG cluster config.${normalcolor}\n"
     local numberofyamlfound=$(find $clusterconfigfilepath/*.yaml -type f -printf "." | wc -c)
     if [[ $numberofyamlfound -gt 1 ]]
     then
         readarray -t yamlfiles < <(ls -1 $clusterconfigfilepath) 
         ls -1 $clusterconfigfilepath
         printf "\nFound more than 1 files. Need user input to pick one..."
-        printf "\n${magentacolor}Type \"none\" to not pick any file${normalcolor}"
-        printf "\n${magentacolor}note: not having a management cluster config file will prompt for a lot of input for TKG cluster config.${normalcolor}"
+        printf "\n${redcolor}Type \"none\" to not pick any file${normalcolor}"
+        printf "\n${redcolor}note: not having a management cluster config file will prompt for a lot of input for TKG cluster config.${normalcolor}"
         printf "\n"
         while [[ -z $clusterconfigfile ]]; do
             read -p "type the name of the file: " clusterconfigfile

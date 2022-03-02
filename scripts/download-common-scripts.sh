@@ -10,7 +10,7 @@ printf "\nStarting download script...\n"
 # fi
 
 downloadFilesList='common'
-if [[ -z $1 ]]
+if [[ -n $1 ]]
 then
     downloadFilesList=$1
 fi

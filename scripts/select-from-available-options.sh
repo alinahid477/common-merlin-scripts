@@ -5,7 +5,7 @@ source $HOME/binaries/scripts/contains-element.sh
 
 function getOptionsInString () {
     local yellowcolor=$(tput setaf 3)
-    local magentacolor=$(tput setaf 5)
+    local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
 
 
@@ -44,7 +44,7 @@ function selectFromAvailableOptionsWithDefault () {
     local optionSTR=$(getOptionsInString)
 
     printf "${yellowcolor}available options are: [$optionSTR]\n${normalcolor}"
-    printf "${magentacolor}Type \"none\" for no selection.\n${normalcolor}"
+    printf "${redcolor}Type \"none\" for no selection.\n${normalcolor}"
     local selectedOption=''
     local selectedOptionIndex=255
     while [[ -z $selectedOption ]]; do
