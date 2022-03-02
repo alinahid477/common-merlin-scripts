@@ -134,10 +134,8 @@ installTanzuCLI () {
             # Link the tanzu binary. Cause that's needs to happen regardless of whether it was previously installed or not.
             install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit || return 1
             chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
-            printf "\nDebug point #1\n"
             if [[ ! -d $HOME/.local/share/tanzu-cli ]]
             then
-                printf "\nDebug point #2\n"
                 # This means tanzu cli was NOT previously installed and file system exists. Lets install it.
                 if [[ -f cli/manifest.yaml ]]
                 then
@@ -164,8 +162,7 @@ installTanzuCLI () {
         sleep 2
         tanzu version || returnOrexit || return 1
         printf "\n\n"
-        printf "\nDebug point #3\n"
-        #tanzu plugin list || returnOrexit || return 1
+        tanzu plugin list --local tanzu/ || returnOrexit || return 1
         printf "Tanzu CLI...COMPLETED\n\n"
     fi
     cd ~

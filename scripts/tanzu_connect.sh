@@ -113,7 +113,16 @@ function tanzu_connect_and_confirm () {
 
     tanzu_connect || returnOrexit || return 1
 
-    printf "\ntanzu connected to below ...\n"
+    printf "\nchecking for cluster plugin installed....\n"
+    local x=$(tanzu cluster --help)
+    if [[ $x == *@("unknown command")* ]]
+    then
+        printf "\nCluster plugin not found....installing....\n"
+        tanzu plugin install cluster
+        printf "\nDONE.\n"
+    fi
+    
+    printf "\nPerforming tanzu cluster list ...\n"
     sleep 1
     tanzu cluster list --include-management-cluster
 
