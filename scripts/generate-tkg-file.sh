@@ -5,17 +5,13 @@ templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
 
 
 source $HOME/binaries/scripts/contains-element.sh
-source $HOME/binaries/scripts/build-deployment-file.sh
+source $HOME/binaries/scripts/assemble-file.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh
 
 generateTKCFile () {
     local bluecolor=$(tput setaf 4)
     local magentacolor=$(tput setaf 5)
     local normalcolor=$(tput sgr0)
-    
-    notifyfile=$1
-
-    printf "\n*******Starting TKG workload cluster wizard*******\n\n"
 
     local tkgClusterName=''
     while [[ -z $tkgClusterName ]]; do
@@ -105,8 +101,6 @@ generateTKCFile () {
     cp $tmpTKCFile $HOME/workload-clusters/ && printf "COMPLETE" || printf "FAILED"
 
     printf "\n\nGenerated tkg workload-cluster config file: $HOME/workload-clusters/tkg-$tkgClusterName.yaml\n\n"
-
-    echo "$HOME/workload-clusters/tkg-$tkgClusterName.yaml" >> $(echo $notifyfile)
 
     return 0
 }

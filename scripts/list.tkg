@@ -7,5 +7,5 @@ parse_yaml.sh
 returnOrexit.sh
 select-from-available-options.sh
 tanzu_connect.sh
-build-deployment-file.sh
+assemble-file.sh
 generate-tkg-file.sh
