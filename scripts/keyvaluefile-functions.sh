@@ -56,7 +56,7 @@ function checkConditionWithDefaultValueFile () { # returns 0 if condition is met
     then
         return 1
     fi
-
+    
     local istrue=''
     for condition in ${conditions[@]}; do
         local keyvalpair=(${condition//=/ }) # string split by delim '='
@@ -66,19 +66,33 @@ function checkConditionWithDefaultValueFile () { # returns 0 if condition is met
         # value will be found either in environment variable OR in keyvaluefile.
         # lets extract the value first
         local foundval=$(findValueForKey $key $keyValueFile)
-
+        
         if [[ $conditionType == 'AND' ]]
         then
             istrue='y'
             # after all it is an 'AND condition'. Hence, if as long as value for 1 key is missing or value does not match the condition is false.
             # the reason for (( -n $val && $foundval != $val )) is: sometimes the andconditions could be [ "SOME_KEY" ] and NOT [ "SOME_KEY=SOME_VAL" ].
-            # When it is only [ "SOME_KEY" ] the $val will be empty, which means, the condition is "if there exists a value for "SOME_KEY" and I dont care what value."
-            # BUT WHENE it is [ "SOME_KEY=SOME_VAL" ] I care about the key and matching the value too, eg: must be $foundval=SOME_VAL
-            if [[ -z $foundval || (( -n $val && $foundval != $val )) ]]
+            # When it is only [ "SOME_KEY" ] the $val will be empty, which means, the condition is "if there exists a value for "SOME_KEY" I am all good, I dont care what value."
+            # BUT WHEN it is [ "SOME_KEY=SOME_VAL" ] I care about the key and matching the value too, eg: must be $foundval=SOME_VAL
+            if [[ -z $foundval ]]
             then
                 # only 1 'n' makes the AND condition false
                 istrue='n'
                 break
+            fi
+            if [[ -n $val && $foundval != $val ]]
+            then
+                istrue='n'
+                # should be able break here. BUT sometime it can also be this scenario "true" != true --> which not what I want. So doing below additional check.
+                foundval=$(echo $foundval | xargs) # remove quote marks from both side
+                val=$(echo $val | xargs) # remove quote marks from both side
+                if [[ $foundval == $val ]]
+                then
+                    # this means the value are the same but for quotation reasion is resulted false before. eg: "true" != true, "somevalue" != somevalue
+                    istrue='y'
+                else
+                    break
+                fi
             fi
         fi
 
@@ -88,11 +102,23 @@ function checkConditionWithDefaultValueFile () { # returns 0 if condition is met
             
             # As long as there's value for 1 key is present and it matches the contidion is true.
             # we only need set it to 'n' once when it is empty. because it is OR condition. Hence, if I get 'y' once then the condition is true.
-            if [[ -n $foundval && (( -n $val && $foundval == $val )) ]]
+            if [[ -n $foundval ]]
             then
                 # only 1 'y' makes the OR condition true.
                 istrue='y'
                 break                
+            fi
+            if [[ -n $val && $foundval == $val ]]
+            then
+                istrue='y'
+                foundval=$(echo $foundval | xargs) # remove quote marks from both side
+                val=$(echo $val | xargs) # remove quote marks from both side
+                if [[ $foundval != $val ]]
+                then
+                    istrue='n'
+                else
+                    break
+                fi
             fi
         fi
     done

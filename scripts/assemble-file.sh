@@ -61,21 +61,25 @@ function assembleFile () {
                 defaultoptionvalue=$foundvalue
             fi            
         fi
-
-        # if there's a condition for default value then let;s check if condition is met or not
-        local andconditions_forvalue=$(echo $(_jq '.andconditions_forblock'))
-        ret=255
-        if [[ -n $andconditions_forvalue && $andconditions_forvalue != null ]]
+        
+        if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
         then
-            andconditions_forvalue=($(echo "$andconditions_forvalue" | jq -rc '.[]')) # read as array
-            checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forvalue[@]}
-            ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
-            if [[ $ret == 1 ]]
+            # if there's a condition for default value then let;s check if condition is met or not
+            local andconditions_forvalue=$(echo $(_jq '.andconditions_forvalue'))
+            ret=255
+            if [[ -n $andconditions_forvalue && $andconditions_forvalue != null ]]
             then
-                # condition is false. So the defaultvalue cannot be used.
-                defaultoptionvalue=''
+                andconditions_forvalue=($(echo "$andconditions_forvalue" | jq -rc '.[]')) # read as array
+                checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forvalue[@]}
+                ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+                if [[ $ret == 1 ]]
+                then
+                    # condition is false. So the defaultvalue cannot be used.
+                    defaultoptionvalue=''
+                fi
             fi
         fi
+        
         
          # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
         if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
@@ -108,7 +112,7 @@ function assembleFile () {
             done
         fi
         
-        if [[ $confirmed == 'y' ]]
+        if [[ $confirmed == 'y' || -z $defaultoptionvalue || $defaultoptionvalue == null ]]
         then
             filename=$(echo $(_jq '.filename'))
 
