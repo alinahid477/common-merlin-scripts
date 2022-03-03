@@ -9,10 +9,6 @@ source $HOME/binaries/scripts/keyvaluefile-functions.sh
 function assembleFile () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForFilesJSON='prompts-for-files.json'
-    local yellowcolor=$(tput setaf 3)
-    local greencolor=$(tput setaf 2)
-    local bluecolor=$(tput setaf 4)
-    local normalcolor=$(tput sgr0)
 
     local baseFile=$1
     local defaultValuesFile=$2
@@ -94,8 +90,7 @@ function assembleFile () {
             # optionsJson=''
             
             # if we have value for $defaultoptionvalue we will do selectedOption=$defaultoptionvalue instead.
-            selectedOption=$defaultoptionvalue
-            printf "${yellowcolor}No need for user input. Using extracted default: $defaultoptionvalue${normalcolor}.\n"            
+            selectedOption=$defaultoptionvalue          
         fi
 
         # I gotten this far meaning show prompt to end-user
@@ -118,7 +113,7 @@ function assembleFile () {
                 case $yn in
                     [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
                     [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-                    * ) echo "Please answer y or n";;
+                    * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
                 esac
             done
         fi
@@ -135,11 +130,12 @@ function assembleFile () {
             if [[ ${#options[@]} -gt 1 ]]
             then
                 # prompt user to select 1 from the available options     
-                if [[ -n $selectedOption ]]
+                if [[ -n $selectedOption && $selectedOption == $defaultoptionvalue ]]
                 then
                     # This means defaultvalue has been asigned to previously. (see above)
                     # BUT present user to pick type option just in case.
                     # The below provides an functionality for the user to press enter and accept the default value Or input 1 valid option OR type none to select nothing.
+                    printf "${greencolor}Press enter to accept default: $selectedOption${normalcolor}.\n"  
                     selectFromAvailableOptionsWithDefault $selectedOption ${options[@]}
                 else
                     # this means there's no default value and user must input 1 value from available options.

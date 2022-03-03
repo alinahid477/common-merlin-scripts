@@ -8,11 +8,6 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 extractVariableAndTakeInput () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForVariablesJSON='prompts-for-variables.json'
-    local bluecolor=$(tput setaf 4)
-    local greencolor=$(tput setaf 2)
-    local yellowcolor=$(tput setaf 3)
-    local redcolor=$(tput setaf 1)
-    local normalcolor=$(tput sgr0)
 
     variableFile=$1
     defaultValuesFile=$2

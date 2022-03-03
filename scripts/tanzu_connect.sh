@@ -7,12 +7,6 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/parse_yaml.sh
 
 function tanzu_connect () {
-    local yellowcolor=$(tput setaf 3)
-    local greencolor=$(tput setaf 2)
-    local redcolor=$(tput setaf 1)
-    local normalcolor=$(tput sgr0)
-
-
     isloggedin='n'
     printf "\nChecking tanzu config...\n"
     sleep 1

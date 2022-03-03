@@ -9,17 +9,13 @@ source $HOME/binaries/scripts/assemble-file.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh
 
 generateTKCFile () {
-    local yellowcolor=$(tput setaf 3)
-    local greencolor=$(tput setaf 2)
-    local redcolor=$(tput setaf 1)
-    local normalcolor=$(tput sgr0)
-
     local tkgClusterName=''
+    printf "Variable: CLUSTER_NAME\n${bluecolor}Hint: The name of the TKG cluster. The name must be fqdn compliant.${normalcolor}\n"
     while [[ -z $tkgClusterName ]]; do
-        read -p "CLUSTER_NAME: " tkgClusterName
-        if [[ -z $tkgClusterName ]]
+        read -p "input value for CLUSTER_NAME: " tkgClusterName
+        if [[ -z $tkgClusterName || ! $inp =~ [A-Za-z0-9_\-]+$ ]]
         then
-            printf "empty value is not allowed.\n"
+            printf "${redcolor}empty or invalid value is not allowed.${normalcolor}\n"
         fi
     done
 
@@ -42,7 +38,7 @@ generateTKCFile () {
             read -p "type the name of the file: " clusterconfigfile
             if [[ -z $clusterconfigfile ]]
             then
-                printf "You must provide a name.\n"
+                printf "${redcolor}You must provide a name.${normalcolor}\n"
             else
                 if [[ $clusterconfigfile == 'none' ]]
                 then
@@ -70,7 +66,7 @@ generateTKCFile () {
             case $yn in
                 [Yy]* ) confirmation="y"; printf "you confirmed yes\n"; break;;
                 [Nn]* ) confirmation="n";printf "You confirmed no.\n"; break;;
-                * ) echo "Please answer y or n.";;
+                * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
             esac
         done
         if [[ $confirmation == 'n' ]]

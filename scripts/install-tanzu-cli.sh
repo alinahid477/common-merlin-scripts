@@ -70,7 +70,7 @@ installTanzuCLI () {
                     case $yn in
                         [Yy]* ) doinflate="y"; printf "\nyou confirmed yes\n"; break;;
                         [Nn]* ) doinflate="n";printf "\n\nYou said no.\n"; break;;
-                        * ) echo "Please answer y or n.";;
+                        * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
                     esac
                 done
             fi
