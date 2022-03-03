@@ -9,6 +9,7 @@ extractVariableAndTakeInput () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForVariablesJSON='prompts-for-variables.json'
     local bluecolor=$(tput setaf 4)
+    local greencolor=$(tput setaf 2)
     local yellowcolor=$(tput setaf 3)
     local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
@@ -143,14 +144,14 @@ extractVariableAndTakeInput () {
         hint=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .hint' $templateFilesDIR/$promptsForVariablesJSON)
         if [[ -n $hint && $hint != null ]]
         then
-            printf "Variable: $inputvar\nHint: ${yellowcolor}$hint ${normalcolor}\n"
+            printf "Variable: $inputvar\n${bluecolor}Hint: $hint ${normalcolor}\n"
         fi        
         
         # rule of skip_prompt=true --> if there is a defaultvalue exist do not propmt user
         # if no defaultvalue exist then prompt user. skip_prompt does not mean anything here.
         if [[ $skip_prompt == true && -n $defaultvalue && $defaultvalue != null ]]
         then
-            printf "${bluecolor}Skipping user input. default value: $inputvar=$defaultvalue${normalcolor}\n"
+            printf "${yellowcolor}Skipping user input. default value: $inputvar=$defaultvalue${normalcolor}\n"
             sed -i 's|<'$inputvar'>|'$defaultvalue'|g' $variableFile
             continue
         fi
@@ -173,7 +174,7 @@ extractVariableAndTakeInput () {
             local isEmptyAllowed=false
             if [[ $optional == true && -n $defaultvalue && $defaultvalue != null ]]
             then
-                printf "Press enter to accept ${redcolor}Default value: $defaultvalue${normalcolor}\n"
+                printf "${greencolor}Press enter to accept Default value: $defaultvalue${normalcolor}\n"
                 isEmptyAllowed=true
             fi
 
@@ -191,7 +192,7 @@ extractVariableAndTakeInput () {
                 ret=$?
                 if [[ $ret == 255 ]]
                 then
-                    printf "No selection were made. Remove the entry\n"
+                    printf "${bluecolor}No selection were made. Remove the entry${normalcolor}\n"
                     sed -i '/'$inputvar'/d' $variableFile
                 else
                     # selected option
@@ -213,7 +214,26 @@ extractVariableAndTakeInput () {
                     fi                
                 fi
             done
-            sed -i 's|'${variableNameRaw}'|'$inp'|g' $variableFile
+            if [[ $isEmptyAllowed == true && $inp == $defaultvalue ]]
+            then
+                # this means user pressed enter to accept default value
+                printf "${greencolor}Accepted default value: $inp${normalcolor}\n"
+            else
+                local inp1=$(echo $inp | xargs)
+                local defaultvalue1=$(echo $defaultvalue | xargs)
+                if [[ $isEmptyAllowed == true && $inp1 == $defaultvalue1 ]]
+                then
+                    printf "${bluecolor}Accepted default value: $inp${normalcolor}\n"
+                fi
+            fi
+            local useSpecialReplace=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .use_special_replace' $templateFilesDIR/$promptsForVariablesJSON)
+            if [[ $useSpecialReplace == true ]]
+            then
+                awk -v old=${variableNameRaw} -v new="$inp" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $variableFile > $variableFile.tmp && mv $variableFile.tmp $variableFile && rm $variableFile.tmp
+            else
+                sed -i 's|'${variableNameRaw}'|'$inp'|g' $variableFile
+            fi
+            
             # read this property to see if this variable should be recorded in .env file for usage in developer workspace (eg: git-ops-secret)
             isRecordAsEnvVar=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .isRecordAsEnvVar' $templateFilesDIR/$promptsForVariablesJSON)
             # add to .env for later use if instructed in the prompt file (eg: during developer namespace creation)            

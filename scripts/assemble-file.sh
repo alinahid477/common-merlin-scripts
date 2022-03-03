@@ -10,6 +10,7 @@ function assembleFile () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForFilesJSON='prompts-for-files.json'
     local yellowcolor=$(tput setaf 3)
+    local greencolor=$(tput setaf 2)
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
 
@@ -80,11 +81,21 @@ function assembleFile () {
             fi
         fi
         
-        
-         # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
+        local selectedOption=''
+        # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
         if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
         then
             confirmed='y'
+
+            # the below is commented out because default value can be surfaced during option selection. So the below statement does not have to happen
+            # # we only use optionJson if we want to take user input and ---> yes correct
+            # # we will only take user input from options if there's no value for $defaultoptionvalue. ---> No, not necessarily. We can still present user with options and input BUT can also provide 'press enter to choose default value'
+            # # since this (inside this if) means that there's $defaultoptionvalue so we will set if to empty for the next if below. ---> No. Let's put this infront of user to make a choise.
+            # optionsJson=''
+            
+            # if we have value for $defaultoptionvalue we will do selectedOption=$defaultoptionvalue instead.
+            selectedOption=$defaultoptionvalue
+            printf "${yellowcolor}No need for user input. Using extracted default: $defaultoptionvalue${normalcolor}.\n"            
         fi
 
         # I gotten this far meaning show prompt to end-user
@@ -106,79 +117,75 @@ function assembleFile () {
                 read -p "please confirm [y/n]: " yn
                 case $yn in
                     [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                    [Nn]* ) printf "You said no.\n"; break;;
-                    * ) echo "Please answer y or n\n";;
+                    [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                    * ) echo "Please answer y or n";;
                 esac
             done
         fi
         
-        if [[ $confirmed == 'y' || -z $defaultoptionvalue || $defaultoptionvalue == null ]]
+        
+        if [[ -n $optionsJson && $optionsJson != null ]]
+        then
+            # this means I have read $optionsJson as there was no $defaultoptionvalue
+            # no prompt use to select an option from optionsJson
+
+            # read it as array so I can perform containsElement for valid value from user input.
+            readarray -t options < <(echo $optionsJson | jq -rc '.[]')
+
+            if [[ ${#options[@]} -gt 1 ]]
+            then
+                # prompt user to select 1 from the available options     
+                if [[ -n $selectedOption ]]
+                then
+                    # This means defaultvalue has been asigned to previously. (see above)
+                    # BUT present user to pick type option just in case.
+                    # The below provides an functionality for the user to press enter and accept the default value Or input 1 valid option OR type none to select nothing.
+                    selectFromAvailableOptionsWithDefault $selectedOption ${options[@]}
+                else
+                    # this means there's no default value and user must input 1 value from available options.
+                    # The below provides an functionality where user must select 1 valid option OR type none to select nothing.
+                    selectFromAvailableOptions ${options[@]}
+                fi
+                
+                ret=$?
+                if [[ $ret == 255 ]]
+                then
+                    printf "${redcolor}\nERROR: Invalid option selected.${normalcolor}\n"
+                    confirmed='n' # no option was selected. Hence, no file should be appended.
+                else
+                    selectedOption=${options[$ret]}
+                fi
+            else    
+                # only 1 option available. No point presenting with prompt
+                selectedOption="${options[0]}"
+                printf "${yellocolor}No need for user input as only 1 option is available. Default choice: $selectedOption${normalcolor}\n"
+            fi
+        fi
+        
+        
+
+        if [[ $confirmed == 'y' ]]
         then
             filename=$(echo $(_jq '.filename'))
-
-            local selectedOption=''
-            if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
-            then                
-                # we only use optionJson if we want to take user input and 
-                # we will only take user input from options if there's no value for $defaultoptionvalue.
-                # since this (inside this if) means that there's $defaultoptionvalue so we will set if to empty for the next if below.
-                optionsJson=''
-                
-                # if we have value for $defaultoptionvalue we will do selectedOption=$defaultoptionvalue instead.
-                selectedOption=$defaultoptionvalue
-                printf "No need for user input. Using extracted default: ${yellowcolor}$defaultoptionvalue${normalcolor}.\n"
-            fi
-            
-            if [[ -n $optionsJson && $optionsJson != null ]]
-            then
-                # this means I have read $optionsJson as there was no $defaultoptionvalue
-                # no prompt use to select an option from optionsJson
-
-                # read it as array so I can perform containsElement for valid value from user input.
-                readarray -t options < <(echo $optionsJson | jq -rc '.[]')
-
-                if [[ ${#options[@]} -gt 1 ]]
-                then
-                    # prompt user to select 1
-                    
-                    selectFromAvailableOptions ${options[@]}
-                    ret=$?
-                    if [[ $ret == 255 ]]
-                    then
-                        printf "\nERROR: Invalid option selected.\n"
-                        returnOrexit || return 1
-                    else
-                        selectedOption=${options[$ret]}
-                    fi
-                else    
-                    # only 1 option available. No point presenting with prompt
-                    selectedOption="${options[0]}"
-                    printf "No need for user input as only 1 option is available: $selectedOption\n"
-                fi
-
-            fi
-
-
-            if [[ -n $selectedOption && -n $filename ]]
-            then
-                # when multiple options exists (eg: vsphere or aws or azure)
-                # I have mentioned the filename in the JSON prompt file in this format $.template
-                # AND the physical file exists with name vsphere.template, azure.template etc
-                # Thus based on the input from user or defaultoptionvalue (eg: vsphere or azure or aws)
-                #   I will dynamically form the filename eg: replace the '$' sign with selectedOption 
-                #   eg: filename='$.template' will become filename='vsphere.template' 
-                filename=$(echo $filename | sed 's|\$|'$selectedOption'|g')
-            fi
-
             if [[ -n $filename && $filename != null ]]
             then
+                if [[ -n $selectedOption ]]
+                then
+                    # when multiple options exists (eg: vsphere or aws or azure)
+                    # I have mentioned the filename in the JSON prompt file in this format $.template
+                    # AND the physical file exists with name vsphere.template, azure.template etc
+                    # Thus based on the input from user or defaultoptionvalue (eg: vsphere or azure or aws)
+                    #   I will dynamically form the filename eg: replace the '$' sign with selectedOption 
+                    #   eg: filename='$.template' will become filename='vsphere.template' 
+                    filename=$(echo $filename | sed 's|\$|'$selectedOption'|g')
+                fi
                 # append the content of the chunked file to the profile file.
-                printf "adding configs for $promptName...."
+                printf "${greencolor}adding configs for $promptName....${normalcolor}"
                 cat $templateFilesDIR/$filename >> $baseFile && printf "ok." || printf "failed."
                 printf "\n\n" >> $baseFile
             fi
-            printf "\n"
         fi
+        printf "\n"
     done
 
     return 0

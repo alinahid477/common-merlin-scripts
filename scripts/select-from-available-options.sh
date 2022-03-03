@@ -78,10 +78,18 @@ function selectFromAvailableOptionsWithDefault () {
             printf "error: You must input a valid value from the available options. try again..\n"
         else
             for i in "${!availableOptions[@]}"; do
-                if [[ "${availableOptions[$i]}" = "${selectedOption}" ]];
+                if [[ "${availableOptions[$i]}" == "${selectedOption}" ]]
                 then
                     selectedOptionIndex=$i
                     break
+                else
+                    local availableOptions1=$(echo "${availableOptions[$i]}" | xargs) 
+                    local selectedOption1=$(echo "${selectedOption}" | xargs)
+                    if [[ "$availableOptions1" == "$selectedOption1" ]]
+                    then
+                        selectedOptionIndex=$i
+                        break
+                    fi
                 fi
             done
         fi
