@@ -1,7 +1,7 @@
 #!/bin/bash
 
-redcolor=$(tput setaf 1)
-greencolor=$(tput setaf 2)
-yellowcolor=$(tput setaf 3)
-bluecolor=$(tput setaf 4)
-normalcolor=$(tput sgr0)
+export redcolor=$(tput setaf 1)
+export greencolor=$(tput setaf 2)
+export yellowcolor=$(tput setaf 3)
+export bluecolor=$(tput setaf 4)
+export normalcolor=$(tput sgr0)
