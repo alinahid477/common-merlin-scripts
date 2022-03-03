@@ -24,7 +24,27 @@ function assembleFile () {
         _jq() {
             echo ${promptItem} | base64 --decode | jq -r ${1}
         }
-        unset confirmed
+        
+
+        # if there's a condition for display this block then first check if condition is met or not
+        local andconditions_forblock=$(echo $(_jq '.andconditions_forblock'))
+        local ret=255
+        if [[ -n $andconditions_forblock && $andconditions_forblock != null ]]
+        then
+            andconditions_forblock=($(echo "$andconditions_forblock" | jq -rc '.[]')) # read as array
+            checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forblock[@]}
+            ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+            if [[ $ret == 1 ]]
+            then
+                # condition is false. skip this block as this does not apply. 
+                # eg: if INFRASTRUCTURE_PROVIDER != vsphere then no reason to show options / input for networking
+                # as for INFRASTRUCTURE_PROVIDER=aws || INFRASTRUCTURE_PROVIDER=azure it will most like use the cloud network LB instead of something like avi, nsxt
+                continue
+            fi
+        fi
+
+
+        local confirmed=''
         local promptName=$(echo $(_jq '.name')) # get property value of property called "name" from itemObject (aka array element object)
         local prompt=$(echo $(_jq '.prompt'))
         local hint=$(echo $(_jq '.hint'))
@@ -32,6 +52,38 @@ function assembleFile () {
         local defaultoptionkey=$(echo $(_jq '.defaultoptionkey'))
         local optionsJson=$(echo $(_jq '.options'))
 
+        # value for $defaultoptionkey will take precedence over $defaultoptionvalue
+        if [[ -n $defaultoptionkey && $defaultoptionkey != null ]]
+        then
+            local foundvalue=$(findValueForKey $defaultoptionkey $defaultValuesFile)
+            if [[ -n $foundvalue && $foundvalue != null ]]
+            then
+                defaultoptionvalue=$foundvalue
+            fi            
+        fi
+
+        # if there's a condition for default value then let;s check if condition is met or not
+        local andconditions_forvalue=$(echo $(_jq '.andconditions_forblock'))
+        ret=255
+        if [[ -n $andconditions_forvalue && $andconditions_forvalue != null ]]
+        then
+            andconditions_forvalue=($(echo "$andconditions_forvalue" | jq -rc '.[]')) # read as array
+            checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forvalue[@]}
+            ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+            if [[ $ret == 1 ]]
+            then
+                # condition is false. So the defaultvalue cannot be used.
+                defaultoptionvalue=''
+            fi
+        fi
+        
+         # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
+        if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
+        then
+            confirmed='y'
+        fi
+
+        # I gotten this far meaning show prompt to end-user
         if [[ -n $hint && $hint != null ]] 
         then
             printf "$prompt (${bluecolor} hint: $hint ${normalcolor})\n"
@@ -39,47 +91,11 @@ function assembleFile () {
             printf "$prompt\n"
         fi
 
-        # if there's a value for 'defaultoptionvalue' then check condition. 
-        # If condition is true take the 'defaultoptionvalue'.
-        # If condition is false take user input
+       
 
-        if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]] # so, -n works if variable does not exist or value is empty. the jq is outputing null hence need to check null too.
-        then
-            local andconditions=$(echo $(_jq '.andconditions'))
-            local ret=1
-            if [[ -n $andconditions && $andconditions != null ]]
-            then
-                andconditions=($(echo "$andconditions" | jq -rc '.[]')) # read as array
-                checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
-                ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
-            fi
-
-            if [[ $ret == 1 ]]
-            then
-                # condition is false. Hence empty 'defaultoptionvalue' so that I can take user input.
-                defaultoptionvalue=''
-            else
-                # condition is true. Hence use 'defaultoptionvalue' instead of prompting for user input.
-                confirmed='y'
-            fi
-        fi
-        
-        # If there's no $defaultoptionvalue (either condition did not meet OR isnt specified in json)
-        #   we want to check the $defaultoptionkey and extract the value for it. which will be treated as $defaultoptionvalue
-        # The goal here is to get a default value for the prompt.
-        if [[ (( -z $defaultoptionvalue || $defaultoptionvalue == null )) && -n $defaultoptionkey && $defaultoptionkey != null ]]
-        then
-            local tmp=$(findValueForKey $defaultoptionkey $defaultValuesFile)
-            if [[ -n $tmp && $tmp != null ]]
-            then
-                # so, since we have a default value, we do not need to prompt user for it
-                defaultoptionvalue=$tmp
-                confirmed='y'
-            fi
-        fi
         # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
-        # as we already have 'defaultoptionvalue' it is confirmed='y'
         # AND $optionsJson means need to type in value. So should not ask y/n.
+        # OTHERWISE let's ask user if she/he like to select the file or not
         if [[ -z $confirmed && ((-z $optionsJson || $optionsJson == null)) ]]
         then
             while true; do
