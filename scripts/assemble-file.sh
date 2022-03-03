@@ -135,7 +135,6 @@ function assembleFile () {
                     # This means defaultvalue has been asigned to previously. (see above)
                     # BUT present user to pick type option just in case.
                     # The below provides an functionality for the user to press enter and accept the default value Or input 1 valid option OR type none to select nothing.
-                    printf "${greencolor}Press enter to accept default: $selectedOption${normalcolor}.\n"  
                     selectFromAvailableOptionsWithDefault $selectedOption ${options[@]}
                 else
                     # this means there's no default value and user must input 1 value from available options.

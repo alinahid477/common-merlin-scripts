@@ -169,7 +169,10 @@ extractVariableAndTakeInput () {
             local isEmptyAllowed=false
             if [[ $optional == true && -n $defaultvalue && $defaultvalue != null ]]
             then
-                printf "${greencolor}Press enter to accept Default value: $defaultvalue${normalcolor}\n"
+                if [[ -z $optionsJson || $optionsJson == null ]]
+                then
+                    printf "${greencolor}Press enter to accept Default: $defaultvalue${normalcolor}\n"
+                fi
                 isEmptyAllowed=true
             fi
 
@@ -182,8 +185,13 @@ extractVariableAndTakeInput () {
                 local selectedOption=''
                 # read it as array so I can perform containsElement for valid value from user input.
                 readarray -t options < <(echo $optionsJson | jq -rc '.[]')
-
-                selectFromAvailableOptionsWithDefault "$defaultvalue" ${options[@]}
+                if [[ -n $defaultvalue && $defaultvalue != null ]]
+                then
+                    selectFromAvailableOptionsWithDefault $defaultvalue ${options[@]}
+                else
+                    selectFromAvailableOptions ${options[@]}
+                fi
+                
                 ret=$?
                 if [[ $ret == 255 ]]
                 then
@@ -205,7 +213,7 @@ extractVariableAndTakeInput () {
                         # this means the input-for-values.json has optional=true and there exist default value (either defaultvalue: "some value" OR defaultvaluekey: "somekey")
                         inp=$defaultvalue    
                     else
-                        printf "empty value is not allowed.\n"
+                        printf "${redcolor}empty value is not allowed.${normalcolor}\n"
                     fi                
                 fi
             done

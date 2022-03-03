@@ -48,7 +48,11 @@ function selectFromAvailableOptionsWithDefault () {
     local optionSTR=$(getOptionsInString '' ${availableOptions[@]})
 
     printf "${yellowcolor}available options are: [$optionSTR]\n${normalcolor}"
-    printf "${redcolor}Type \"none\" for no selection.\n${normalcolor}"
+    printf "${yellowcolor}Type \"none\" for no selection.\n${normalcolor}"
+    if [[ -n $noneOrDefault && $noneOrDefault != 'none' ]]
+    then
+        printf "${greencolor}Press enter to accept Default: $noneOrDefault${normalcolor}\n"
+    fi
     local selectedOption=''
     local selectedOptionIndex=255
     while [[ -z $selectedOption ]]; do

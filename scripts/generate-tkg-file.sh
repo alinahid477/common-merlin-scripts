@@ -13,9 +13,10 @@ generateTKCFile () {
     printf "Variable: CLUSTER_NAME\n${bluecolor}Hint: The name of the TKG cluster. The name must be fqdn compliant.${normalcolor}\n"
     while [[ -z $tkgClusterName ]]; do
         read -p "input value for CLUSTER_NAME: " tkgClusterName
-        if [[ -z $tkgClusterName || ! $inp =~ [A-Za-z0-9_\-]+$ ]]
+        if [[ -z $tkgClusterName || ! $tkgClusterName =~ ^[A-Za-z0-9_-]+$ ]]
         then
             printf "${redcolor}empty or invalid value is not allowed.${normalcolor}\n"
+            tkgClusterName=''
         fi
     done
 
@@ -71,7 +72,7 @@ generateTKCFile () {
         done
         if [[ $confirmation == 'n' ]]
         then
-            printf "Not using management cluster config file as default value provider.\n"
+            printf "${redcolor}Not using management cluster config file as default value provider.${normalcolor}\n"
             clusterconfigfile=''
         fi
     fi
