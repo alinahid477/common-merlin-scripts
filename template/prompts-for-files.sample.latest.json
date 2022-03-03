@@ -1,0 +1,38 @@
+[
+    {
+        "name": "cloud",
+        "filename":"$.template",
+        "prompt": "Type in the name of the cloud?",
+        "options": ["vsphere","aws","azure"],
+        "hint": "possible values are: vsphere, aws, azure",
+        "defaultoptionkey": "INFRASTRUCTURE_PROVIDER"
+    },
+    {
+        "name": "networking",
+        "filename":"$.template",
+        "prompt": "Type in the name of the network?",
+        "options": ["nsxalb","nsxt","kubevip"],
+        "hint": "possible values are: nsxalb, nsxt, kubevip",
+        "andconditions_forblock": [ "INFRASTRUCTURE_PROVIDER=vsphere" ],
+        "andconditions_forvalue": [ "AVI_ENABLE=true" ],
+        "defaultoptionvalue": "nsxalb"
+    },
+    {
+        "name": "autoscale",
+        "filename":"autoscaler.template",
+        "prompt": "Would you like to autoscale this cluster?",
+        "hint": "recommended if deploying it on public clouds as you pay by the resource"
+    },
+    {
+        "name": "imagerepo",
+        "filename":"imagerepo.template",
+        "prompt": "Would you like to configure for private image repository?",
+        "hint": "If you deploy Tanzu Kubernetes Grid management clusters and Kubernetes clusters in environments that are not connected to the Internet, you need to set up a private image repository within your firewall and populate it with the Tanzu Kubernetes Grid images."
+    },
+    {
+        "name": "proxy",
+        "filename":"proxy.template",
+        "prompt": "Would you like to configure proxy?",
+        "hint": "If your environment includes proxies, you can optionally configure Tanzu Kubernetes Grid to send outgoing HTTP and HTTPS traffic from kubelet, containerd, and the control plane to your proxies."
+    }
+]

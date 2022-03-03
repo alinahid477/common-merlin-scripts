@@ -1,0 +1,345 @@
+[
+    {
+        "name": "<AZURE_CLIENT_ID>",
+        "hint": "Azure tenant id",
+        "defaultvaluekey": "AZURE_CLIENT_ID"
+    },
+    {
+        "name": "<AZURE_CLIENT_SECRET>",
+        "hint": "Azure client secret",
+        "defaultvaluekey": "AZURE_CLIENT_SECRET"
+    },
+    {
+        "name": "<AZURE_SSH_PUBLIC_KEY_B64>",
+        "hint": "ssh public key (should come from management cluster config file)",
+        "defaultvaluekey": "AZURE_SSH_PUBLIC_KEY_B64",
+        "use_special_replace": true
+    },
+    {
+        "name": "<AZURE_SUBSCRIPTION_ID>",
+        "hint": "Azure subscription id",
+        "defaultvaluekey": "AZURE_SUBSCRIPTION_ID"
+    },
+    {
+        "name": "<AZURE_TENANT_ID>",
+        "hint": "Azure tenant id",
+        "defaultvaluekey": "AZURE_TENANT_ID"
+    },
+    {
+        "name": "<AZURE_CUSTOM_TAGS>",
+        "hint": "Custom tags for Azure resources",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_ENVIRONMENT>",
+        "hint": "Available options are: AzurePublicCloud, AzureChinaCloud, AzureGermanCloud, AzureUSGovernmentCloud",
+        "options": ["AzurePublicCloud", "AzureChinaCloud", "AzureGermanCloud", "AzureUSGovernmentCloud"],
+        "defaultvalue": "AzurePublicCloud"
+    },
+    {
+        "name": "<AZURE_LOCATION>",
+        "hint": "Azure location",
+        "defaultvaluekey": "AZURE_LOCATION"
+    },
+    {
+        "name": "<AZURE_RESOURCE_GROUP>",
+        "hint": "Azure resource group",
+        "defaultvaluekey": "AZURE_RESOURCE_GROUP"
+    },
+    {
+        "name": "<AZURE_ENABLE_PRIVATE_CLUSTER>",
+        "hint": "Do you like to enable private cluster (default: false)",
+        "options": ["true","false"],
+        "defaultvalue": "false"
+    },
+    {
+        "name": "<AZURE_FRONTEND_PRIVATE_IP>",
+        "hint": "Set this if AZURE_ENABLE_PRIVATE_CLUSTER is true and you want to override the default internal load balancer address of 10.0.0.100",
+        "andconditions": ["AZURE_ENABLE_PRIVATE_CLUSTER=true"],
+        "conditions_lookup_file": "this",
+        "defaultvalue": "10.0.0.100",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_VNET_CIDR>",
+        "hint": "Optional, set if you want to deploy the cluster to a new VNET and subnets and override the default values. By default, AZURE_VNET_CIDR is set to 10.0.0.0/16",
+        "defaultvaluekey": "AZURE_VNET_CIDR",
+        "skip_prompt": true
+    },
+    {
+        "name": "<AZURE_CONTROL_PLANE_SUBNET_CIDR>",
+        "hint": "Optional, set if you want to deploy the cluster to a new VNET and subnets and override the default values. By default, AZURE_CONTROL_PLANE_SUBNET_CIDR to 10.0.0.0/24",
+        "andconditions": ["AZURE_VNET_CIDR"],
+        "conditions_lookup_file": "this",
+        "defaultvaluekey": "AZURE_CONTROL_PLANE_SUBNET_CIDR",
+        "skip_prompt": true
+    },
+    {
+        "name": "<AZURE_NODE_SUBNET_CIDR>",
+        "hint": "Optional, set if you want to deploy the cluster to a new VNET and subnets and override the default values. By default, AZURE_NODE_SUBNET_CIDR to 10.0.1.0/24.",
+        "andconditions": ["AZURE_VNET_CIDR"],
+        "conditions_lookup_file": "this",
+        "defaultvaluekey": "AZURE_NODE_SUBNET_CIDR",
+        "skip_prompt": true
+    },
+    {
+        "name": "<AZURE_VNET_RESOURCE_GROUP>",
+        "hint": "Optional, set if you want to deploy the cluster to an existing VNET and subnets or assign names to a new VNET and subnets.",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_VNET_NAME>",
+        "hint": "Optional, set if you want to deploy the cluster to an existing VNET and subnets or assign names to a new VNET and subnets.",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_CONTROL_PLANE_SUBNET_NAME>",
+        "hint": "Optional, set if you want to deploy the cluster to an existing VNET and subnets or assign names to a new VNET and subnets.",
+        "andconditions": ["AZURE_VNET_NAME"],
+        "conditions_lookup_file": "this",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_NODE_SUBNET_NAME>",
+        "hint": "Optional, set if you want to deploy the cluster to an existing VNET and subnets or assign names to a new VNET and subnets.",
+        "andconditions": ["AZURE_VNET_NAME"],
+        "conditions_lookup_file": "this",
+        "optional": true
+    },
+    {
+        "name": "<AZURE_CONTROL_PLANE_MACHINE_TYPE>",
+        "hint": "Optional, set if you want to override the default value. The default value is Standard_D2s_v3.",
+        "defaultvalue": "Standard_D2s_v3"
+    },
+    {
+        "name": "<AZURE_NODE_MACHINE_TYPE>",
+        "hint": "Optional, set if you want to override the default value. An Azure VM size for the worker node VMs, chosen to fit expected workloads. The default value is Standard_D2s_v3",
+        "defaultvalue": "Standard_D2s_v3"
+    },
+
+
+
+
+    {
+        "name": "<VSPHERE_SERVER>",
+        "hint": "The IP address or FQDN of the vCenter Server instance on which to deploy the Tanzu Kubernetes cluster.",
+        "defaultvaluekey": "VSPHERE_SERVER",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_USERNAME>",
+        "hint": "A vSphere user account with the required privileges for Tanzu Kubernetes Grid operation. For example, tkg-user@vsphere.local.",
+        "defaultvaluekey": "VSPHERE_USERNAME",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_SSH_AUTHORIZED_KEY>",
+        "hint": "Paste in the contents of the SSH public key that you created in Deploy a Management Cluster to vSphere.",
+        "defaultvaluekey": "VSPHERE_SSH_AUTHORIZED_KEY",
+        "skip_prompt": true,
+        "use_special_replace": true
+    },
+    {
+        "name": "<VSPHERE_DATACENTER>",
+        "hint": "The name of the datacenter in which to deploy the cluster, as it appears in the vSphere inventory. For example, /MY-DATACENTER",
+        "defaultvaluekey": "VSPHERE_DATACENTER",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_DATASTORE>",
+        "hint": "The name of the vSphere datastore for the cluster to use, as it appears in the vSphere inventory. For example, /MY-DATACENTER/datastore/MyDatastore",
+        "defaultvaluekey": "VSPHERE_DATASTORE",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_FOLDER>",
+        "hint": "The name of an existing VM folder in which to place Tanzu Kubernetes Grid VMs, as it appears in the vSphere inventory. For example, if you created a folder named TKG, the path is /MY-DATACENTER/vm/TKG",
+        "defaultvaluekey": "VSPHERE_FOLDER",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_INSECURE>",
+        "hint": "Optional. Set to true or false to bypass thumbprint verification. If false, set VSPHERE_TLS_THUMBPRINT.",
+        "options": ["true", "false"],
+        "defaultvaluekey": "VSPHERE_INSECURE",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_TLS_THUMBPRINT>",
+        "hint": "The thumbprint of the vCenter Server certificate. For information about how to obtain the vCenter Server certificate thumbprint, see Obtain vSphere Certificate Thumbprints.",
+        "andconditions": ["VSPHERE_INSECURE=false"],
+        "conditions_lookup_file": "this",
+        "defaultvaluekey": "VSPHERE_TLS_THUMBPRINT",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_NETWORK>",
+        "hint": "The name of an existing vSphere network to use as the Kubernetes service network, as it appears in the vSphere inventory. For example, k8s-workload-vms-network",
+        "defaultvaluekey": "VSPHERE_NETWORK",
+        "skip_prompt": true
+    },
+    {
+        "name": "<VSPHERE_RESOURCE_POOL>",
+        "hint": "The name of an existing resource pool in which to place this Tanzu Kubernetes Grid instance, as it appears in the vSphere inventory. EG: /MY-DATACENTER/host/cluster0/Resources",
+        "defaultvaluekey": "VSPHERE_RESOURCE_POOL",
+        "optional": true
+    },
+    {
+        "name": "<VSPHERE_PASSWORD>",
+        "hint": "The password for the vSphere user account.",
+        "defaultvaluekey": "VSPHERE_PASSWORD",
+        "skip_prompt": true
+    },
+    {
+        "name": "<CONTROLPLANE_SIZE>",
+        "hint": "Size for control plane node VMs.\n\tFor vSphere, set\n\t   small (2 CPUs, 4 GB memory, 20 GB disk),\n\t    medium (2 CPUs, 8 GB memory, 40 GB disk),\n\t    large (4 CPUs, 16 GB memory, 40 GB disk),\n\t    extra-large (8 CPUs, 32 GB memory, 80 GB disk).\n\tFor Amazon EC2, set an instance type, eg: t3.small.\n\tFor Azure, set an instance type, eg: Standard_D2s_v3."
+    },
+    {
+        "name": "<WORKER_SIZE>",
+        "hint": "Size for worker node VMs."
+    },
+
+
+
+
+
+    {
+        "name": "<INFRASTRUCTURE_PROVIDER>",
+        "hint": "Options are: vsphere, aws, azure, or tkg-service-vsphere",
+        "options": ["vsphere", "aws", "azure","tkg-service-vsphere"],
+        "defaultvaluekey": "INFRASTRUCTURE_PROVIDER",
+        "skip_prompt": true
+    },
+    {
+        "name": "<CLUSTER_NAME>",
+        "hint": "This name must comply with DNS hostname",
+        "defaultvaluekey": "CLUSTER_NAME",
+        "skip_prompt": true
+    },
+    {
+        "name": "<CLUSTER_PLAN>",
+        "hint": "Required. Set to dev, prod, or a custom plan. The dev plan deploys a cluster with a single control plane node. The prod plan deploys a highly available cluster with three control plane nodes.",
+        "defaultvaluekey": "CLUSTER_PLAN",
+        "optional": true
+    },
+    {
+        "name": "<CONTROL_PLANE_MACHINE_COUNT>",
+        "hint": "Deploy a Tanzu Kubernetes cluster with more control plane nodes than the dev and prod plans define by default. The number of control plane nodes that you specify must be odd.",
+        "andconditions": ["CLUSTER_PLAN"],
+        "conditions_lookup_file": "this",
+        "optional": true
+    },
+    {
+        "name": "<WORKER_MACHINE_COUNT>",
+        "hint": "Deploy a Tanzu Kubernetes cluster with more worker nodes than the dev and prod plans define by default.",
+        "andconditions": ["CLUSTER_PLAN"],
+        "conditions_lookup_file": "this",
+        "optional": true
+    },
+    {
+        "name": "<CLUSTER_CIDR>",
+        "hint": "Optional, set if you want to override the default value. The CIDR range to use for pods. By default, this range is set to 100.96.0.0/11.",
+        "defaultvalue": "100.96.0.0/11",
+        "optional": true
+    },
+    {
+        "name": "<SERVICE_CIDR>",
+        "hint": "Optional, set if you want to override the default value. The CIDR range to use for the Kubernetes services. By default, this range is set to 100.64.0.0/13",
+        "defaultvalue": "100.96.0.0/11",
+        "optional": true
+    },
+    {
+        "name": "<OS_NAME>",
+        "hint": "Node VM OS. Options are: ubuntu, photon, amazon",
+        "options": ["ubuntu", "photon", "amazon"],
+        "defaultvaluekey": "OS_NAME",
+        "optional": true
+    },
+    {
+        "name": "<OS_VERSION>",
+        "hint": "Version for OS_NAME OS. Defaults to 20.04 for Ubuntu. Can be 3 for Photon on vSphere and 2 for Amazon Linux on Amazon EC2",
+        "options": ["20.04", "3", "2"],
+        "defaultvaluekey": "OS_VERSION",
+        "optional": true
+    },
+
+
+
+
+
+    {
+        "name": "<AUTOSCALER_MIN_SIZE_0>",
+        "hint": "Minimum number of worker nodes. Cluster Autoscaler does not attempt to scale down the nodes below this limit."
+    },
+    {
+        "name": "<AUTOSCALER_MAX_SIZE_0>",
+        "hint": "Maximum number of worker nodes. Cluster Autoscaler does not attempt to scale up the nodes beyond this limit."
+    },
+    {
+        "name": "<AUTOSCALER_SCALE_DOWN_DELAY_AFTER_ADD>",
+        "hint": "Amount of time that Cluster Autoscaler waits after a scale-up operation and then resumes scale-down scans. Default 10m.",
+        "defaultvalue": "10m"
+    },
+    {
+        "name": "<AUTOSCALER_SCALE_DOWN_DELAY_AFTER_DELETE>",
+        "hint": "Amount of time that Cluster Autoscaler waits after deleting a node and then resumes scale-down scans. Default 10s.",
+        "defaultvalue": "10s"
+    },
+    {
+        "name": "<AUTOSCALER_SCALE_DOWN_DELAY_AFTER_FAILURE>",
+        "hint": "Amount of time that Cluster Autoscaler waits after a scale-down failure and then resumes scale-down scans. Default 3m.",
+        "defaultvalue": "3m"
+    },
+    {
+        "name": "<AUTOSCALER_SCALE_DOWN_UNNEEDED_TIME>",
+        "hint": "Amount of time that Cluster Autoscaler must wait before scaling down an eligible node. Default 10m.",
+        "defaultvalue": "10m"
+    },
+    {
+        "name": "<AUTOSCALER_MAX_NODE_PROVISION_TIME>",
+        "hint": "Maximum amount of time Cluster Autoscaler waits for a node to be provisioned. Default 15m.",
+        "defaultvalue": "15m"
+    },
+
+
+
+    {
+        "name": "<TKG_CUSTOM_IMAGE_REPOSITORY>",
+        "hint": "Required if you deploy Tanzu Kubernetes Grid in an Internet-restricted environment. Provide the IP address or FQDN of your private registry. For example, custom-image-repository.io/yourproject"
+    },
+    {
+        "name": "<TKG_CUSTOM_IMAGE_REPOSITORY_SKIP_TLS_VERIFY>",
+        "hint": "Set to true if your private image registry uses a self-signed certificate and you do not use TKG_CUSTOM_IMAGE_REPOSITORY_CA_CERTIFICATE. Because the Tanzu connectivity webhook injects the Harbor CA certificate into cluster nodes, TKG_CUSTOM_IMAGE_REPOSITORY_SKIP_TLS_VERIFY should always be set to false when using Harbor.",
+        "options": ["true", "false"]
+    },
+    {
+        "name": "<TKG_CUSTOM_IMAGE_REPOSITORY_CA_CERTIFICATE>",
+        "hint": "Set if your private image registry uses a self-signed certificate. Provide the CA certificate in base64 encoded format, for example TKG_CUSTOM_IMAGE_REPOSITORY_CA_CERTIFICATE: \"LS0t[…]tLS0tLQ==\""
+    },
+
+
+    {
+        "name": "<VSPHERE_CONTROL_PLANE_ENDPOINT>",
+        "hint": "Required for Kube-Vip. Static virtual IP address, or fully qualified domain name (FQDN) mapped to static address, for API requests to the Tanzu Kubernetes cluster."
+    },
+    {
+        "name": "<TKG_HTTPS_PROXY>",
+        "hint": "The URL of your HTTPS proxy. You can set this variable to the same value as TKG_HTTP_PROXY or provide a different value. The URL must start with http://. If you set TKG_HTTPS_PROXY, you must also set TKG_HTTP_PROXY."
+    },
+    {
+        "name": "<TKG_HTTP_PROXY>",
+        "hint": "The URL of your HTTP proxy, formatted as follows: PROTOCOL://USERNAME:PASSWORD@FQDN-OR-IP:PORT"
+    },    
+    {
+        "name": "<TKG_NO_PROXY>",
+        "hint": "One or more network CIDRs or hostnames, comma-separated and without spaces, that must bypass the HTTP(S) proxy. For example, noproxy.yourdomain.com,192.168.0.0/24"
+    },
+    {
+        "name": "<TKG_PROXY_CA_CERT>",
+        "hint": "Set if your proxy server uses a self-signed certificate. Provide the CA certificate in base64 encoded format, for example TKG_PROXY_CA_CERT: \"LS0t[…]tLS0tLQ==\"",
+        "optional": true
+    }
+    
+
+
+]
