@@ -99,6 +99,10 @@ extractVariableAndTakeInput () {
         ## LOGIC ##
         # delete the variable from output file if
         # andcondition is NOT met and optional=true || skip_prompt=true
+        # This is only reason optional=true exists.--> Basically this means that if a variable is optional and the condition to it is not met (eg: AZURE_PRIVATE_IP) then remove it from the file.
+        # skip_prompt=true has another purpose--->See below, 
+        #     which is, when skip_prompt=true and default value exists (either defaultvalue or extracted from defaultvaluekey) and if there's andconditions which is also met then do not ask for input.
+        #          
         if [[ (($skip_prompt == true || $optional == true)) && $isAndConditionMet == false ]]
         then
             sed -i '/'$inputvar'/d' $variableFile
@@ -147,7 +151,16 @@ extractVariableAndTakeInput () {
         if [[ $skip_prompt == true && -n $defaultvalue && $defaultvalue != null ]]
         then
             printf "${yellowcolor}Skipping user input. default value: $inputvar=$defaultvalue${normalcolor}\n"
-            sed -i 's|<'$inputvar'>|'$defaultvalue'|g' $variableFile
+            local useSpecialReplace=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .use_special_replace' $templateFilesDIR/$promptsForVariablesJSON)
+            # printf "\nDBG: $useSpecialReplace\n"
+            if [[ -n $useSpecialReplace && $useSpecialReplace == true ]]
+            then
+                awk -v old=${variableNameRaw} -v new="$defaultvalue" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $variableFile > $variableFile.tmp && mv $variableFile.tmp $variableFile
+                sleep 1
+            else
+                sed -i 's|'${variableNameRaw}'|'$defaultvalue'|g' $variableFile
+            fi
+            
             continue
         fi
 
@@ -162,12 +175,12 @@ extractVariableAndTakeInput () {
             # when does not exist prompt user to input value
             isinputneeded='y'
             
-            # rule of optional=true --> when defaultvalue exists prompt user for confirmation to ask for userinput, if user says yes
+            # when defaultvalue exists prompt user the default value and give user option to 'press enter' to accept it.
             # then prompt user for input against the variable.
             # if no defaultvalue exist then regardless of optional=true or false prompt user for input against the variable.
             # So I only need to check the below condition to say empty is allowed
             local isEmptyAllowed=false
-            if [[ $optional == true && -n $defaultvalue && $defaultvalue != null ]]
+            if [[ -n $defaultvalue && $defaultvalue != null ]]
             then
                 if [[ -z $optionsJson || $optionsJson == null ]]
                 then
@@ -226,13 +239,15 @@ extractVariableAndTakeInput () {
                 local defaultvalue1=$(echo $defaultvalue | xargs)
                 if [[ $isEmptyAllowed == true && $inp1 == $defaultvalue1 ]]
                 then
-                    printf "${bluecolor}Accepted default value: $inp${normalcolor}\n"
+                    printf "${greencolor}Accepted default value: $inp${normalcolor}\n"
                 fi
             fi
             local useSpecialReplace=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .use_special_replace' $templateFilesDIR/$promptsForVariablesJSON)
-            if [[ $useSpecialReplace == true ]]
+            # printf "\nDBG: $useSpecialReplace\n"
+            if [[ -n $useSpecialReplace && $useSpecialReplace == true ]]
             then
-                awk -v old=${variableNameRaw} -v new="$inp" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $variableFile > $variableFile.tmp && mv $variableFile.tmp $variableFile && rm $variableFile.tmp
+                awk -v old=${variableNameRaw} -v new="$inp" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $variableFile > $variableFile.tmp && mv $variableFile.tmp $variableFile
+                sleep 1
             else
                 sed -i 's|'${variableNameRaw}'|'$inp'|g' $variableFile
             fi
