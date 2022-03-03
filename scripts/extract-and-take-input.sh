@@ -69,9 +69,12 @@ extractVariableAndTakeInput () {
         
         local andconditions=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .andconditions' $templateFilesDIR/$promptsForVariablesJSON)
         
+        local ret=255
         local isAndConditionMet=true
         if [[ -n $andconditions && $andconditions != null ]]
         then
+            # read it as an array because the funtion 'checkConditionWithDefaultValueFile' expects array.
+            andconditions=($(echo "$andconditions" | jq -rc '.[]'))
             local andconditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
             
             # andconditions will only exist in combination with EITHER optional=true OR skip_prompt=true
@@ -79,12 +82,12 @@ extractVariableAndTakeInput () {
             then
                 # this means the andconditions is based on an input that I have provided previously (during the generation for this file)
                 # and it exists in this file (aka $variableFile)
-                checkCondition "AND" $andconditions $variableFile 
+                checkConditionWithDefaultValueFile "AND" $variableFile ${andconditions[@]} 
             else
                 if [[ $andconditionsLookupFile == 'default' ]]
                 then 
                     # this means the andconditions is based on an the default value file eg: management-cluster-config.yaml
-                    checkCondition "AND" $andconditions $defaultValuesFile
+                    checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
                 else
                     checkCondition # this will return 1 becuase it will fail the null check         
                 fi

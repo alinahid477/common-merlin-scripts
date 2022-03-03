@@ -4,15 +4,18 @@ source $HOME/binaries/scripts/contains-element.sh
 
 
 function getOptionsInString () {
-    local yellowcolor=$(tput setaf 3)
-    local redcolor=$(tput setaf 1)
-    local normalcolor=$(tput sgr0)
-
-
     local additionalOption=$1
+    shift
+    local availableOptions=("$@")
+    
     local optionSTR=''
     # need to convert into comma separated string just so I can display
     for option in "${availableOptions[@]}"; do
+        if [[ -z $option ]] 
+        then
+            continue
+        fi
+
         if [[ -z $optionSTR ]]
         then
             optionSTR=$option
@@ -30,6 +33,10 @@ function getOptionsInString () {
 
 
 function selectFromAvailableOptionsWithDefault () {
+    local yellowcolor=$(tput setaf 3)
+    local redcolor=$(tput setaf 1)
+    local normalcolor=$(tput sgr0)
+    
     # param #1: expects an array
     local noneOrDefault=$1 # must be a value. If no default value is needed then pass none. Passing a default value will allow pressing enter to accept default value.
     shift
@@ -41,7 +48,7 @@ function selectFromAvailableOptionsWithDefault () {
         returnOrexit || return 255
     fi
     
-    local optionSTR=$(getOptionsInString)
+    local optionSTR=$(getOptionsInString '' ${availableOptions[@]})
 
     printf "${yellowcolor}available options are: [$optionSTR]\n${normalcolor}"
     printf "${redcolor}Type \"none\" for no selection.\n${normalcolor}"

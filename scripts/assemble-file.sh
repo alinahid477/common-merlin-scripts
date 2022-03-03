@@ -9,6 +9,7 @@ source $HOME/binaries/scripts/keyvaluefile-functions.sh
 function assembleFile () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForFilesJSON='prompts-for-files.json'
+    local yellowcolor=$(tput setaf 3)
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
 
@@ -24,11 +25,12 @@ function assembleFile () {
             echo ${promptItem} | base64 --decode | jq -r ${1}
         }
         unset confirmed
-        promptName=$(echo $(_jq '.name')) # get property value of property called "name" from itemObject (aka array element object)
-        prompt=$(echo $(_jq '.prompt'))
-        hint=$(echo $(_jq '.hint'))
-        defaultoptionvalue=$(echo $(_jq '.defaultoptionvalue'))
-        defaultoptionkey=$(echo $(_jq '.defaultoptionkey'))
+        local promptName=$(echo $(_jq '.name')) # get property value of property called "name" from itemObject (aka array element object)
+        local prompt=$(echo $(_jq '.prompt'))
+        local hint=$(echo $(_jq '.hint'))
+        local defaultoptionvalue=$(echo $(_jq '.defaultoptionvalue'))
+        local defaultoptionkey=$(echo $(_jq '.defaultoptionkey'))
+        local optionsJson=$(echo $(_jq '.options'))
 
         if [[ -n $hint && $hint != null ]] 
         then
@@ -43,10 +45,14 @@ function assembleFile () {
 
         if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]] # so, -n works if variable does not exist or value is empty. the jq is outputing null hence need to check null too.
         then
-            andconditionsJson=$(echo $(_jq '.andconditions'))
-        
-            checkCondition "AND" $andconditionsJson $defaultValuesFile
-            ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+            local andconditions=$(echo $(_jq '.andconditions'))
+            local ret=1
+            if [[ -n $andconditions && $andconditions != null ]]
+            then
+                andconditions=($(echo "$andconditions" | jq -rc '.[]')) # read as array
+                checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
+                ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+            fi
 
             if [[ $ret == 1 ]]
             then
@@ -73,7 +79,8 @@ function assembleFile () {
         fi
         # when there's value for defaultoptionvalue then it will be confirmed='y' because in this case we dont need to take user input.
         # as we already have 'defaultoptionvalue' it is confirmed='y'
-        if [[ -z $confirmed ]]
+        # AND $optionsJson means need to type in value. So should not ask y/n.
+        if [[ -z $confirmed && ((-z $optionsJson || $optionsJson == null)) ]]
         then
             while true; do
                 read -p "please confirm [y/n]: " yn
@@ -90,17 +97,16 @@ function assembleFile () {
             filename=$(echo $(_jq '.filename'))
 
             local selectedOption=''
-            local optionsJson=''
-            if [[ -z $defaultoptionvalue || $defaultoptionvalue == null ]]
-            then
-                # we only need read optionJson if we want to take user input and 
+            if [[ -n $defaultoptionvalue && $defaultoptionvalue != null ]]
+            then                
+                # we only use optionJson if we want to take user input and 
                 # we will only take user input from options if there's no value for $defaultoptionvalue.
+                # since this (inside this if) means that there's $defaultoptionvalue so we will set if to empty for the next if below.
+                optionsJson=''
                 
-                optionsJson=$(echo $(_jq '.options'))
-            else
                 # if we have value for $defaultoptionvalue we will do selectedOption=$defaultoptionvalue instead.
                 selectedOption=$defaultoptionvalue
-                printf "No need for user input. Using extracted default option value: $defaultoptionvalue instead from environment variable or cluster config.\n"
+                printf "No need for user input. Using extracted default: ${yellowcolor}$defaultoptionvalue${normalcolor}.\n"
             fi
             
             if [[ -n $optionsJson && $optionsJson != null ]]

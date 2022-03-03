@@ -39,21 +39,23 @@ function findValueForKey () {
     fi
 }
 
-function checkCondition () { # returns 0 if condition is met. Otherwise returns 1.
+function checkConditionWithDefaultValueFile () { # returns 0 if condition is met. Otherwise returns 1.
 
     local conditionType=$1  # (Required) possible values are either 'AND' or 'OR'
-    local conditionsJson=$2 # (Required) comma separated json string
-    local keyValueFile=$3   # (Optional) filepath of the keyvalue file (single or multiple lines containing format 'key: value'. eg: tkgm clusterconfig file)
+    local keyValueFile=$2   # (Required, cause the next required param is array) filepath of the keyvalue file (single or multiple lines containing format 'key: value'. eg: tkgm clusterconfig file)
+    shift
+    shift
+    local conditions=("$@") # (Required) comma separated json string
+    
+    if [[ $keyValueFile == 'na' ]] # Making the keyValueFile optional. When no keyValueFile exist pass 'na'
+    then
+        keyValueFile=''
+    fi
 
-
-    if [[ -z $conditionType || -z $conditionsJson || $conditionsJson == null ]] # sincce conditionsJson is extracted from json it can be null. 
+    if [[ -z $conditionType || -z $conditions || $conditions == null || ${#conditions[@]} -lt 1 ]] # sincce conditionsJson is extracted from json it can be null. 
     then
         return 1
     fi
-
-
-    readarray -t conditions < <(echo $conditionsJson | jq -rc '.[]')
-    
 
     local istrue=''
     for condition in ${conditions[@]}; do
@@ -64,7 +66,6 @@ function checkCondition () { # returns 0 if condition is met. Otherwise returns 
         # value will be found either in environment variable OR in keyvaluefile.
         # lets extract the value first
         local foundval=$(findValueForKey $key $keyValueFile)
-       
 
         if [[ $conditionType == 'AND' ]]
         then
@@ -102,4 +103,15 @@ function checkCondition () { # returns 0 if condition is met. Otherwise returns 
     fi
 
     return 1
+}
+
+function checkCondition () {
+    local conditionType=$1
+    if [[ -z $conditionType ]]
+    then
+        return 1
+    fi
+    shift
+    local conditions=("$@")
+    checkConditionWithDefaultValueFile $conditionType 'na' ${conditions[@]} && return 0 || return 1
 }

@@ -9,13 +9,14 @@ source $HOME/binaries/scripts/assemble-file.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh
 
 generateTKCFile () {
-    local bluecolor=$(tput setaf 4)
+    local yellowcolor=$(tput setaf 3)
+    local greencolor=$(tput setaf 2)
     local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
 
     local tkgClusterName=''
     while [[ -z $tkgClusterName ]]; do
-        read -p "Cluster Name: " name
+        read -p "CLUSTER_NAME: " tkgClusterName
         if [[ -z $tkgClusterName ]]
         then
             printf "empty value is not allowed.\n"
@@ -27,15 +28,15 @@ generateTKCFile () {
     local clusterconfigfile=''
     local clusterconfigfilepath="$HOME/.config/tanzu/tkg/clusterconfigs"
     printf "\nLooking for management cluster config file in $clusterconfigfilepath/"
-    printf "\n${redcolor}note: the management cluster config file act as a default value provider for TKG cluster config.${normalcolor}\n"
+    printf "\n${greencolor}note: the management cluster config file act as a default value provider for TKG cluster config.${normalcolor}\n"
     local numberofyamlfound=$(find $clusterconfigfilepath/*.yaml -type f -printf "." | wc -c)
     if [[ $numberofyamlfound -gt 1 ]]
     then
         readarray -t yamlfiles < <(ls -1 $clusterconfigfilepath) 
         ls -1 $clusterconfigfilepath
         printf "\nFound more than 1 files. Need user input to pick one..."
-        printf "\n${redcolor}Type \"none\" to not pick any file${normalcolor}"
-        printf "\n${redcolor}note: not having a management cluster config file will prompt for a lot of input for TKG cluster config.${normalcolor}"
+        printf "\n${yellowcolor}Type \"none\" to not pick any file${normalcolor}"
+        printf "\n${greencolor}note: not having a management cluster config file will prompt for a lot of input for TKG cluster config.${normalcolor}"
         printf "\n"
         while [[ -z $clusterconfigfile ]]; do
             read -p "type the name of the file: " clusterconfigfile
@@ -57,13 +58,12 @@ generateTKCFile () {
             fi
         done
     else
-        clusterconfigfile=$(ls $clusterconfigfilepath/*.yaml)
+        clusterconfigfile=$(ls -1 $clusterconfigfilepath/*.yaml)
     fi
     
     if [[ -n $clusterconfigfile ]]
     then
-        clusterconfigfile="$clusterconfigfilepath/$clusterconfigfile"
-        printf "${bluecolor}Found management cluster config file: $clusterconfigfilepath/$clusterconfigfile${normalcolor}"
+        printf "${yellowcolor}Found management cluster config file: $clusterconfigfilepath/$clusterconfigfile${normalcolor}\n"
         local confirmation=''
         while true; do
             read -p "Confirm to use the above as default value provider [y/n]: " yn
