@@ -7,6 +7,11 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/parse_yaml.sh
 
 function tanzu_connect () {
+    local yellowcolor=$(tput setaf 3)
+    local greencolor=$(tput setaf 2)
+    local redcolor=$(tput setaf 1)
+    local normalcolor=$(tput sgr0)
+
 
     isloggedin='n'
     printf "\nChecking tanzu config...\n"
@@ -40,17 +45,18 @@ function tanzu_connect () {
         then
             if [[ -n $BASTION_HOST ]]
             then
+                printf "Bastion host detected $BASTION_HOST. Attempting to create tunnel...\n"
                 create_bastion_tunnel_auto_tkg $tanzupath || returnOrexit || return 1
             fi
             
-            printf "\nFound \n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tpath: $tanzupath\n"
+            printf "\nFound Tanzu context:\n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tpath: $tanzupath\n"
             # sleep 1
             # tanzu login --kubeconfig $tanzupath --context $tanzucontext --name $tanzuname
             isloggedin='y'
         fi
         if [[ -n $tanzuendpoint ]]
         then
-            printf "\nFound \n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tendpoint: $tanzuendpoint\nPerforming Tanzu login...\n"
+            printf "\nFound Tanzu context:\n\tcontext: $tanzucontext \n\tname: $tanzuname \n\tendpoint: $tanzuendpoint\nPerforming Tanzu login...\n"
             sleep 1
             tanzu login --endpoint $tanzuendpoint --context $tanzucontext --name $tanzuname
             isloggedin='y'
@@ -64,24 +70,24 @@ function tanzu_connect () {
         if [[ -z $AUTH_ENPOINT ]]
         then
             kubeconfigfile=$HOME/.kube-tkg/config
-            printf "\nNO AUTH_ENDPOINT given.\nLooking for kubeconfig in $kubeconfigfile...\n"
+            printf "NO AUTH_ENDPOINT given.\nLooking for kubeconfig in $kubeconfigfile...\n"
             sleep 1
             isexist=$(ls $kubeconfigfile)
             if [[ -z $isexist ]]
             then
-                printf "\nERROR: kubeconfig not found in $kubeconfigfile\nExiting...\n"
+                printf "\n${redcolor}ERROR: kubeconfig not found in $kubeconfigfile ${normalcolor}\nExiting...\n"
                 returnOrexit || return 1
             fi
             filename=$(ls -1tc $HOME/.config/tanzu/tkg/clusterconfigs/ | head -1)
             if [[ -z $filename ]]
             then
-                printf "\nERROR: Management cluster config file not found in $HOME/.config/tanzu/tkg/clusterconfigs/. Exiting...\n"
+                printf "\n${redcolor}ERROR: Management cluster config file not found in $HOME/.config/tanzu/tkg/clusterconfigs/.${normalcolor} Exiting...\n"
                 returnOrexit || return 1
             fi
             clustername=$(cat $HOME/.config/tanzu/tkg/clusterconfigs/$filename | awk -F: '$1=="CLUSTER_NAME"{print $2}' | xargs)
             if [[ -z $clustername ]]
             then
-                printf "\nERROR: CLUSTER_NAME could not be extracted. Please check file ~/.config/tanzu/tkg/clusterconfigs/$filename. Exiting...\n"
+                printf "\n${redcolor}ERROR: CLUSTER_NAME could not be extracted. Please check file ~/.config/tanzu/tkg/clusterconfigs/$filename.${normalcolor} Exiting...\n"
                 returnOrexit || return 1
             fi            
             contextname=$(parse_yaml $kubeconfigfile | grep "\@$clustername" | awk -F= '$1=="contexts_name"{print $2}' | xargs)    

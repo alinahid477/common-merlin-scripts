@@ -95,7 +95,7 @@ function create_bastion_tunnel_for_cluster_endpoints () {
 
     if [[ $CLUSTER_ENDPOINTS == *[,]* ]]
     then
-        printf "\nMultiple endpoints specified\n\n"
+        printf "Multiple endpoints specified\n"
         CLUSTER_ENDPOINTS_ARR=$(echo $CLUSTER_ENDPOINTS | tr "," "\n")
         for clusterEndpoint in $CLUSTER_ENDPOINTS_ARR
         do
@@ -108,7 +108,7 @@ function create_bastion_tunnel_for_cluster_endpoints () {
             create_bastion_tunnel "$proto$serverurl:$port" && printf "Tunnel Created\n" || printf "Failed.\n"
         done
     else
-        printf "\nSingle management cluster endpoint specified\n\n"
+        printf "Single management cluster endpoint specified\n"
         
         proto="$(echo $CLUSTER_ENDPOINTS | grep :// | sed -e's,^\(.*://\).*,\1,g')"
         serverurl="$(echo ${CLUSTER_ENDPOINTS/$proto/} | cut -d/ -f1)"

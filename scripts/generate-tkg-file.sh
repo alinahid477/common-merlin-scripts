@@ -63,7 +63,7 @@ generateTKCFile () {
     
     if [[ -n $clusterconfigfile ]]
     then
-        printf "${yellowcolor}Found management cluster config file: $clusterconfigfilepath/$clusterconfigfile${normalcolor}\n"
+        printf "${yellowcolor}Found management cluster config file: $clusterconfigfile${normalcolor}\n"
         local confirmation=''
         while true; do
             read -p "Confirm to use the above as default value provider [y/n]: " yn

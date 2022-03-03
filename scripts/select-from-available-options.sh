@@ -34,6 +34,7 @@ function getOptionsInString () {
 
 function selectFromAvailableOptionsWithDefault () {
     local yellowcolor=$(tput setaf 3)
+    local greencolor=$(tput setaf 2)
     local redcolor=$(tput setaf 1)
     local normalcolor=$(tput sgr0)
     
@@ -85,7 +86,7 @@ function selectFromAvailableOptionsWithDefault () {
             done
         fi
     done
-    printf "Selected option: $selectedOption\n"
+    printf "${greencolot}Selected option: $selectedOption${normalcolor}\n"
     return $selectedOptionIndex
 }
 
