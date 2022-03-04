@@ -52,7 +52,7 @@ function prechecks () {
     fi
     printf "FOUND\n"
 
-    printf "\nChecking Docker on $BASTION_USERNAME@$BASTION_HOST..."
+    printf "Checking Docker on $BASTION_USERNAME@$BASTION_HOST..."
     isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'docker --version')
     if [[ -z $isexist ]]
     then
@@ -60,10 +60,10 @@ function prechecks () {
         printf "\nPlease install docker on host $BASTION_HOST to continue...${normalcolor}\n"
         returnOrexit || return 1
     else
-        printf "FOUND.\nDetails: $isexist\n\n"
+        printf "FOUND.\nDetails: $isexist\n"
     fi
 
-    printf "\nChecking python3 on $BASTION_USERNAME@$BASTION_HOST...."
+    printf "Checking python3 on $BASTION_USERNAME@$BASTION_HOST...."
     isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'python3 --version')
     if [[ -z $isexist ]]
     then
@@ -75,10 +75,10 @@ function prechecks () {
             printf "\nPlease install Python on host $BASTION_HOST to continue...${normalcolor}"
             returnOrexit || return 1
         else
-            printf "FOUND.\nDetails: $isexist\n\n"
+            printf "FOUND.\nDetails: $isexist\n"
         fi
     else
-        printf "FOUND\nDetails: $isexist\n\n"
+        printf "FOUND\nDetails: $isexist\n"
     fi
 
     return 0
@@ -116,8 +116,8 @@ function prepareRemote () {
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/binaries/' > /tmp/bastionhostbinaries.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/' > /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.ssh/' >> /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
-    ssh -i .ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.config/tanzu/' >> /tmp/bastionhosthomefiles.txt
-    ssh -i .ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.kube-tkg/' >> /tmp/bastionhosthomefiles.txt
+    ssh -i .ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.config/tanzu/' >> /tmp/bastionhosthomefiles.txt || printf "....ingnoring error as file already exists"
+    ssh -i .ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.kube-tkg/' >> /tmp/bastionhosthomefiles.txt || printf "....ingnoring error as file already exists"
 
 
 
@@ -168,8 +168,8 @@ function prepareRemote () {
         fi
         
         printf "\nUploading .kube-tkg/config and .kube/config\n"
-        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube-tkg/config #|| returnOrexit || return 1
-        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube/config #|| returnOrexit || return 1
+        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube-tkg/config || printf "....ignoring, file already exists\n" && printf "....COMPLETED\n"
+        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube/config || printf "....ignoring, file already exists\n" && printf "....COMPLETED\n"
     fi
 
 
@@ -253,7 +253,7 @@ function startTKGCreate () {
     isexist=$(docker ps --filter "name=$remoteDockerName" --format "{{.Names}}")
     if [[ -z $isexist ]]
     then
-        unset DOCKER_CONTEXT
+        # unset DOCKER_CONTEXT
 
         printf "\n${yellowcolor}No docker name $remoteDockerName running on bastion host...starting docker $remoteDockerName....${normalcolor}\n"
         ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'chmod +x '$remoteDIR'/bastionhostrun.sh && '$remoteDIR'/bastionhostrun.sh '$DOCKERHUB_USERNAME $DOCKERHUB_PASSWORD $remoteDockerName
@@ -267,34 +267,43 @@ function startTKGCreate () {
         done
         if [[ -z $isexist ]]
         then
-            printf "\nERROR: Remote container $remoteDockerName not running."
-            printf "\nUnable to proceed further. Please check merling directory in your bastion host.\n"
+            printf "\n${redcolor}ERROR: Remote container $remoteDockerName not running."
+            printf "\nUnable to proceed further. Please check merling directory in your bastion host.${normalcolor}\n"
             returnOrexit || return 1
         fi
-
     else
         printf "\n${yellowcolor}Docker $remoteDockerName already running. Going to reuse....${normalcolor}\n"
     fi
 
-    printf "\nSwitching to remote context again $localDockerContextName..."
-    export DOCKER_CONTEXT=$localDockerContextName
-    printf "COMPLETED\n"
+    # printf "\nSwitching to remote context again $localDockerContextName..."
+    # export DOCKER_CONTEXT=$localDockerContextName
+    # printf "COMPLETED\n"
 
-    while true; do
-        read -p "Did the above command ran successfully? Confirm to continue? [yn] " yn
-        case $yn in
-            [Yy]* ) printf "\nyou confirmed yes\n"; break;;
-            [Nn]* ) printf "\nyou said no\n"; returnOrexit || return 1;;
-            * ) printf "${redcolor}Please answer y when you are ready.${normalcolor}\n";;
-        esac
-    done
+    # while true; do
+    #     read -p "Did the above command ran successfully? Confirm to continue? [yn] " yn
+    #     case $yn in
+    #         [Yy]* ) printf "\nyou confirmed yes\n"; break;;
+    #         [Nn]* ) printf "\nyou said no\n"; returnOrexit || return 1;;
+    #         * ) printf "${redcolor}Please answer y when you are ready.${normalcolor}\n";;
+    #     esac
+    # done
 
 
     printf "\nPerforming ssh-add..."
     docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add ~/.ssh/id_rsa" || returnOrexit || return 1
     printf "COMPLETED\n"
 
-    printf "\nStarting tanzu cluster create in remote context..."
+    printf "\nchecking for cluster plugin....\n"
+    local x=$(docker exec -it $remoteDockerName bash -c "tanzu cluster --help")
+    if [[ -z $x || $x == *@("unknown command")* ]]
+    then
+        printf "\n${yellowcoloe}Cluster plugin not found....installing....${normalcolor}\n"
+        docker exec -it $remoteDockerName bash -c "tanzu plugin install cluster"
+        printf "\nDONE.\n"
+    fi
+
+
+    printf "\n${yellowcolor}Starting tanzu cluster create in remote context...${normalcolor}"
     docker exec -it $remoteDockerName bash -c "cd ~ ; tanzu cluster create  --file $configfile -v 9"
     printf "COMPLETED\n"
 

@@ -115,7 +115,7 @@ function tanzu_connect_and_confirm () {
 
     printf "\nchecking for cluster plugin installed....\n"
     local x=$(tanzu cluster --help)
-    if [[ $x == *@("unknown command")* ]]
+    if [[ -z $x || $x == *@("unknown command")* ]]
     then
         printf "\nCluster plugin not found....installing....\n"
         tanzu plugin install cluster

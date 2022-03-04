@@ -164,6 +164,11 @@ function assembleFile () {
             filename=$(echo $(_jq '.filename'))
             if [[ -n $filename && $filename != null ]]
             then
+                if [[ $filename =~ [\#]+ ]]
+                then
+                    local INFRASTRUCTURE_PROVIDER=$(findValueForKey 'INFRASTRUCTURE_PROVIDER' $defaultValuesFile)
+                    filename=$(echo $filename | sed 's|\#|'$INFRASTRUCTURE_PROVIDER'|g')
+                fi
                 if [[ -n $selectedOption ]]
                 then
                     # when multiple options exists (eg: vsphere or aws or azure)
