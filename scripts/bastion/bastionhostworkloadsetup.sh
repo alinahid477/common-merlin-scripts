@@ -89,7 +89,7 @@ function prechecks () {
 
 function prepareRemote () {
     local configfile=$1
-    if [[ -f $configfile ]]
+    if [[ ! -f $configfile ]]
     then
         printf "\n${redcolor}ERROR: config file missing...${normalcolor}\n"
         returnOrexit || return 1
@@ -161,16 +161,15 @@ function prepareRemote () {
     isexist=$(cat /tmp/bastionhosthomefiles.txt | grep -w "config$")
     if [[ -z $isexist ]]
     then
-        isexist=$(ls )
-        if [[ -f $HOME/.kube-tkg/config.remote ]]
+        if [[ ! -f $HOME/.kube-tkg/config.remote ]]
         then
             printf "\nAdjusting $HOME/.kube-tkg/config for remote..."
             modifyConfigFileForTunnel $HOME/.kube-tkg/config $HOME/.kube-tkg/config.remote $MANAGEMENT_CLUSTER_ENDPOINTS || returnOrexit || return 1
         fi
         
         printf "\nUploading .kube-tkg/config and .kube/config\n"
-        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube-tkg/config || returnOrexit || return 1
-        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube/config || returnOrexit || return 1
+        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube-tkg/config #|| returnOrexit || return 1
+        scp $HOME/.kube-tkg/config.remote $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/.kube/config #|| returnOrexit || return 1
     fi
 
 
@@ -222,7 +221,7 @@ function prepareRemote () {
 
 function startTKGCreate () {
     local configfile=$1
-    if [[ -f $configfile ]]
+    if [[ ! -f $configfile ]]
     then
         printf "\n${redcolor}ERROR: config file missing...${normalcolor}\n"
         returnOrexit || return 1
@@ -334,7 +333,7 @@ function downloadTKGFiles () {
 
     local configfile=$1
 
-    if [[ -z $configfile ]]
+    if [[ -z $configfile || ! -f $configfile ]]
     then
         printf "\n${redcolor}ERROR: configfile not supplied...${normalcolor}\n"
         returnOrexit || return 1
@@ -362,7 +361,7 @@ function downloadTKGFiles () {
 function cleanBastion () {
 
     local configfile=$1
-    if [[ -f $configfile ]]
+    if [[ ! -f $configfile ]]
     then
         printf "\n${redcolor}ERROR: config file missing...${normalcolor}\n"
         returnOrexit || return 1
