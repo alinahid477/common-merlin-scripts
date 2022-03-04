@@ -1,0 +1,5 @@
+bastionhostinit.sh
+bastionhostmanagementsetup.sh
+bastionhostrun.sh
+bastionhostworkloadsetup.sh
+Dockerfile

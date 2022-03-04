@@ -125,6 +125,9 @@ function create_bastion_tunnel_for_cluster_endpoints () {
 # params (required): path/to/kubeconfig
 # eg: ~/.kube-tkg/config
 function create_bastion_tunnel_from_kubeconfig () {
+    
+    local kubeconfigfile=''
+    
     # $1=endpoint url or kubeconfig file
     if [[ -n $1 ]]
     then
@@ -143,12 +146,12 @@ function create_bastion_tunnel_from_kubeconfig () {
     # this will hold the name of the environment variable to write on .env file if needed.
     # in the case of tkgm/tce it will have a environment variable or to be writted.
     # but there may also be cases where it is simply about creating tunnel and env variable doesnt need to be create
-    # eg: $2 is MANAGEMENT_CLUSTER_ENDPOINTS for tkgm or tce
+    # eg: $2 is MANAGEMENT_CLUSTER_ENDPOINTS for tkgm or tce and for workload TKC TKG_CLUSTER_ENDPOINTS
     local clusterEndpointsVariableName=$2
-    local managementClusterEndpoints=''
+    local clusterEndpoints=''
     if [[ -n $clusterEndpointsVariableName ]]
     then
-        managementClusterEndpoints=${!clusterEndpointsVariableName}
+        clusterEndpoints=${!clusterEndpointsVariableName}
     fi
 
     
@@ -164,11 +167,11 @@ function create_bastion_tunnel_from_kubeconfig () {
         port=$(echo $serveraddress | awk -F/ '{print $3}' | awk -F: '{print $2}')
         if [[ $serverurl != 'kubernetes' ]]
         then
-            if [[ -z $managementClusterEndpoints ]]
+            if [[ -z $clusterEndpoints ]]
             then
-                managementClusterEndpoints=$(echo "$serverurl:$port")
+                clusterEndpoints=$(echo "$serverurl:$port")
             else
-                managementClusterEndpoints=$(echo "$managementClusterEndpoints,$serverurl:$port")
+                clusterEndpoints=$(echo "$clusterEndpoints,$serverurl:$port")
             fi
             printf "Tunnel for host: $serverurl, port: $port..."
             status=''
@@ -179,8 +182,8 @@ function create_bastion_tunnel_from_kubeconfig () {
             then
                 printf "\nAdjusting kubeconfig for tunneling..."
                 sed -i '0,/'$serverurl'/s//kubernetes/' $kubeconfigfile
-                isexist=$(ls ~/.kube/config)
-                if [[ -n $isexist ]]
+                local x=$(echo $kubeconfigfile | xargs) 
+                if [[ -f $HOME/.kube/config && "$kubeconfigfile" != "$HOME/.kube/config" ]]
                 then
                     sed -i '0,/'$serverurl'/s//kubernetes/' ~/.kube/config
                 fi
@@ -192,15 +195,65 @@ function create_bastion_tunnel_from_kubeconfig () {
     done
        
 
-    if [[ -n $managementClusterEndpoints && -n $clusterEndpointsVariableName ]]
+    if [[ -n $clusterEndpoints && -n $clusterEndpointsVariableName ]]
     then
         # only wtite in env file if the env variable name is supplied.
         # otherwise assume only tunnel create.
         printf "Writting environment variable $clusterEndpointsVariableName in .env file..."
         sed -i '/'$clusterEndpointsVariableName'/d' $HOME/.env
-        printf "\n$clusterEndpointsVariableName=$managementClusterEndpoints" >> $HOME/.env
+        printf "\n$clusterEndpointsVariableName=$clusterEndpoints" >> $HOME/.env
         printf "DONE.\n"
     fi
+}
+
+
+function modifyConfigFileForTunnel () {
+    local sourceFile=$1
+    local destinationFile=$2
+    local CLUSTER_ENDPOINTS=$3
+
+    if [[ -z $sourceFile || -z $destinationFile ]]
+    then
+        printf "\n${redcolor}ERROR: Source or destination filename not supplied.${normalcolor}\n"
+        returnOrexit || return 1
+    fi
+    
+    if [[ -z $CLUSTER_ENDPOINTS ]]
+    then
+        printf "\n${redcolor}ERROR: endpoints missing.${normalcolor}\n"
+        returnOrexit || return 1
+    fi
+
+    cp $sourceFile $destinationFile
+
+    if [[ $CLUSTER_ENDPOINTS == *[,]* ]]
+    then
+        printf "Multiple endpoints specified\n"
+        CLUSTER_ENDPOINTS_ARR=$(echo $CLUSTER_ENDPOINTS | tr "," "\n")
+        for clusterEndpoint in $CLUSTER_ENDPOINTS_ARR
+        do
+            # This is flawd logic. I couldn't think of a way now. Need to look into it later.
+            # For now this should not happen as management cluster is going to be sigle per container.
+
+            proto="$(echo $clusterEndpoint | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+            serverurl="$(echo ${clusterEndpoint/$proto/} | cut -d/ -f1)"
+            port="$(echo $serverurl | awk -F: '{print $2}')"
+            serverurl="$(echo $serverurl | awk -F: '{print $1}')"
+            
+            printf "Modifying file for $proto$serverurl:$port..."
+            sed -i '0,/kubernetes/s//'$serverurl'/' $destinationFile && printf "OK\n" || printf "Failed.\n"
+        done
+    else
+        printf "Single management cluster endpoint specified\n"
+        
+        proto="$(echo $CLUSTER_ENDPOINTS | grep :// | sed -e's,^\(.*://\).*,\1,g')"
+        serverurl="$(echo ${CLUSTER_ENDPOINTS/$proto/} | cut -d/ -f1)"
+        port="$(echo $serverurl | awk -F: '{print $2}')"
+        serverurl="$(echo $serverurl | awk -F: '{print $1}')"
+        
+        printf "Modifying file for $proto$serverurl:$port..."
+        sed -i '0,/kubernetes/s//'$serverurl'/' $destinationFile && printf "OK\n" || printf "Failed.\n"
+    fi    
 }
 
 
