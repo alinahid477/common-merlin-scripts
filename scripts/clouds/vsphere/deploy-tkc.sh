@@ -11,7 +11,6 @@ function deployTKC() {
         returnOrexit || return 1
     fi
 
-    local configfile="$HOME/workload-clusters/tkg-$CLUSTER_NAME.yaml"
     printf "Executing tanzu clauster create using file ${yellowcolor}$configfile.${normalcolor}....\n"
     if [[ -n $BASTION_HOST ]]
     then
