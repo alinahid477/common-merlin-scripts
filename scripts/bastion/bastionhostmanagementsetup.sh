@@ -59,6 +59,84 @@ function prechecks () {
 }
 
 
+function clearRemoteMerlinTKGDocker () {
+
+    local requireRemoteContext=$1
+
+    if [[ -z $requireRemoteContext ]]
+    then
+        requireRemoteContext=true
+    fi
+
+    if [[ $requireRemoteContext == true ]]
+    then
+        printf "\nChecking context...\n"
+        docker ps
+        isexist=$(docker context ls | grep "^$localDockerContextName")
+        if [[ -z $isexist ]]
+        then
+            printf "\nCreating remote context $localDockerContextName..."
+            docker context create $localDockerContextName  --docker "host=ssh://$BASTION_USERNAME@$BASTION_HOST" || returnOrexit || return 1
+            printf "COMPLETED\n"
+        fi
+        
+        printf "\nUsing context for remote $localDockerContextName..."
+        export DOCKER_CONTEXT=$localDockerContextName
+        printf "COMPLETED\n"
+
+        printf "\nWaiting 3s before checking remote container...\n"
+        sleep 3
+    fi
+
+    printf "\nChecking remote context for running container $remoteDockerName...\n"
+    docker ps
+    local isexist=$(docker ps --filter "name=$remoteDockerName" --format "{{.Names}}")
+    local error='n'
+    if [[ -n $isexist ]]
+    then
+        error='n'
+        printf "\n${yellowcolor}Docker $remoteDockerName already running. Cleaning it....${normalcolor}\n"
+        docker container stop $remoteDockerName || error='y'
+        count=1
+        while [[ $error == 'y' && $count -lt 5 ]]; do
+            printf "\nfailed to stop container $remoteDockerName. retrying in 5s...#$count"
+            sleep 5
+            error='n'
+            docker container stop $remoteDockerName || error='y'
+            ((count=count+1))
+        done
+    fi
+    if [[ $error == 'n' ]]
+    then
+        isexist=$(docker images | grep -w "^$remoteDockerName")
+        if [[ -n $isexist ]]
+        then
+            error='n'
+            printf "\n${yellowcolor}Docker image $remoteDockerName already exists. Cleaning it....${normalcolor}\n"
+            docker rmi $remoteDockerName:latest || error='y'
+            count=1
+            while [[ $error == 'y' && $count -lt 5 ]]; do
+                printf "\nfailed to delete image $remoteDockerName. retrying in 5s...#$count"
+                sleep 5
+                error='n'
+                docker rmi $remoteDockerName:latest || error='y'
+                ((count=count+1))
+            done
+        fi
+    fi
+    if [[ $requireRemoteContext == true ]]
+    then
+        unset DOCKER_CONTEXT
+    fi
+    if [[ $error == 'y' ]]
+    then
+        printf "\n${redcolor}Cleaning $remoteDockerName failed. Please run these 2 commands manually in the bastion host and try this wizard again..\ndocker container stop merlin-tkg-remote\ndocker rmi merlin-tkg-remote:latest${normalcolor}\n"
+        returnOrexit || return 1
+    fi
+}
+
+
+
 function prepareRemote () {
     printf "\n\n\n********Preparing $BASTION_USERNAME@$BASTION_HOST for merlin*********\n\n\n"
 
@@ -146,6 +224,11 @@ function prepareRemote () {
         scp $MANAGEMENT_CLUSTER_CONFIG_FILE $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/ || returnOrexit || return 1
     fi
 
+
+    clearRemoteMerlinTKGDocker || returnOrexit || return 1
+
+    
+
     return 0
 }
 
@@ -155,7 +238,7 @@ function startTKGCreate () {
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'chmod +x '$remoteDIR'/bastionhostrun.sh && '$remoteDIR'/bastionhostrun.sh '$DOCKERHUB_USERNAME $DOCKERHUB_PASSWORD $remoteDockerName
 
 
-    isexist=$(docker context ls | grep "^$localDockerContextName")
+    local isexist=$(docker context ls | grep "^$localDockerContextName")
     if [[ -z $isexist ]]
     then
         printf "\nCreating remote context $localDockerContextName..."
@@ -482,33 +565,7 @@ function cleanBastion () {
         returnOrexit || return 1
     fi
 
-    printf "\nCleanup bastion's docker..."
-    sleep 2
-    containerid=$(docker ps -aqf "name=^$remoteDockerName$" || printf "")
-    count=1
-    while [[ -z $containerid && $count -lt 5 ]]; do
-        printf "\nfailed to find container id. retrying in 5s...#$count"
-        sleep 5
-        containerid=$(docker ps -aqf "name=^$remoteDockerName$" || printf "")
-        ((count=count+1))
-    done
-    printf "\nDocker container found $remoteDockerName=$containerid. Stopping container..."
-    error='n'
-    docker container stop $containerid || error='y' 
-    count=1
-    while [[ $error == 'y' && $count -lt 5 ]]; do
-        printf "\nfailed to stop container $containerid. retrying in 5s...#$count"
-        sleep 5
-        error='n'
-        docker container stop $containerid || error='y' 
-        ((count=count+1))
-    done
-    printf "\nDocker container $remoteDockerName stoppped."
-
-    printf "\nRemoving container $containerid...."
-    docker container rm $containerid
-    sleep 2
-    docker container rm $(docker container ls --all -q)
+    clearRemoteMerlinTKGDocker false
     
     printf "\nFreeing up space..."
     sleep 2
