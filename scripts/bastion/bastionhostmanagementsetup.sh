@@ -300,6 +300,18 @@ function startTKGCreate () {
         returnOrexit || return 1
     fi
 
+    isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR/COMPLTETED_TANZU_INSTALLATION)
+    if [[ -z $isexist ]]
+    then
+        count=1
+        while [[ -z $isexist && $count -lt 20 ]]; do
+            printf "\nwaiting for tanzu installation to finish... Retrying in 5s"
+            sleep 5
+            isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR/COMPLTETED_TANZU_INSTALLATION)
+            ((count=count+1))
+        done
+    fi
+    
 
     printf "\nPerforming ssh-add..."
     docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add ~/.ssh/id_rsa" || returnOrexit || return 1
