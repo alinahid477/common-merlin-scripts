@@ -7,7 +7,7 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/parse_yaml.sh
 
 function tanzu_connect () {
-    isloggedin='n'
+    local isloggedin='n'
     printf "\nChecking tanzu config...\n"
     sleep 1
     local tanzuname=''
