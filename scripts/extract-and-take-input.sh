@@ -175,6 +175,8 @@ extractVariableAndTakeInput () {
             # when does not exist prompt user to input value
             isinputneeded='y'
             
+            local optionsJson=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .options' $templateFilesDIR/$promptsForVariablesJSON)
+
             # when defaultvalue exists prompt user the default value and give user option to 'press enter' to accept it.
             # then prompt user for input against the variable.
             # if no defaultvalue exist then regardless of optional=true or false prompt user for input against the variable.
@@ -188,9 +190,7 @@ extractVariableAndTakeInput () {
                 fi
                 isEmptyAllowed=true
             fi
-
-
-            optionsJson=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .options' $templateFilesDIR/$promptsForVariablesJSON)
+            
             if [[ -n $optionsJson && $optionsJson != null ]]
             then
                 # this means user input need to come from a list

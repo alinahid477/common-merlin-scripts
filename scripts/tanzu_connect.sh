@@ -10,7 +10,7 @@ function tanzu_connect () {
     isloggedin='n'
     printf "\nChecking tanzu config...\n"
     sleep 1
-    unset tanzuname
+    local tanzuname=''
     readarray -t tanzunames < <(tanzu config server list -o json | jq -r '.[].name')
     if [[ ${#tanzunames[@]} -gt 1 ]]
     then
@@ -27,9 +27,10 @@ function tanzu_connect () {
         fi
     else    
         # only 1 context. Most likely the most usual.
-        tanzuname="${contextnames[0]}"
+        tanzuname="${tanzunames[0]}"
+        printf "\n${yellowcolor}Found single context: $tanzuname...${normalcolor}\n"
     fi
-    
+
     if [[ -n $tanzuname ]]
     then
         tanzucontext=$(tanzu config server list -o json | jq -r '.[] | select(.name=="'$tanzuname'") | .context')
