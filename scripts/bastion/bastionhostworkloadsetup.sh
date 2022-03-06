@@ -4,6 +4,7 @@ export $(cat /root/.env | xargs)
 remoteDIR="~/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"
 localBastionDIR=$HOME/binaries/scripts/bastion
+localScriptsDIR=$HOME/binaries/scripts
 localDockerContextName="merlin-bastion-docker-tkg"
 clusterEndpointsVariableName='TKG_CLUSTER_ENDPOINTS'
 
@@ -101,7 +102,7 @@ function prepareRemote () {
     if [[ -z $isexist ]]
     then
         printf "\nCreating structual directories 'merlin' in $BASTION_USERNAME@$BASTION_HOST home dir"
-        ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/binaries' || returnOrexit || return 1
+        ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/binaries/scripts' || returnOrexit || return 1
         ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/.ssh' || returnOrexit || return 1
     fi
     isexist=$(ssh -i ~/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR'/workload-clusters')
@@ -114,6 +115,7 @@ function prepareRemote () {
 
     printf "\nGetting remote files list from $BASTION_USERNAME@$BASTION_HOST\n"
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/binaries/' > /tmp/bastionhostbinaries.txt || returnOrexit || return 1
+    ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/binaries/scripts/' >> /tmp/bastionhostbinaries.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/' > /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.ssh/' >> /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
     ssh -i .ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.config/tanzu/' >> /tmp/bastionhosthomefiles.txt || printf "....ingnoring error as file already exists"
@@ -180,6 +182,25 @@ function prepareRemote () {
         printf "\nUploading bastionhostinit.sh\n"
         scp $localBastionDIR/bastionhostinit.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/ || returnOrexit || return 1
     fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "install-tanzu-cli.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading install-tanzu-cli.sh\n"
+        scp $localScriptsDIR/install-tanzu-cli.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "returnOrexit.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading returnOrexit.sh\n"
+        scp $localScriptsDIR/returnOrexit.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "color-file.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading color-file.sh\n"
+        scp $localScriptsDIR/color-file.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+
 
     isexist=$(cat /tmp/bastionhosthomefiles.txt | grep -w "bastionhostrun.sh$")
     if [[ -z $isexist ]]

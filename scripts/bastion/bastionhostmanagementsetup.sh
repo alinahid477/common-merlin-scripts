@@ -4,7 +4,89 @@ export $(cat /root/.env | xargs)
 remoteDIR="~/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"
 localBastionDIR=$HOME/binaries/scripts/bastion
+localScriptsDIR=$HOME/binaries/scripts
 localDockerContextName="merlin-bastion-docker-tkg"
+
+
+function clearRemoteMerlinTKGDocker () {
+
+    local requireRemoteContext=$1
+
+    if [[ -z $requireRemoteContext ]]
+    then
+        requireRemoteContext=true
+    fi
+
+    if [[ $requireRemoteContext == true ]]
+    then
+        printf "\nChecking context...\n"
+        docker ps
+        isexist=$(docker context ls | grep "^$localDockerContextName")
+        if [[ -z $isexist ]]
+        then
+            printf "\nCreating remote context $localDockerContextName..."
+            docker context create $localDockerContextName  --docker "host=ssh://$BASTION_USERNAME@$BASTION_HOST" || returnOrexit || return 1
+            printf "COMPLETED\n"
+        fi
+        
+        printf "\nUsing context for remote $localDockerContextName..."
+        export DOCKER_CONTEXT=$localDockerContextName
+        printf "COMPLETED\n"
+
+        printf "\nWaiting 3s before checking remote container...\n"
+        sleep 3
+    fi
+
+    printf "\nChecking remote context for running container $remoteDockerName...\n"
+    docker ps
+    local isexist=$(docker ps --filter "name=$remoteDockerName" --format "{{.Names}}")
+    local error='n'
+    if [[ -n $isexist ]]
+    then
+        error='n'
+        printf "\n${yellowcolor}Docker $remoteDockerName already running. Cleaning it....${normalcolor}\n"
+        docker container stop $remoteDockerName || error='y'
+        count=1
+        while [[ $error == 'y' && $count -lt 5 ]]; do
+            printf "\nfailed to stop container $remoteDockerName. retrying in 5s...#$count"
+            sleep 5
+            error='n'
+            docker container stop $remoteDockerName || error='y'
+            ((count=count+1))
+        done
+    else
+        printf "\n${yellowcolor}Docker $remoteDockerName NOT running. No need to clean.${normalcolor}\n"
+    fi
+    if [[ $error == 'n' ]]
+    then
+        isexist=$(docker images | grep -w "^$remoteDockerName")
+        if [[ -n $isexist ]]
+        then
+            printf "\n${yellowcolor}Docker image $remoteDockerName already exists. Cleaning it....${normalcolor}\n"
+            docker rmi $remoteDockerName:latest || error='y'
+            count=1
+            while [[ $error == 'y' && $count -lt 5 ]]; do
+                printf "\nfailed to delete image $remoteDockerName. retrying in 5s...#$count"
+                sleep 5
+                error='n'
+                docker rmi $remoteDockerName:latest || error='y'
+                ((count=count+1))
+            done
+        else
+            printf "\n${yellowcolor}Docker image $remoteDockerName DOES NOT exist. No need to clean.${normalcolor}\n"
+        fi
+    fi
+    if [[ $requireRemoteContext == true ]]
+    then
+        unset DOCKER_CONTEXT
+    fi
+    if [[ $error == 'y' ]]
+    then
+        printf "\n${redcolor}Cleaning $remoteDockerName failed. Please run these 2 commands manually in the bastion host and try this wizard again..\ndocker container stop merlin-tkg-remote\ndocker rmi merlin-tkg-remote:latest${normalcolor}\n"
+        returnOrexit || return 1
+    fi
+}
+
 
 function prechecks () {
     printf "\n\n\n*********performing prerequisites checks************\n\n\n"
@@ -58,85 +140,6 @@ function prechecks () {
     return 0
 }
 
-
-function clearRemoteMerlinTKGDocker () {
-
-    local requireRemoteContext=$1
-
-    if [[ -z $requireRemoteContext ]]
-    then
-        requireRemoteContext=true
-    fi
-
-    if [[ $requireRemoteContext == true ]]
-    then
-        printf "\nChecking context...\n"
-        docker ps
-        isexist=$(docker context ls | grep "^$localDockerContextName")
-        if [[ -z $isexist ]]
-        then
-            printf "\nCreating remote context $localDockerContextName..."
-            docker context create $localDockerContextName  --docker "host=ssh://$BASTION_USERNAME@$BASTION_HOST" || returnOrexit || return 1
-            printf "COMPLETED\n"
-        fi
-        
-        printf "\nUsing context for remote $localDockerContextName..."
-        export DOCKER_CONTEXT=$localDockerContextName
-        printf "COMPLETED\n"
-
-        printf "\nWaiting 3s before checking remote container...\n"
-        sleep 3
-    fi
-
-    printf "\nChecking remote context for running container $remoteDockerName...\n"
-    docker ps
-    local isexist=$(docker ps --filter "name=$remoteDockerName" --format "{{.Names}}")
-    local error='n'
-    if [[ -n $isexist ]]
-    then
-        error='n'
-        printf "\n${yellowcolor}Docker $remoteDockerName already running. Cleaning it....${normalcolor}\n"
-        docker container stop $remoteDockerName || error='y'
-        count=1
-        while [[ $error == 'y' && $count -lt 5 ]]; do
-            printf "\nfailed to stop container $remoteDockerName. retrying in 5s...#$count"
-            sleep 5
-            error='n'
-            docker container stop $remoteDockerName || error='y'
-            ((count=count+1))
-        done
-    fi
-    if [[ $error == 'n' ]]
-    then
-        isexist=$(docker images | grep -w "^$remoteDockerName")
-        if [[ -n $isexist ]]
-        then
-            error='n'
-            printf "\n${yellowcolor}Docker image $remoteDockerName already exists. Cleaning it....${normalcolor}\n"
-            docker rmi $remoteDockerName:latest || error='y'
-            count=1
-            while [[ $error == 'y' && $count -lt 5 ]]; do
-                printf "\nfailed to delete image $remoteDockerName. retrying in 5s...#$count"
-                sleep 5
-                error='n'
-                docker rmi $remoteDockerName:latest || error='y'
-                ((count=count+1))
-            done
-        fi
-    fi
-    if [[ $requireRemoteContext == true ]]
-    then
-        unset DOCKER_CONTEXT
-    fi
-    if [[ $error == 'y' ]]
-    then
-        printf "\n${redcolor}Cleaning $remoteDockerName failed. Please run these 2 commands manually in the bastion host and try this wizard again..\ndocker container stop merlin-tkg-remote\ndocker rmi merlin-tkg-remote:latest${normalcolor}\n"
-        returnOrexit || return 1
-    fi
-}
-
-
-
 function prepareRemote () {
     printf "\n\n\n********Preparing $BASTION_USERNAME@$BASTION_HOST for merlin*********\n\n\n"
 
@@ -144,7 +147,7 @@ function prepareRemote () {
     if [[ -z $isexist ]]
     then
         printf "\nCreating directory 'merlin' in $BASTION_USERNAME@$BASTION_HOST home dir"
-        ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/binaries' || returnOrexit || return 1
+        ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/binaries/scripts' || returnOrexit || return 1
         ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/.ssh' || returnOrexit || return 1
     fi
     
@@ -152,6 +155,7 @@ function prepareRemote () {
 
     printf "\nGetting remote files list from $BASTION_USERNAME@$BASTION_HOST\n"
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/binaries/' > /tmp/bastionhostbinaries.txt || returnOrexit || return 1
+    ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/binaries/scripts/' >> /tmp/bastionhostbinaries.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/' > /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls '$remoteDIR'/.ssh/' >> /tmp/bastionhosthomefiles.txt || returnOrexit || return 1
 
@@ -188,6 +192,25 @@ function prepareRemote () {
         printf "\nUploading bastionhostinit.sh\n"
         scp $localBastionDIR/bastionhostinit.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/ || returnOrexit || return 1
     fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "install-tanzu-cli.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading install-tanzu-cli.sh\n"
+        scp $localScriptsDIR/install-tanzu-cli.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "returnOrexit.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading returnOrexit.sh\n"
+        scp $localScriptsDIR/returnOrexit.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+    isexist=$(cat /tmp/bastionhostbinaries.txt | grep -w "color-file.sh$")
+    if [[ -z $isexist ]]
+    then
+        printf "\nUploading color-file.sh\n"
+        scp $localScriptsDIR/color-file.sh $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/binaries/scripts/ || returnOrexit || return 1
+    fi
+
 
     isexist=$(cat /tmp/bastionhosthomefiles.txt | grep -w "bastionhostrun.sh$")
     if [[ -z $isexist ]]
