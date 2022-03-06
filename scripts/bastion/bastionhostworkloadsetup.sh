@@ -503,7 +503,7 @@ function auto_tkgdeploy () {
                 ret=$?
                 if [[ $ret == 0 ]]
                 then
-                    cleanBastion
+                    cleanBastion $tkgconfigfile
                 fi        
             fi            
         fi    
