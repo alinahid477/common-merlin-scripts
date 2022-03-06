@@ -10,7 +10,7 @@ function prechecks () {
     printf "\n\n\n*********performing prerequisites checks************\n\n\n"
 
     printf "checking presence of $HOME/.ssh/id_rsa...."
-    if [[ -f $HOME/.ssh/id_rsa ]]
+    if [[ ! -f $HOME/.ssh/id_rsa ]]
     then
         printf "\nERROR: Failed. id_rsa file must exist in .ssh directory..."
         printf "\nPlease ensure to place id_rsa file in .ssh directory and the id_rsa.pub in .ssh of $BASTION_USERNAME@$BASTION_HOST"
