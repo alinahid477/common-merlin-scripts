@@ -143,8 +143,11 @@ function prechecks () {
 function prepareRemote () {
     printf "\n\n\n********Preparing $BASTION_USERNAME@$BASTION_HOST for merlin*********\n\n\n"
 
-    isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR)
-    if [[ -z $isexist ]]
+    local isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR)
+    local isexist2=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR/binaries)
+    local isexist3=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR/binaries/scripts)
+    local isexist4=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR/.ssh)
+    if [[ -z $isexist || -z $isexist2 || -z $isexist3 || -z $isexist4 ]]
     then
         printf "\nCreating directory 'merlin' in $BASTION_USERNAME@$BASTION_HOST home dir"
         ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/binaries/scripts' || returnOrexit || return 1
