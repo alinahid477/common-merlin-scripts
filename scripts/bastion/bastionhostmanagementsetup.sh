@@ -3,7 +3,7 @@ export $(cat /root/.env | xargs)
 
 remoteDIR="~/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"
-localBastionDIR=$HOME/binaries/bastion
+localBastionDIR=$HOME/binaries/scripts/bastion
 localDockerContextName="merlin-bastion-docker-tkg"
 
 function prechecks () {
