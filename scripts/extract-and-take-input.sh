@@ -143,11 +143,11 @@ function extractVariableAndTakeInput () {
             # when conditions mentioned in the 'conditionalvalue' are met this will overwrite default value
             if [[ $conditionsLookupFile == 'this' ]]
             then
-                returnedValue=$(conditionalValueParser ${conditionalvalue[@]} $variableFile)
+                returnedValue=$(conditionalValueParserArray $variableFile ${conditionalvalue[@]})
             else
                 if [[ $conditionsLookupFile == 'default' ]]
                 then
-                    returnedValue=$(conditionalValueParser ${conditionalvalue[@]} $defaultValuesFile)
+                    returnedValue=$(conditionalValueParserArray $defaultValuesFile ${conditionalvalue[@]})
                 fi
             fi
             
