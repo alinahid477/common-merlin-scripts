@@ -131,16 +131,18 @@ function extractVariableAndTakeInput () {
         
         
         # Custom condition logic: this logic was added later. Mostlikely this is how default values with AND or OR or ISSET or NOTISSET conditions will be determined
-        local conditionalvalue=''
-        readarray -t conditionalvalue < <(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditionalvalue' $templateFilesDIR/$promptsForVariablesJSON)
-        
+        local conditionalvalue=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditionalvalue' $templateFilesDIR/$promptsForVariablesJSON)
+
         local ret=255
         local isAndConditionMet=true
-        if [[ -n $conditionalvalue && $conditionalvalue != null && ${#conditionalvalue[@]} -gt 0 ]]
+        if [[ -n $conditionalvalue && $conditionalvalue != null ]]
         then
-            local conditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
-            local returnedValue=''
             # when conditions mentioned in the 'conditionalvalue' are met this will overwrite default value
+
+            conditionalvalue=($(echo "$conditionalvalue" | jq -rc '.[]'))
+            local conditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
+            
+            local returnedValue=''
             if [[ $conditionsLookupFile == 'this' ]]
             then
                 returnedValue=$(conditionalValueParserArray $variableFile ${conditionalvalue[@]})
