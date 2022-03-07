@@ -225,14 +225,14 @@
     {
         "name": "<CONTROL_PLANE_MACHINE_COUNT>",
         "hint": "Deploy a Tanzu Kubernetes cluster with more control plane nodes than the dev and prod plans define by default. The number of control plane nodes that you specify must be odd.",
-        "andconditions": ["CLUSTER_PLAN"],
+        "conditionalvalue": ["CLUSTER_PLAN==dev;defaultvalue=1", "CLUSTER_PLAN==prod;defaultvalue=5"],
         "conditions_lookup_file": "this",
         "optional": true
     },
     {
         "name": "<WORKER_MACHINE_COUNT>",
         "hint": "Deploy a Tanzu Kubernetes cluster with more worker nodes than the dev and prod plans define by default.",
-        "andconditions": ["CLUSTER_PLAN"],
+        "conditionalvalue": ["CLUSTER_PLAN==dev;defaultvalue=1", "CLUSTER_PLAN==prod;defaultvalue=3"],
         "conditions_lookup_file": "this",
         "optional": true
     },

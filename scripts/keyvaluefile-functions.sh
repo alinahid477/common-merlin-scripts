@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 function findValueForKey () {
     local key=$1
@@ -38,6 +38,160 @@ function findValueForKey () {
         printf "${!key}"
     fi
 }
+
+
+# this is the latest adition that makes checkConditionWithDefaultValueFile or checkCondition functions obsolete. 
+# however, keeping checkConditionWithDefaultValueFile or checkCondition functions for backward compatibility.
+# this function is capable of tacking ==, !=, isset (MY_KEY) and notisset (!MY_KEY) conditions
+function conditionalValueParser () { # takes 1 required and 1 optional params and returns the value of defautvalue or defaultkey's value
+
+    # eg: customConditionSTR: CLUSTER_PLAN==dev&&INFRASTRUCTURE==vsphere;defaultvalue=1 --> CLUSTER_PLAN equal dev && INFRASTRUCTURE==vsphere
+    # eg: customConditionSTR: CLUSTER_PLAN!=dev&&INFRASTRUCTURE==vsphere;defaultkey=MACHINE_COUNT --> CLUSTER_PLAN not equal dev && INFRASTRUCTURE==vsphere
+    # eg: customConditionSTR: CLUSTER_PLAN&&INFRASTRUCTURE==vsphere;defaultkey=MACHINE_COUNT --> CLUSTER_PLAN isset && INFRASTRUCTURE==vsphere
+    # eg: customConditionSTR: !CLUSTER_PLAN&&INFRASTRUCTURE==vsphere;defaultvalue=bla --> CLUSTER_PLAN isset not set && INFRASTRUCTURE==vsphere
+    # eg: customConditionSTR: !CLUSTER_PLAN;defaultvalue=bla --> CLUSTER_PLAN isset not set
+    local customConditionSTR=$1 # required. 
+    local defaultValuesFile=$2 # optional.
+    if [[ -z $customConditionSTR || $customConditionSTR == null ]]
+    then
+        return 1
+    fi
+    
+    local conditionAndValuePair=(${customConditionSTR//;/ })
+    local conditionOnlySTR=${conditionAndValuePair[0]}
+    
+    local conditionsArr=(${conditionOnlySTR//'&&'/ })
+    #check if condition is met
+    for condition in ${conditionsArr[@]}; do
+        local logic='=='
+        local kvpair=(${condition//'=='/ })
+        if [[ ${#kvpair[@]} -lt 2 ]]
+        then
+            logic='!='
+            kvpair=(${condition//'!='/ })
+        fi
+        local k=${kvpair[0]}
+        local v=${kvpair[1]}
+        local ifisset=true
+        if [[ $k =~ ^!.* ]]
+        then
+            ifisset=false
+            k=$(echo $k | sed 's/!//')
+        fi
+        local foundval=$(findValueForKey $k $defaultValuesFile)
+        if [[ -n $v ]]
+        then
+            # if there's a value given to condition then there must be foundval present.
+            # so if foundval is not present then it is false regardless of logic and condition
+            if [[ -z $foundval ]]
+            then
+                return 1
+            fi
+            if [[ $logic == '==' ]]
+            then
+                if [[ $v != $foundval ]]
+                then
+                    return 1
+                else
+                    local v1=$(echo $v | xargs)
+                    local foundval1=$(echo $foundval | xargs)
+                    if [[ $v1 != $foundval1 ]]
+                    then
+                        return 1
+                    fi
+                fi
+            else
+                if [[ $logic == '!=' ]]
+                then
+                  if [[ $v == $foundval ]]
+                    then
+                        return 1
+                    else
+                        local v1=$(echo $v | xargs)
+                        local foundval1=$(echo $foundval | xargs)
+                        if [[ $v1 == $foundval1 ]]
+                        then
+                            return 1
+                        fi
+                    fi  
+                fi
+            fi
+        else
+
+            # if value is not present, this means as the condition is: "as long as there's a value" (doesnt matter what value it is) the condition is true.
+            # This sort of mimics ISSET functionality
+            if [[ -z $foundval && $ifisset == true ]]
+            then
+                # no value found but but I want isset, so confition did not meet
+                return 1
+            fi
+
+            # if value is NOT present (!MY_KEY), this means as the condition is: "as long as there ISNT a value" the condition is true.
+            # This sort of mimics ISSET functionality
+            if [[ -n $foundval && $ifisset == false ]]
+            then
+                # value is present but I want NOT isset, so condition did not meet
+                return 1
+            fi
+        fi
+    done
+    
+    local valueOnlySTR=${conditionAndValuePair[1]}
+    local kvpair=(${valueOnlySTR//=/ })
+    
+    if [[ ${kvpair[0]} == 'defaultvalue' ]]
+    then
+        printf ${kvpair[1]}
+    else
+        if [[ ${kvpair[0]} == 'defaultkey' ]]
+        then
+            local foundval=$(findValueForKey ${kvpair[1]} $defaultValuesFile)
+            if [[ -n $foundval ]]
+            then
+                printf $foundval
+            else
+                return 1
+            fi
+        else
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+
+# this functin takes the array form json parses 1 contidion at a time (in for loop)
+# as soon as it finds a result it ignores parsing the rest of the conditions
+# because the logic/assumtion is there is only 1 true condition if it exists as there can be only value to be returned
+# eg: "conditionalvalue": ["CLUSTER_PLAN==dev;defaultvalue=1", "CLUSTER_PLAN==prod&&INFRA==vsphere;defaultvalue=3", "CLUSTER_PLAN&&INFRA==aws;defaultkey=MACHINE_COUNT"]
+function conditionalValueParserArray () {
+    local defaultValuesFile=$1 # required. pass 'na' if there's no defaultValuesfile, otherwise pass the full path of the file.
+    shift
+    local customConditionsARR=("$@") # required. 
+    
+    if [[ -z $customConditionsARR || $customConditionsARR == null || ${#customConditionsARR[@]} -lt 1 ]]
+    then
+        return 1
+    fi
+
+    if [[ $defaultValuesFile == 'na' ]]
+    then
+        defaultValuesFile=''
+    fi
+
+    for customCondition in ${customConditionsARR[@]}; do
+        local returnedValue=$(conditionalValueParser $customCondition $defaultValuesFile)
+        if [[ -n $returnedValue ]]
+        then
+            printf $returnedValue
+            return 0
+        fi
+    done
+
+    return 1
+}
+
 
 function checkConditionWithDefaultValueFile () { # returns 0 if condition is met. Otherwise returns 1.
 

@@ -1,11 +1,77 @@
 #!/bin/bash
 
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 source $HOME/binaries/scripts/contains-element.sh
 source $HOME/binaries/scripts/select-from-available-options.sh
+source $HOME/binaries/scripts/keyvaluefile-functions.sh
 
-extractVariableAndTakeInput () {
+function customConditionParser () {
+    # eg: customConditionARR=CLUSTER_PLAN=dev&INFRASTRUCTURE=vsphere;defaultvalue=1
+    # eg: customConditionARR=CLUSTER_PLAN=dev&INFRASTRUCTURE=vsphere;defaultkey=MACHINE_COUNT
+    local customConditionSTR=$1 # required. 
+    local defaultValuesFile=$2 # optional.
+    if [[ -z $customConditionSTR || $customConditionSTR == null ]]
+    then
+        return 1
+    fi
+    
+    local conditionAndValuePair=(${customConditionSTR//;/ })
+    local conditionOnlySTR=${conditionAndValuePair[0]}
+    
+    local conditionsArr=(${conditionOnlySTR//&/ })
+
+    #check if condition is met
+    for condition in ${conditionsArr[@]}; do
+        local kvpair=(${condition//=/ })
+        local k=${kvpair[0]}
+        local v=${kvpair[1]}
+        local foundval=$(findValueForKey $k $defaultValuesFile)
+        if [[ -n $v ]]
+        then
+            local v1=$(echo $v | xargs)
+            local foundval1=$(echo $foundval | xargs)
+            if [[ $v != $foundval && $v1 != $foundval1 ]]
+            then
+                return 1
+            fi
+        else
+            # if value is not present, this means as the condition is: "as long as there's a value" (doesnt matter what value it is) the condition is true.
+            # This sort of mimics ISSET functionality
+            if [[ -z $foundval ]]
+            then
+                # no value found so condition is false.
+                return 1
+            fi
+        fi
+    done
+    
+    local valueSTR=${conditionAndValuePair[1]}
+    local kvpair=(${valueSTR//=/ })
+    if [[ ${kvpair[0]} == 'defaultvalue' ]]
+    then
+        printf ${kvpair[1]}
+    else
+        if [[ ${kvpair[0]} == 'defaultkey' ]]
+        then
+            local foundval=$(findValueForKey ${kvpair[1]} $defaultValuesFile)
+            if [[ -n $foundval ]]
+            then
+                printf $foundval
+            else
+                return 1
+            fi
+        else
+            return 1
+        fi
+    fi
+    
+    return 0
+}
+
+
+
+function extractVariableAndTakeInput () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForVariablesJSON='prompts-for-variables.json'
 
@@ -63,38 +129,69 @@ extractVariableAndTakeInput () {
         local defaultvaluekey=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .defaultvaluekey' $templateFilesDIR/$promptsForVariablesJSON)
         local defaultvalue=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .defaultvalue' $templateFilesDIR/$promptsForVariablesJSON)
         
-        local andconditions=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .andconditions' $templateFilesDIR/$promptsForVariablesJSON)
+        
+        # Custom condition logic: this logic was added later. Mostlikely this is how default values with AND or OR or ISSET or NOTISSET conditions will be determined
+        local conditionalvalue=''
+        readarray -t conditionalvalue < <(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditionalvalue' $templateFilesDIR/$promptsForVariablesJSON)
         
         local ret=255
         local isAndConditionMet=true
-        if [[ -n $andconditions && $andconditions != null ]]
+        if [[ -n $conditionalvalue && $conditionalvalue != null && ${#conditionalvalue[@]} -gt 0 ]]
         then
-            # read it as an array because the funtion 'checkConditionWithDefaultValueFile' expects array.
-            andconditions=($(echo "$andconditions" | jq -rc '.[]'))
-            local andconditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
-            
-            # andconditions will only exist in combination with EITHER optional=true OR skip_prompt=true
-            if [[ $andconditionsLookupFile == 'this' ]]
+            local conditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
+            local returnedValue=''
+            # when conditions mentioned in the 'conditionalvalue' are met this will overwrite default value
+            if [[ $conditionsLookupFile == 'this' ]]
             then
-                # this means the andconditions is based on an input that I have provided previously (during the generation for this file)
-                # and it exists in this file (aka $variableFile)
-                checkConditionWithDefaultValueFile "AND" $variableFile ${andconditions[@]} 
+                returnedValue=$(conditionalValueParser ${conditionalvalue[@]} $variableFile)
             else
-                if [[ $andconditionsLookupFile == 'default' ]]
-                then 
-                    # this means the andconditions is based on an the default value file eg: management-cluster-config.yaml
-                    checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
-                else
-                    checkCondition # this will return 1 becuase it will fail the null check         
+                if [[ $conditionsLookupFile == 'default' ]]
+                then
+                    returnedValue=$(conditionalValueParser ${conditionalvalue[@]} $defaultValuesFile)
                 fi
             fi
-            ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
-            if [[ $ret == 1 ]]
+            
+            if [[ -n $returnedValue ]]
             then
-                # condition is false.
+                defaultvalue=$returnedValue
+            else
                 isAndConditionMet=false
             fi
+        else
+            # this is the old way of honoring defaultvalue or value for defaultkey when condition is met
+            # goind forward the above should be the way to do it.
+            local andconditions=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .andconditions' $templateFilesDIR/$promptsForVariablesJSON)
+            if [[ -n $andconditions && $andconditions != null ]]
+            then
+                # read it as an array because the funtion 'checkConditionWithDefaultValueFile' expects array.
+                andconditions=($(echo "$andconditions" | jq -rc '.[]'))
+                local andconditionsLookupFile=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditions_lookup_file' $templateFilesDIR/$promptsForVariablesJSON)
+                
+                # andconditions will only exist in combination with EITHER optional=true OR skip_prompt=true
+                if [[ $andconditionsLookupFile == 'this' ]]
+                then
+                    # this means the andconditions is based on an input that I have provided previously (during the generation for this file)
+                    # and it exists in this file (aka $variableFile)
+                    checkConditionWithDefaultValueFile "AND" $variableFile ${andconditions[@]} 
+                else
+                    if [[ $andconditionsLookupFile == 'default' ]]
+                    then 
+                        # this means the andconditions is based on an the default value file eg: management-cluster-config.yaml
+                        checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
+                    else
+                        checkCondition # this will return 1 becuase it will fail the null check         
+                    fi
+                fi
+                ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
+                if [[ $ret == 1 ]]
+                then
+                    # condition is false.
+                    isAndConditionMet=false
+                fi            
+            fi
         fi
+
+        
 
         ## LOGIC ##
         # delete the variable from output file if
