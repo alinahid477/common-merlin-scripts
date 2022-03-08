@@ -4,7 +4,7 @@
 export $(cat /root/.env | xargs)
 
 installTanzuCLI () {
-    printf "\nChecking Tanzu Framework binary..."
+    printf "\nChecking Tanzu CLI binary..."
     sleep 1
     isinflatedTZ='n'
     DIR="$HOME/tanzu"
@@ -102,12 +102,13 @@ installTanzuCLI () {
             printf "\nLinking tanzu cli ($tcedirname)...\n"
             
             cd $HOME/tanzu/$tcedirname || returnOrexit || return 1
-            if [[ -d $HOME/.local/share/tanzu-cli ]]
+            if [[ -d $HOME/.local/share/tanzu-cli/package ]]
             then
                 # This means it was previously installed and all file system exists.
                 # just need to link the tanzu binary.
                 printf "linking (tce) tanzu..."
                 install bin/tanzu /usr/local/bin/tanzu || returnOrexit || return 1
+                chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
                 printf "COMPLETE.\n"
             else
                 # TCE Tanzu CLI install
@@ -134,9 +135,9 @@ installTanzuCLI () {
             # Link the tanzu binary. Cause that's needs to happen regardless of whether it was previously installed or not.
             install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit || return 1
             chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
-            if [[ ! -d $HOME/.local/share/tanzu-cli ]]
+            if [[ ! -d $HOME/.local/share/tanzu-cli/package ]]
             then
-                # This means tanzu cli was NOT previously installed and file system exists. Lets install it.
+                # This means tanzu cli plugins were not installed and we need plugins. Lets install it.
                 if [[ -f cli/manifest.yaml ]]
                 then
                     # TAP Tanzu CLI install
