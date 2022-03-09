@@ -7,6 +7,7 @@ function installAZCLI () {
         printf "\naz cli not found. Installing...\n"
         curl -sL https://aka.ms/InstallAzureCLIDeb | bash
     else
+        printf "\naz cli found. No need to install new.\n"
         return 0
     fi
 
@@ -29,6 +30,7 @@ function installAWSCLI () {
         $HOME/aws/install
         rm -rf awscliv2.zip
     else
+        printf "\naws cli found. No need to install new.\n"
         return 0
     fi
 
