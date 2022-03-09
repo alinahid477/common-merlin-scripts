@@ -4,5 +4,5 @@ color-file.sh
 contains-element.sh
 parse_yaml.sh
 install-tanzu-cli.sh
-install-cluster-essetial.sh
+install-cluster-essential.sh
 select-from-available-options.sh
