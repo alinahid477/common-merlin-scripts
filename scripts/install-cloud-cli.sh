@@ -25,9 +25,10 @@ function installAWSCLI () {
     if [[ -z $isexists ]]
     then
         printf "\naws cli not found. Installing...\n"
-        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+        cd /tmp/
         unzip awscliv2.zip
-        $HOME/aws/install
+        ./aws/install
         rm -rf awscliv2.zip
     else
         printf "\naws cli found. No need to install new.\n"
