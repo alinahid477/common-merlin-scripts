@@ -27,13 +27,13 @@ function installAWSCLI () {
         printf "\naws cli not found. Installing...\n"
         if [[ ! -d $HOME/awscli ]]
         then
-            mkdir awscli
+            mkdir -p $HOME/awscli
         fi
         local removezip=''
         if [[ ! -d $HOME/awscli/aws ]]
         then
             printf "\naws cli binary not found. Downloading...\n"
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o $HOME/aws/awscliv2.zip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o $HOME/awscli/awscliv2.zip
             cd $HOME/awscli/
             unzip awscliv2.zip
             $removezip=true
