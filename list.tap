@@ -6,4 +6,5 @@ parse_yaml.sh
 install-tanzu-cli.sh
 install-cluster-essential.sh
 select-from-available-options.sh
+keyvaluefile-functions.sh
 install-cloud-cli.sh

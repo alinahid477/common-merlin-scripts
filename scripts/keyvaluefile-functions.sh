@@ -60,7 +60,20 @@ function conditionalValueParser () { # takes 1 required and 1 optional params an
     local conditionAndValuePair=(${customConditionSTR//;/ })
     local conditionOnlySTR=${conditionAndValuePair[0]}
     
-    local conditionsArr=(${conditionOnlySTR//'&&'/ })
+    local conditionsArr=()
+    local conditionType='AND'
+    if [[ $conditionOnlySTR == *"&&"* ]]
+    then
+        conditionsArr=(${conditionOnlySTR//'&&'/ })
+    else 
+        if [[ $conditionOnlySTR == *"||"* ]]
+        then
+            conditionType='OR'
+            conditionsArr=(${conditionOnlySTR//'||'/ })
+        fi
+    fi
+    
+    local isConditionMet=''
     #check if condition is met
     for condition in ${conditionsArr[@]}; do
         local logic='=='
@@ -79,63 +92,148 @@ function conditionalValueParser () { # takes 1 required and 1 optional params an
             k=$(echo $k | sed 's/!//')
         fi
         local foundval=$(findValueForKey $k $defaultValuesFile)
-        if [[ -n $v ]]
+        
+        if [[ $conditionType == 'AND' ]]
         then
-            # if there's a value given to condition then there must be foundval present.
-            # so if foundval is not present then it is false regardless of logic and condition
-            if [[ -z $foundval ]]
+            isConditionMet=true
+            if [[ -n $v ]]
             then
-                return 1
-            fi
-            if [[ $logic == '==' ]]
-            then
-                if [[ $v != $foundval ]]
+                # if there's a value given to condition then there must be foundval present.
+                # so if foundval is not present then it is false regardless of logic and condition
+                if [[ -z $foundval ]]
                 then
+                    isConditionMet=false
                     return 1
-                else
-                    local v1=$(echo $v | xargs)
-                    local foundval1=$(echo $foundval | xargs)
-                    if [[ $v1 != $foundval1 ]]
-                    then
-                        return 1
-                    fi
                 fi
-            else
-                if [[ $logic == '!=' ]]
+                if [[ $logic == '==' ]]
                 then
-                  if [[ $v == $foundval ]]
+                    if [[ $v != $foundval ]]
                     then
+                        isConditionMet=false
                         return 1
                     else
                         local v1=$(echo $v | xargs)
                         local foundval1=$(echo $foundval | xargs)
-                        if [[ $v1 == $foundval1 ]]
+                        if [[ $v1 != $foundval1 ]]
                         then
+                            isConditionMet=false
                             return 1
                         fi
-                    fi  
+                    fi
+                else
+                    if [[ $logic == '!=' ]]
+                    then
+                    if [[ $v == $foundval ]]
+                        then
+                            isConditionMet=false
+                            return 1
+                        else
+                            local v1=$(echo $v | xargs)
+                            local foundval1=$(echo $foundval | xargs)
+                            if [[ $v1 == $foundval1 ]]
+                            then
+                                isConditionMet=false
+                                return 1
+                            fi
+                        fi  
+                    fi
+                fi
+            else
+                # if value is not present, this means as the condition is: "as long as there's a value" (doesnt matter what value it is) the condition is true.
+                # This sort of mimics ISSET functionality
+                if [[ -z $foundval && $ifisset == true ]]
+                then
+                    # no value found but I want isset, so confition did not meet
+                    isConditionMet=false
+                    return 1
+                fi
+
+                # if value is NOT present (!MY_KEY), this means as the condition is: "as long as there ISNT a value" the condition is true.
+                # This sort of mimics ISSET functionality
+                if [[ -n $foundval && $ifisset == false ]]
+                then
+                    # value is present but I want NOT isset, so condition did not meet
+                    isConditionMet=false
+                    return 1
                 fi
             fi
         else
-
-            # if value is not present, this means as the condition is: "as long as there's a value" (doesnt matter what value it is) the condition is true.
-            # This sort of mimics ISSET functionality
-            if [[ -z $foundval && $ifisset == true ]]
+            if [[ $conditionType == 'OR' ]]
             then
-                # no value found but but I want isset, so confition did not meet
-                return 1
-            fi
+                isConditionMet=false
+                if [[ -n $v ]]
+                then
+                    # if there's a value given to condition then there must be foundval present.
+                    # so if foundval is not present then it is false regardless of logic and condition
+                    if [[ -z $foundval ]]
+                    then
+                        isConditionMet=false
+                        break
+                    fi
+                    if [[ $logic == '==' ]]
+                    then
+                        if [[ $v == $foundval ]]
+                        then
+                            isConditionMet=true
+                            break
+                        else
+                            local v1=$(echo $v | xargs)
+                            local foundval1=$(echo $foundval | xargs)
+                            if [[ $v1 == $foundval1 ]]
+                            then
+                                isConditionMet=true
+                                break
+                            fi
+                        fi
+                    else
+                        if [[ $logic == '!=' ]]
+                        then
+                        if [[ $v != $foundval ]]
+                            then
+                                isConditionMet=true
+                                break
+                            else
+                                local v1=$(echo $v | xargs)
+                                local foundval1=$(echo $foundval | xargs)
+                                if [[ $v1 != $foundval1 ]]
+                                then
+                                    isConditionMet=true
+                                    break
+                                fi
+                            fi  
+                        fi
+                    fi
+                else
 
-            # if value is NOT present (!MY_KEY), this means as the condition is: "as long as there ISNT a value" the condition is true.
-            # This sort of mimics ISSET functionality
-            if [[ -n $foundval && $ifisset == false ]]
-            then
-                # value is present but I want NOT isset, so condition did not meet
-                return 1
+                    # if value is not present, this means as the condition is: "as long as there's a value" (doesnt matter what value it is) the condition is true.
+                    # This sort of mimics ISSET functionality
+                    if [[ -z $foundval && $ifisset == false ]]
+                    then
+                        # no value found but I want isset, so confition did not meet
+                        isConditionMet=true
+                        break
+                    fi
+
+                    # if value is NOT present (!MY_KEY), this means as the condition is: "as long as there ISNT a value" the condition is true.
+                    # This sort of mimics ISSET functionality
+                    if [[ -n $foundval && $ifisset == true ]]
+                    then
+                        # value is present but I want NOT isset, so condition did not meet
+                        isConditionMet=true
+                        break
+                    fi
+                fi
             fi
-        fi
+        fi     
+        
     done
     
+    if [[ -z $isConditionMet || $isConditionMet == false ]]
+    then
+        return 1
+    fi
+
+
     local valueOnlySTR=${conditionAndValuePair[1]}
     local kvpair=(${valueOnlySTR//=/ })
     
