@@ -75,7 +75,7 @@ function selectFromAvailableOptionsWithDefault () {
         if [[ $ret == 1 ]]
         then
             unset selectedOption
-            printf "error: You must input a valid value from the available options. try again..\n"
+            printf "${redcolor}error: You must input a valid value from the available options. try again..${normalcolor}\n"
         else
             for i in "${!availableOptions[@]}"; do
                 if [[ "${availableOptions[$i]}" == "${selectedOption}" ]]
