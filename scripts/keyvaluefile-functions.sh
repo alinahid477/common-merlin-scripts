@@ -60,7 +60,7 @@ function conditionalValueParser () { # takes 1 required and 1 optional params an
     local conditionAndValuePair=(${customConditionSTR//;/ })
     local conditionOnlySTR=${conditionAndValuePair[0]}
     
-    local conditionsArr=()
+    local conditionsArr=($conditionOnlySTR)
     local conditionType='AND'
     if [[ $conditionOnlySTR == *"&&"* ]]
     then
@@ -241,7 +241,7 @@ function conditionalValueParser () { # takes 1 required and 1 optional params an
     then
         printf ${kvpair[1]}
     else
-        if [[ ${kvpair[0]} == 'defaultkey' ]]
+        if [[ ${kvpair[0]} == 'defaultkey' || ${kvpair[0]} == 'defaultvaluekey' ]]
         then
             local foundval=$(findValueForKey ${kvpair[1]} $defaultValuesFile)
             if [[ -n $foundval ]]
