@@ -11,3 +11,4 @@ tanzu_connect.sh
 assemble-file.sh
 keyvaluefile-functions.sh
 generate-tkg-file.sh
+install-cloud-cli.sh

@@ -1,24 +1,10 @@
 #!/bin/bash
 
 export $(cat $HOME/.env | xargs)
-
+source $HOME/binaries/scripts/install-cloud-cli.sh
 # this is used for both management and tkc
 function prepareEnvironment () {
-    printf "\n\n"
-    printf "${yellowcolor}Checking az cli...${normalcolor}\n"
-    local isexist=$(which az)
-    if [[ -z $isexist ]]
-    then
-        printf "${redcolor}az cli not found. Installing...${normalcolor}\n"
-        curl -sL https://aka.ms/InstallAzureCLIDeb | bash
-    fi
-    az version -o table
-    sleep 1
-    isexist=$(which az)
-    if [[ -z $isexist ]]
-    then
-        return 1
-    fi
+    installAZCLI || returnOrexit || return 1
 
     return 0
 }
@@ -255,7 +241,7 @@ function prepareAccountForTKG () {
 
     while true; do
         export $(cat $HOME/.env | xargs)
-        printf "\n${yellowcolor}Checking azure client app (Service Principle) for TKG in environment variable called AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET...${normalcolor}\n"
+        printf "\n${bluecolor}Checking azure client app (Service Principle) for TKG in environment variable called AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET...${normalcolor}\n"
         sleep 1
         if [[ -z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET ]]
         then
@@ -292,4 +278,7 @@ function prepareAccountForTKG () {
     done
 
     acceptBaseImageLicense || returnOrexit || return 1
+
+
+    return 0
 }
