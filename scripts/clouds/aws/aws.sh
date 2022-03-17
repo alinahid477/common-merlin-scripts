@@ -127,7 +127,7 @@ function prepareAccountForTKG () {
             sed -i '/AWS_REGION/d' $HOME/.env
             printf "\nAWS_REGION=$awsRegion\n" >> $HOME/.env
         fi
-    fi
+    done
 
     export $(cat $HOME/.env | xargs)
 
