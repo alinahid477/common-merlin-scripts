@@ -5,6 +5,7 @@ export $(cat $HOME/.env | xargs)
 source $HOME/binaries/scripts/install-cloud-cli.sh
 
 function prepareEnvironment () {
+    printf "\nPrepare aws cli...\n"
     installAWSCLI || returnOrexit || return 1
 
     return 0
@@ -12,21 +13,49 @@ function prepareEnvironment () {
 
 
 function doLogin () {
+
+    printf "\nCheking access to AWS account for region...\n"
+
     export $(cat $HOME/.env | xargs)
 
-    printf "\n\n"
+    if [[ -z $AWS_REGION ]]
+    then
+        printf "${yellowcolor}AWS_REGION not set in environment variable.\nProvide a valid aws region (eg: us-west-2) or type 'none' to not provide any${normalcolor}\n"
+        local awsRegion=''
+        while [[ -z $awsRegion ]]; do
+            read -p "AWS_REGION: " awsRegion
+            if [[ -n $awsRegion && $awsRegion != 'none' ]]
+            then
+                sed -i '/AWS_REGION/d' $HOME/.env
+                printf "\nAWS_REGION=$awsRegion\n" >> $HOME/.env
+            fi
+        done
+    fi
+    
+    export $(cat $HOME/.env | xargs)
 
-    printf "Checking if can log in...\n"
+    if [[ -z $AWS_REGION ]]
+    then
+        printf "\n${redcolor}ERROR: AWS_REGION must exist for checking aws access.${normalcolor}\n"
+    fi
+
+    printf "Checking credential validity..."
     local isexist=$(aws sts get-caller-identity)
     if [[ -z $isexist ]]
     then
         printf "\n${redcolor}ERROR: invalid aws access.${normalcolor}\n"
         returnOrexit || return 1
+    else
+        printf "${greencolor}VALID.${normalcolor}\n"
     fi
 }
 
 
 function createKeyPair () {
+
+    printf "\nCreating key pair for TKG in AWS region...\n"
+    sleep 2
+
     export $(cat $HOME/.env | xargs)
 
     if [[ -z $AWS_REGION ]]
@@ -36,20 +65,19 @@ function createKeyPair () {
     fi
 
     printf "\nChecking Key pair validity with name $AWS_REGION-tkg-keypair in the region $AWS_REGION..."
-
+    local isexist=''
     local kpName=$(aws ec2 describe-key-pairs --key-name $AWS_REGION-tkg-keypair --region $AWS_REGION --output text | awk '{print $3}')
     local kpFileName=$(ls -l $HOME/.ssh/$AWS_REGION-tkg-keypair.pem)
     printf "CHECKED\n"
     if [[ -n $kpName && -n $kpFileName ]]
     then
         printf "${greencolor}Key Pair already exists, no need to create a new one.${normalcolor}\n"
+        isexist=true
     else
-        createnew='n'
         if [[ -n $kpName ]]
         then
             printf "${yellowcolor}WARN: KeyPair exist in AWS but missing in local $HOME/.ssh/$AWS_REGION-tkg-keypair.pem.\nDeleting exisitng key pair $kpName from AWS $AWS_REGION...${normalcolor}"
             aws ec2 delete-key-pair --key-name $kpName --region $AWS_REGION
-            createnew='y'
             printf "DELETED.\n"
         fi
 
@@ -57,37 +85,58 @@ function createKeyPair () {
         then
             printf "Key pair file exists in local: $HOME/.ssh/$AWS_REGION-tkg-keypair.pem BUT is not associated with AWS region.\n"
             printf "Importing file://$HOME/.ssh/$AWS_REGION-tkg-keypair.pem to AWS Account for region $AWS_REGION with name: $AWS_REGION-tkg-keypair..."    
-            aws ec2 import-key-pair --key-name  $AWS_REGION-tkg-keypair --public-key-material file://$HOME/.ssh/$AWS_REGION-tkg-keypair.pem
+            aws ec2 import-key-pair --key-name  $AWS_REGION-tkg-keypair --public-key-material fileb://$HOME/.ssh/$AWS_REGION-tkg-keypair.pem || returnOrexit || return 1
             printf "IMPORTED.\n"
+            isexist=true
         fi
 
-        if [[ $createnew == 'y' ]]
+        if [[ -z $isexist ]]
         then
-            printf "${bluecolor}No key pair found in local or in aws region: $AWS_REGION.${normalcolor}}\n"
+            printf "${bluecolor}No key pair found in local or in aws region: $AWS_REGION.${normalcolor}\n"
             printf "Registering an SSH Public Key with Your AWS Account in region $AWS_REGION and creating localfile: $HOME/.ssh/$AWS_REGION-tkg-keypair.pem..."
-            aws ec2 create-key-pair --key-name $AWS_REGION-tkg-keypair --output json --region $AWS_REGION | jq .KeyMaterial -r > $HOME/.ssh/$AWS_REGION-tkg-keypair.pem
+            aws ec2 create-key-pair --key-name $AWS_REGION-tkg-keypair --output json --region $AWS_REGION | jq .KeyMaterial -r > $HOME/.ssh/$AWS_REGION-tkg-keypair.pem || returnOrexit || return 1
+            isexist=$(cat $HOME/.ssh/$AWS_REGION-tkg-keypair.pem)
+            if [[ -z $isexist ]]
+            then
+                printf "${redcolor}ERROR: empty pem file${normalcolor}\n"
+                rm $HOME/.ssh/$AWS_REGION-tkg-keypair.pem
+                returnOrexit || return 1
+            fi
             printf "REGISTERED.\n"
+            isexist=true
         fi      
     fi
 
-    printf "\n\nKey-Pair created. To review visit https://$AWS_REGION.console.aws.amazon.com/ec2/v2/home?region=$AWS_REGION#KeyPairs:"
-    while true; do
-        read -p "Confirm to continue? [y/n] " yn
-        case $yn in
-            [Yy]* ) printf "you confirmed yes\n"; break;;
-            [Nn]* ) printf "You said no.\n"; returnOrexit || return 1;;
-            * ) printf "${redcolor}Please answer yes or no.${normalcolor}\n";;
-        esac
-    done
+    if [[ $isexist == true ]]
+    then
+        printf "${greencolor}Key-Pair created. To review visit https://$AWS_REGION.console.aws.amazon.com/ec2/v2/home?region=$AWS_REGION#KeyPairs:${normalcolor}\n"
+        while true; do
+            read -p "Confirm to continue? [y/n] " yn
+            case $yn in
+                [Yy]* ) printf "you confirmed yes\n"; break;;
+                [Nn]* ) printf "You said no.\n"; returnOrexit || return 1;;
+                * ) printf "${redcolor}Please answer yes or no.${normalcolor}\n";;
+            esac
+        done
+    else
+        printf "\n\n${redcolor}ERROR: failed to create key-pair in aws.${normalcolor}\n"
+        returnOrexit || return 1
+    fi
+    
+    return 0
 }
 
 
 function prepareAccountForTKG () {
+
+    printf "\nPreparing AWS account in the region for TKG...\n"
+    printf "Documentation: https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.5/vmware-tanzu-kubernetes-grid-15/GUID-mgmt-clusters-aws.html#cluster-configuration-file-11\n"
+    sleep 2
+
     prepareEnvironment || returnOrexit || return 1
 
     while true; do
         export $(cat $HOME/.env | xargs)
-        printf "\nDocumentation: https://docs.vmware.com/en/VMware-Tanzu-Kubernetes-Grid/1.5/vmware-tanzu-kubernetes-grid-15/GUID-mgmt-clusters-aws.html#cluster-configuration-file-11\n"
         printf "\n${bluecolor}Checking aws access informartion for TKG in environment variable called AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY...${normalcolor}\n"
         sleep 1
         if [[ -z $AWS_ACCESS_KEY_ID || -z $AWS_SECRET_ACCESS_KEY ]]
@@ -114,33 +163,13 @@ function prepareAccountForTKG () {
                 break
             fi
         else
+            printf "Access Key and Secret is present.\n"
             doLogin || returnOrexit || return 1
             break
         fi
     done
 
-    local awsRegion=''
-    while [[ -z $awsRegion ]]; do
-        read -p "AWS_REGION: " awsRegion
-        if [[ -n $awsRegion ]]
-        then
-            sed -i '/AWS_REGION/d' $HOME/.env
-            printf "\nAWS_REGION=$awsRegion\n" >> $HOME/.env
-        fi
-    done
-
-    export $(cat $HOME/.env | xargs)
-
-    printf "\n${yellowcolor}AWS region=$AWS_REGION\nConfirm y to continue or n to exit.${normalcolor}\n"
-
-    while true; do
-        read -p "Confirmation? [y/n]: " yn
-        case $yn in
-            [Yy]* ) confirmation="y"; printf "you confirmed yes\n"; break;;
-            [Nn]* ) confirmation="n";printf "You confirmed no.\n"; returnOrexit || return 1;;
-            * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
-        esac
-    done
+    
 
     createKeyPair || returnOrexit || return 1
 
