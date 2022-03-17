@@ -60,3 +60,32 @@ function installAWSCLI () {
     fi
     return 0
 }
+
+
+function installCloudCLI () {
+    local cloudname=$1
+
+    if [[ -z $cloudname || (( $cloudname != 'vsphere' && $cloudname != 'aws' && $cloudname != 'azure' )) ]]
+    then
+        printf "\n\n${redcolor}ERROR: invalid cloud name provided for installing cloud cli.${normalcolor}\n\n"
+        returnOrexit || return 1
+    fi
+
+    if [[ $cloudname == 'aws' ]]
+    then
+        installAWSCLI || returnOrexit || return 1
+        return 0
+    fi
+    if [[ $cloudname == 'aws' ]]
+    then
+        installAZCLI || returnOrexit || return 1
+        return 0
+    fi
+    if [[ $cloudname == 'vsphere' ]]
+    then
+        
+        return 0
+    fi
+
+    return 1
+}
