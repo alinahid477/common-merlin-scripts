@@ -69,7 +69,7 @@ installTanzuCLI () {
                     read -p "Confirm to untar in $DIR [y/n]: " yn
                     case $yn in
                         [Yy]* ) doinflate="y"; printf "\nyou confirmed yes\n"; break;;
-                        [Nn]* ) doinflate="n";printf "\n\nYou said no.\n"; break;;
+                        [Nn]* ) doinflate="n";printf "\nYou said no.\n"; break;;
                         * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
                     esac
                 done

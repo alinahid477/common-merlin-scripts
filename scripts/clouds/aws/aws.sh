@@ -50,6 +50,55 @@ function doLogin () {
     fi
 }
 
+function doAWSConfigure () {
+
+    printf "\nPerforming aws configure...\n"
+
+    if [[ -f $HOME/.aws/credentials ]]
+    then
+        printf "${bluecolor}AWS configuration already exist. No need to create new one. Skipping...${normalcolor}\n"
+        return 0
+    fi
+
+    
+    local issso=false
+    # if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    # then
+    #     while true; do
+    #         read -p "Confirm is you would like to use sso [y/n]: " yn
+    #         case $yn in
+    #             [Yy]* ) issso=true; printf "\nyou confirmed yes\n"; break;;
+    #             [Nn]* ) printf "\nYou said no.\n"; break;;
+    #             * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
+    #         esac
+    #     done
+    # fi
+
+    if [[ $issso == false ]]
+    then
+        printf "User Name,Access key ID,Secret access key,Default region name,profile\n" > /tmp/awsconfigure.csv
+        printf "merlin,$AWS_ACCESS_KEY_ID,$AWS_SECRET_ACCESS_KEY,$AWS_REGION,merlin-tkg" >> /tmp/awsconfigure.csv
+
+        aws configure import --csv "file:///tmp/awsconfigure.csv" --region $AWS_REGION --profile "merlin-tkg"
+    else
+        aws configure sso
+    fi
+
+}
+
+
+function getKeyPairName () {
+    export $(cat $HOME/.env | xargs)
+
+    if [[ -z $AWS_REGION ]]
+    then
+        returnOrexit || return 1
+    fi
+    local kpName=$(aws ec2 describe-key-pairs --key-name $AWS_REGION-tkg-keypair --region $AWS_REGION --output text | awk '{print $3}')
+    printf $kpName
+
+    return 0
+}
 
 function createKeyPair () {
 
@@ -169,7 +218,7 @@ function prepareAccountForTKG () {
         fi
     done
 
-    
+    doAWSConfigure
 
     createKeyPair || returnOrexit || return 1
 
