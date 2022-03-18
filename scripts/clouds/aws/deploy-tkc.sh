@@ -15,6 +15,8 @@ function deployTKC() {
     then
         printf "\n${redcolor}ERROR: AWS_REGION missing from environment variable.${normalcolor}\n"
         returnOrexit || return 1
+    else
+        export AWS_SSH_KEY_NAME=$(echo "$AWS_REGION-tkg-keypair" | xargs)
     fi
 
     printf "Executing tanzu clauster create using file ${yellowcolor}$configfile.${normalcolor}....\n"
