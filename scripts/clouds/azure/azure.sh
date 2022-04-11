@@ -71,6 +71,7 @@ function doLogin () {
         fi
     fi
 
+    export $(cat $HOME/.env | xargs)
 
     return 0
 }
@@ -192,15 +193,15 @@ function createServicePrincipal () {
 
     printf "Creating service principal with name: $servicePrincipalName and role: $servicePrincipalRole...\n"
     
-    $servicePrincipalRoleArr=(${servicePrincipalRole//,/ })
+    local servicePrincipalRoleArr=(${servicePrincipalRole//,/ })
     
     local appId=''
     local secret=''
     for role in ${servicePrincipalRoleArr[@]}; do
         if [[ -z $appId ]]
         then
-            printf "Performing .. az ad sp create-for-rbac --role \"$role\" --name \"$servicePrincipalName\"...\n"
-            local appIdandSecret=$(az ad sp create-for-rbac --role "$role" --name "$servicePrincipalName" | jq -r '.appId+","+.password')
+            printf "Performing .. az ad sp create-for-rbac --role \"$role\" --name \"$servicePrincipalName\" --scope  /subscriptions/$AZ_SUBSCRIPTION_ID...\n"
+            local appIdandSecret=$(az ad sp create-for-rbac --role "$role" --name "$servicePrincipalName" --scope  /subscriptions/$AZ_SUBSCRIPTION_ID | jq -r '.appId+","+.password')
             if [[ -n $appIdandSecretArr ]]
             then
                 local appIdandSecretArr=(${appIdandSecret//,/ })
