@@ -76,7 +76,7 @@ function installCloudCLI () {
         installAWSCLI || returnOrexit || return 1
         return 0
     fi
-    if [[ $cloudname == 'aws' ]]
+    if [[ $cloudname == 'azure' ]]
     then
         installAZCLI || returnOrexit || return 1
         return 0
