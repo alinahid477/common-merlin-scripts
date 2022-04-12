@@ -12,6 +12,14 @@ function prepareEnvironment () {
 function doLogin () {
     export $(cat $HOME/.env | xargs)
 
+    if [[ ((-z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET || -z $AZ_TENANT_ID)) && -d "$HOME/.azure" ]]
+    then
+        printf "${yellowcolot}App registration does not exist or not complete...\nRemoving .azure dir...${normalcolor}\n"
+        sed -i '/AZ_TENANT_ID/d' $HOME/.env
+        sed -i '/AZ_SUBSCRIPTION_ID/d' $HOME/.env
+        rm -r $HOME/.azure/
+    fi
+
     printf "\n\n"
 
     printf "Checking if logged in...\n"
@@ -77,6 +85,8 @@ function doLogin () {
 }
 
 
+
+
 function acceptBaseImageLicense () {
     local baseImageName=$1
 
@@ -125,9 +135,10 @@ function acceptBaseImageLicense () {
     az vm image terms accept --publisher vmware-inc --offer tkg-capi --plan $baseImageName --subscription $AZ_SUBSCRIPTION_ID || returnOrexit || return 1
 
 
-    if [[ -z $BASE_IMAGE_NAME && -n $baseImageName ]]
+    if [[ -z $BASE_IMAGE_NAME || (( -n $baseImageName && $baseImageName != $BASE_IMAGE_NAME )) ]]
     then
         printf "Recording BASE_IMAGE_NAME in .env file...\n"
+        sed -i '/BASE_IMAGE_NAME/d' $HOME/.env
         printf "\nBASE_IMAGE_NAME=$baseImageName\n" >> $HOME/.env
     fi
 
@@ -202,8 +213,9 @@ function createServicePrincipal () {
         then
             printf "Performing .. az ad sp create-for-rbac --role \"$role\" --name \"$servicePrincipalName\" --scope  /subscriptions/$AZ_SUBSCRIPTION_ID...\n"
             local appIdandSecret=$(az ad sp create-for-rbac --role "$role" --name "$servicePrincipalName" --scope  /subscriptions/$AZ_SUBSCRIPTION_ID | jq -r '.appId+","+.password')
-            if [[ -n $appIdandSecretArr ]]
+            if [[ -n $appIdandSecret ]]
             then
+                printf "\nDEBUG: $appIdandSecret\n"
                 local appIdandSecretArr=(${appIdandSecret//,/ })
                 appId=${appIdandSecretArr[0]}
                 secret=${appIdandSecretArr[1]}
@@ -211,14 +223,16 @@ function createServicePrincipal () {
                 if [[ -n $appId && -n $secret ]]
                 then
                     printf "Recording AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET in .env file...\n"
+                    sed -i '/AZ_TKG_APP_ID/d' $HOME/.env
+                    sed -i '/AZ_TKG_APP_CLIENT_SECRET/d' $HOME/.env
                     printf "\nAZ_TKG_APP_ID=$appId\n" >> $HOME/.env
                     printf "\nAZ_TKG_APP_CLIENT_SECRET=$secret\n" >> $HOME/.env
                 else
-                    printf "${redcolor}ERROR: Something went wrong...{$normalcolor}\n"
+                    printf "${redcolor}ERROR: Something went wrong...$normalcolor\n"
                     returnOrexit || return 1
                 fi
             else
-                printf "${redcolor}ERROR: Something went wrong...{$normalcolor}\n"
+                printf "${redcolor}ERROR: Something went wrong...{}$normalcolor\n"
                 returnOrexit || return 1
             fi
         else
@@ -266,6 +280,7 @@ function prepareAccountForTKG () {
                     sleep 1
                     createServicePrincipal $SERVICE_PRINCIPAL_NAME $SERVICE_PRINCIPAL_ROLE || returnOrexit || return 1
                     sleep 1
+                    printf "${yellowcolor}service principal creation complete. Logging out to login using SP $normalcolor\n"
                     az logout
                     sleep 1
                     doLogin || returnOrexit || return 1
@@ -278,7 +293,7 @@ function prepareAccountForTKG () {
         fi
     done
 
-    acceptBaseImageLicense || returnOrexit || return 1
+    acceptBaseImageLicense $AZ_BASE_IMAGE || returnOrexit || return 1
 
 
     return 0
