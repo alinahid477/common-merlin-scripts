@@ -57,6 +57,7 @@ function doLogin () {
     if [[ -z $AZ_TENANT_ID && -n $tenantId ]]
     then
         printf "Recording tenant id in .env file...\n"
+        sed -i '/AZ_TENANT_ID/d' $HOME/.env
         printf "\nAZ_TENANT_ID=$tenantId\n" >> $HOME/.env
     else
         if [[ "$AZ_TENANT_ID" != "$tenantId" ]]
@@ -70,6 +71,7 @@ function doLogin () {
     if [[ -z $AZ_SUBSCRIPTION_ID && -n $id ]]
     then
         printf "Recording subscription id in .env file...\n"
+        sed -i '/AZ_SUBSCRIPTION_ID/d' $HOME/.env
         printf "\nAZ_SUBSCRIPTION_ID=$id\n" >> $HOME/.env
     else
         if [[ "$AZ_SUBSCRIPTION_ID" != "$id" ]]
