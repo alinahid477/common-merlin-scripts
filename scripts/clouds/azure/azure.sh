@@ -250,8 +250,7 @@ function createServicePrincipal () {
 
 }
 
-function prepareAccountForTKG () {
-    
+function prepareAccount () {
     prepareEnvironment || returnOrexit || return 1
 
     while true; do
@@ -292,7 +291,12 @@ function prepareAccountForTKG () {
             break
         fi
     done
+}
 
+function prepareAccountForTKG () {
+    
+    prepareAccount || returnOrexit || return 1
+    
     acceptBaseImageLicense $AZ_BASE_IMAGE || returnOrexit || return 1
 
 

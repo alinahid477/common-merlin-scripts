@@ -1,2 +1,4 @@
 init-prechecks.sh
 returnOrexit.sh
+color-file.sh
+install-cloud-cli.sh
