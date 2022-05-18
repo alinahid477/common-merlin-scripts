@@ -32,7 +32,7 @@ function create_bastion_tunnel () {
         returnOrexit || return 1
     fi
 
-    increasePortCount=0
+    local increasePortCount=0
     if [[ -n $2 ]] 
     then
         increasePortCount=$2
@@ -78,6 +78,16 @@ function create_bastion_tunnel () {
     local hostPort=$port
     ((hostPort=$hostPort+$increasePortCount))
 
+    printf "\nChecking existing bastion tunnel for $port on tcp..."
+    local pid=$(netstat -ntlp | egrep "*tcp.*:6443.*LISTEN" | awk '{print $7}' | awk -F/ '{print $1}')
+    if [[ -n $pid ]]
+    then
+        printf "FOUND. PID:$pid"
+        printf "\nKILL process $pid..."
+        kill -9 $pid && printf "KILLED\n" || printf "Failed.\n"
+    else
+        printf "NOT FOUND\n"
+    fi
     printf "\nCreating bastion tunnel for $hostPort:$host:$port through bastion $BASTION_USERNAME@$BASTION_HOST..."
     sleep 1
     ssh -i /root/.ssh/id_rsa -4 -fNT -L $hostPort:$host:$port $BASTION_USERNAME@$BASTION_HOST || returnOrexit || return 1
@@ -97,6 +107,7 @@ function create_bastion_tunnel_for_cluster_endpoints () {
     then
         printf "Multiple endpoints specified\n"
         CLUSTER_ENDPOINTS_ARR=$(echo $CLUSTER_ENDPOINTS | tr "," "\n")
+        local entryCount=0
         for clusterEndpoint in $CLUSTER_ENDPOINTS_ARR
         do
             proto="$(echo $clusterEndpoint | grep :// | sed -e's,^\(.*://\).*,\1,g')"
@@ -105,7 +116,9 @@ function create_bastion_tunnel_for_cluster_endpoints () {
             serverurl="$(echo $serverurl | awk -F: '{print $1}')"
             
             printf "Creating tunnel for $proto$serverurl:$port..."
-            create_bastion_tunnel "$proto$serverurl:$port" && printf "Tunnel Created\n" || printf "Failed.\n"
+            create_bastion_tunnel "$proto$serverurl:$port" $entryCount && printf "Tunnel Created\n" || printf "Failed.\n"
+
+            ((entryCount=$entryCount+1))
         done
     else
         printf "Single management cluster endpoint specified\n"
