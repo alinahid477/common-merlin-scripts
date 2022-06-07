@@ -12,7 +12,7 @@ function prepareEnvironment () {
 function doLogin () {
     export $(cat $HOME/.env | xargs)
 
-    if [[ ((-z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET || -z $AZ_TENANT_ID)) && -d "$HOME/.azure" ]]
+    if [[ ((-z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET || -z $AZ_TENANT_ID)) && -d "$HOME/.azure" ]]
     then
         printf "${yellowcolot}App registration does not exist or not complete...\nRemoving .azure dir...${normalcolor}\n"
         sed -i '/AZ_TENANT_ID/d' $HOME/.env
@@ -27,12 +27,12 @@ function doLogin () {
     while [[ -z $tenantId ]]; do
         printf "${redcolor}not logged in. Log in...${normalcolor}\n"
 
-        if [[ -z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET || -z $AZ_TENANT_ID ]]
+        if [[ -z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET || -z $AZ_TENANT_ID ]]
         then
             az login || returnOrexit || return 1
             # what if only tenant id is missing somehow?
             # the below logic will take care of it
-            if [[ -n $AZ_TKG_APP_ID && -n $AZ_TKG_APP_CLIENT_SECRET ]]
+            if [[ -n $AZ_APP_ID && -n $AZ_APP_CLIENT_SECRET ]]
             then
                 printf "${yellowcolot}service principal is present but tenant id is missing. fixing this...${normalcolor}\n"    
                 tenantId=$(az account show | jq -r '.tenantId')
@@ -41,12 +41,12 @@ function doLogin () {
                     printf "${yellowcolot}Found tenant id: $tenantId. Logout and login using service principal.${normalcolor}\n"    
                     sleep 1
                     az logout
-                    az login --service-principal --username $AZ_TKG_APP_ID --password $AZ_TKG_APP_CLIENT_SECRET --tenant $AZ_TENANT_ID || returnOrexit || return 1
+                    az login --service-principal --username $AZ_APP_ID --password $AZ_APP_CLIENT_SECRET --tenant $AZ_TENANT_ID || returnOrexit || return 1
                 fi    
             fi
         else
             printf "${yellowcolot}Login into az using az-cli using service principal...${normalcolor}\n"
-            az login --service-principal --username $AZ_TKG_APP_ID --password $AZ_TKG_APP_CLIENT_SECRET --tenant $AZ_TENANT_ID || returnOrexit || return 1
+            az login --service-principal --username $AZ_APP_ID --password $AZ_APP_CLIENT_SECRET --tenant $AZ_TENANT_ID || returnOrexit || return 1
         fi
         sleep 3
 
@@ -158,7 +158,7 @@ function createServicePrincipal () {
     if [[ -z $servicePrincipalName ]]
     then
         isUserInputRequired='y'
-        servicePrincipalName='tkg'
+        servicePrincipalName='tanzu'
         printf "${yellowcolor}Assuming default ServicePrincipal name: $servicePrincipalName.${normalcolor}\n"
     fi
     if [[ -z $servicePrincipalRole ]]
@@ -224,11 +224,11 @@ function createServicePrincipal () {
 
                 if [[ -n $appId && -n $secret ]]
                 then
-                    printf "Recording AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET in .env file...\n"
-                    sed -i '/AZ_TKG_APP_ID/d' $HOME/.env
-                    sed -i '/AZ_TKG_APP_CLIENT_SECRET/d' $HOME/.env
-                    printf "\nAZ_TKG_APP_ID=$appId\n" >> $HOME/.env
-                    printf "\nAZ_TKG_APP_CLIENT_SECRET=$secret\n" >> $HOME/.env
+                    printf "Recording AZ_APP_ID and AZ_APP_CLIENT_SECRET in .env file...\n"
+                    sed -i '/AZ_APP_ID/d' $HOME/.env
+                    sed -i '/AZ_APP_CLIENT_SECRET/d' $HOME/.env
+                    printf "\nAZ_APP_ID=$appId\n" >> $HOME/.env
+                    printf "\nAZ_APP_CLIENT_SECRET=$secret\n" >> $HOME/.env
                 else
                     printf "${redcolor}ERROR: Something went wrong...$normalcolor\n"
                     returnOrexit || return 1
@@ -257,23 +257,23 @@ function prepareAccount () {
 
     while true; do
         export $(cat $HOME/.env | xargs)
-        printf "\n${bluecolor}Checking azure client app (Service Principle) for TKG in environment variable called AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET...${normalcolor}\n"
+        printf "\n${bluecolor}Checking azure client app (Service Principle) in environment variable called AZ_APP_ID and AZ_APP_CLIENT_SECRET...${normalcolor}\n"
         sleep 1
-        if [[ -z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET ]]
+        if [[ -z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET ]]
         then
-            printf "${redcolor}ServicePrincipal information not found\nPlease either fill in the value for AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET in .env file and confirm 'n'\nOR to create a new one confirm 'y' to below.${normalcolor}\n"
+            printf "${redcolor}ServicePrincipal information not found\nPlease either fill in the value for AZ_APP_ID and AZ_APP_CLIENT_SECRET in .env file and confirm 'n'\nOR to create a new one confirm 'y' to below.${normalcolor}\n"
             local confirmation='n'
             while true; do
-                read -p "Would you like to create Service Principal for tkg? [y/n]: " yn
+                read -p "Would you like to create a NEW Service Principal? [y/n]: " yn
                 case $yn in
                     [Yy]* ) confirmation="y"; printf "you confirmed yes\n"; break;;
                     [Nn]* ) confirmation="n";printf "You confirmed no.\n"; break;;
                     * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
                 esac
             done
-            if [[ $confirmation == 'n' && ((-z $AZ_TKG_APP_ID || -z $AZ_TKG_APP_CLIENT_SECRET)) ]]
+            if [[ $confirmation == 'n' && ((-z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET)) ]]
             then
-                printf "${redcolor}Without ServicePrincipal this wizard will not continue.\nAssuming the end user is going to add value for AZ_TKG_APP_ID and AZ_TKG_APP_CLIENT_SECRET in the environment variable...${normalcolor}\n"
+                printf "${redcolor}Without ServicePrincipal this wizard will not continue.\nAssuming the end user is going to add value for AZ_APP_ID and AZ_APP_CLIENT_SECRET in the environment variable...${normalcolor}\n"
             else
                 if [[ $confirmation == 'y' ]]
                 then
