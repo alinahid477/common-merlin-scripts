@@ -6,11 +6,12 @@ export $(cat /root/.env | xargs)
 installTanzuCLI () {
     printf "\nChecking Tanzu CLI binary..."
     sleep 1
-    isinflatedTZ='n'
-    DIR="$HOME/tanzu"
+    local isinflatedTZ='n'
+    local DIR="$HOME/tanzu"
     if [ -d "$DIR" ]
     then
-        if [ "$(ls -A $DIR)" ]; then
+        if [ "$(ls -A $DIR)" ]
+        then
             isinflatedTZ='y'
             printf "\nFound tanzu cli is already inflated in $DIR.\nSkipping further checks.\n"
         fi
@@ -18,6 +19,7 @@ installTanzuCLI () {
     sleep 1
     if [[ $isinflatedTZ == 'n' ]]
     then
+        printf "\nInflating Tanzu CLI in $DIR.\n"
         # default look for: tanzu tap cli
         tarfilenamingpattern="tanzu-framework-linux-amd64*"
         tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
@@ -91,7 +93,7 @@ installTanzuCLI () {
     fi
 
     cd ~
-    isexist=$(which tanzu)
+    local isexist=$(which tanzu)
     if [[ -d $DIR && -z $isexist ]]
     then
         # default check tce
@@ -102,12 +104,19 @@ installTanzuCLI () {
             printf "\nLinking tanzu cli ($tcedirname)...\n"
             
             cd $HOME/tanzu/$tcedirname || returnOrexit || return 1
-            if [[ -f $HOME/.local/share/tanzu-cli/tanzu-plugin-management-cluster ]]
+            if [[ -f $HOME/.local/share/tanzu-cli/tanzu-plugin-management-cluster || -f $HOME/.local/share/tanzu-cli/management-cluster ]]
             then
                 # This means it was previously installed and all file system exists.
                 # just need to link the tanzu binary.
                 printf "linking (tce) tanzu..."
-                install bin/tanzu /usr/local/bin/tanzu || returnOrexit || return 1
+                if [[ -f bin/tanzu ]]
+                then
+                    install bin/tanzu /usr/local/bin/tanzu || returnOrexit || return 1
+                fi
+                if [[ -f tanzu ]]
+                then
+                    install tanzu /usr/local/bin/tanzu || returnOrexit || return 1
+                fi
                 chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
                 printf "COMPLETE.\n"
             else
