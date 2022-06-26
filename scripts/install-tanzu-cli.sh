@@ -104,7 +104,7 @@ installTanzuCLI () {
             printf "\nLinking tanzu cli ($tcedirname)...\n"
             
             cd $HOME/tanzu/$tcedirname || returnOrexit || return 1
-            if [[ -f $HOME/.local/share/tanzu-cli/tanzu-plugin-management-cluster || -f $HOME/.local/share/tanzu-cli/management-cluster ]]
+            if [[ -f $HOME/.local/share/tanzu-cli/tanzu-plugin-management-cluster || -d $HOME/.local/share/tanzu-cli/management-cluster ]]
             then
                 # This means it was previously installed and all file system exists.
                 # just need to link the tanzu binary.
