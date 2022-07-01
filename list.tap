@@ -1,4 +1,5 @@
 init-prechecks.sh
+init-checkk8s.sh
 returnOrexit.sh
 color-file.sh
 contains-element.sh
