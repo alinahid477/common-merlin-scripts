@@ -35,15 +35,13 @@ installClusterEssential () {
     sleep 2
 
 
-
+    
     DIR="$HOME/tanzu-cluster-essentials"
-
     if [[ $isinflatedCE == 'n' && -n $clusteressentialsbinary ]]
     then
         printf "\nInflating Tanzu cluster essential...\n"
         sleep 1
-        
-        local doinflate=''
+        local doinflate='y'
 
         if [ ! -d "$DIR" ]
         then
@@ -73,31 +71,95 @@ installClusterEssential () {
         tar -xvf ${clusteressentialsbinary} -C $HOME/tanzu-cluster-essentials/ || returnOrexit
         if [[ $isreturnorexit == 'return' ]]
         then
-            printf "\nNot proceed further...\n"
+            printf "\n${redcolor}ERROR: Not proceeding further...${normalcolor}\n"
             return 1
         fi
-        printf "$clusteressentialsbinary extract in in $DIR....COMPLETED\n\n"
+        printf "$clusteressentialsbinary extracted in $DIR....COMPLETED\n\n"
     fi
     
-    local isexist=$(kapp version)
-    if [[ -d $DIR && -z $isexist ]]
+    
+    if [[ -d $DIR ]]
     then
-        printf "\nLinking kapp.....\n"
-        cp $HOME/tanzu-cluster-essentials/kapp /usr/local/bin/kapp || returnOrexit
-        if [[ $isreturnorexit == 'return' ]]
+        local isexist=$(kapp version)
+        if [[ -z $isexist ]]
         then
-            printf "\nNot proceed further...\n"
-            return 1
+            printf "\nLinking kapp.....\n"
+            cp $HOME/tanzu-cluster-essentials/kapp /usr/local/bin/kapp || returnOrexit
+            if [[ $isreturnorexit == 'return' ]]
+            then
+                printf "\n${redcolor}ERRPR: Not proceeding further...${normalcolor}\n"
+                returnOrexit || return 1
+            fi
+            chmod +x /usr/local/bin/kapp || returnOrexit
+            if [[ $isreturnorexit == 'return' ]]
+            then
+                printf "\n${redcolor}ERROR: Not proceeding further...${normalcolor}\n"
+                returnOrexit || return 1
+            fi
+            printf "checking kapp....\n"
+            kapp version
         fi
-        chmod +x /usr/local/bin/kapp || returnOrexit
-        if [[ $isreturnorexit == 'return' ]]
+
+        if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL ]]
         then
-            printf "\nNot proceed further...\n"
-            return 1
+            printf "Checking cluster essential in k8s...\n"
+            local isclusteressential=$(kubectl get configmaps -n tanzu-cluster-essentials | grep -sw 'kapp-controller')
+            if [[ -n $isclusteressential ]]
+            then
+                printf "Found kapp-controller in the k8s but .env is not marked as complete. Marking as complete....."
+                sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
+                printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+                export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
+                printf "DONE.\n"
+            fi
+            sleep 2
         fi
-        printf "checking kapp....\n"
-        kapp version
+
+        local redeploy='n'
+        if [[ $INSTALL_TANZU_CLUSTER_ESSENTIAL == 'COMPLETED' && $isinflatedCE == 'n' ]]
+        then
+            printf "${yellowcolor}Tanzu-Cluster-Essential is marked as COMPLETED in the .env.\n"
+            printf "However, this installation detected a new inflation of tanzu-cluster-essentials-linux-amd64-x.x.x.tgz in the $DIR.${normalcolor}\n"
+            while true; do
+                read -p "Would you like to re-deploy tanzu-cluster-essential? [y/n]: " yn
+                case $yn in
+                    [Yy]* ) redeploy='y'; printf "you confirmed yes.\n"; break;;
+                    [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
+                    * ) echo "Please answer y or n.";;
+                esac
+            done
+        fi
+        if [[ $redeploy == 'y' ]]
+        then
+            printf "\nPerforming kubectl get all in the namespace:tanzu-cluster-essential before re-deploy...\n"
+            kubectl get all -n tanzu-cluster-essentials
+            while true; do
+                read -p "Are you sure you want to re-deploy tanzu-cluster-essential? [y/n]: " yn
+                case $yn in
+                    [Yy]* ) redeploy='y'; printf "you confirmed yes\n"; break;;
+                    [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
+                    * ) echo "Please answer y or n.";;
+                esac
+            done
+        fi
+        if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL || $redeploy == 'y' ]]
+        then
+            printf "\nInstalling cluster essential in k8s cluster...\n\n"
+            sleep 5
+            cd $HOME/tanzu-cluster-essentials
+            source ./install.sh
+            printf "\nTanzu cluster essential instllation....COMPLETED\n\n"
+
+            sleep 2
+
+            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
+            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+            export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
+            sleep 1
+        fi
+        
     else
-        printf "\nWARN: Kapp could not be installed. Most likely $DIR missing.\n"
+        printf "\nWARN: Kapp and cluster-essential could not be installed. Most likely $DIR missing.\n"
     fi 
+    
 }
