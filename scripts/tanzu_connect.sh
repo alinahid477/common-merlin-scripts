@@ -134,7 +134,7 @@ function tanzu_connect_and_confirm () {
         case $yn in
             [Yy]* ) printf "\nyou confirmed yes\n"; echo "TANZU_CONNECT=YES" >> /tmp/TANZU_CONNECT; break;;
             [Nn]* ) printf "\n\nYou said no. \n\nExiting...\n\n"; returnOrexit || return 1;;
-            * ) printf "${redcolor}Please answer yes or no.${normalcolor}\n";;
+            * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
         esac
     done
 }

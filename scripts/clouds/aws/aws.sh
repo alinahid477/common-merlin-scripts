@@ -164,7 +164,7 @@ function createKeyPair () {
             case $yn in
                 [Yy]* ) printf "you confirmed yes\n"; break;;
                 [Nn]* ) printf "You said no.\n"; returnOrexit || return 1;;
-                * ) printf "${redcolor}Please answer yes or no.${normalcolor}\n";;
+                * ) printf "${redcolor}Please answer y or n.${normalcolor}\n";;
             esac
         done
     else

@@ -25,7 +25,7 @@ function deployTKC() {
                 case $yn in
                     [Yy]* ) printf "\nyou confirmed yes\n"; break;;
                     [Nn]* ) printf "\n\nYou said no. \n\nExiting...\n\n"; exit;;
-                    * ) echo "Please answer yes or no.";;
+                    * ) echo "Please answer y or n.";;
                 esac
             done
         else
