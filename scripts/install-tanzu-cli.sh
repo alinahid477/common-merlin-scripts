@@ -125,8 +125,10 @@ installTanzuCLI () {
                 # Linking tanzu binary as part of the install.sh script shipped in the zip file.
                 printf "installing (tce) tanzu...\n"
                 export ALLOW_INSTALL_AS_ROOT=true
+                sleep 1
                 chmod +x install.sh
                 ./install.sh
+                sleep 1
                 unset ALLOW_INSTALL_AS_ROOT
                 printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi            
