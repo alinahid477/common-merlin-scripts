@@ -147,7 +147,7 @@ function extractVariableAndTakeInput () {
             then
                 returnedValue=$(conditionalValueParserArray $variableFile ${conditionalvalue[@]})
             else
-                if [[ $conditionsLookupFile == 'default' ]]
+                if [[ $conditionsLookupFile == 'default' && -f $defaultValuesFile ]]
                 then
                     returnedValue=$(conditionalValueParserArray $defaultValuesFile ${conditionalvalue[@]})
                 fi
@@ -176,7 +176,7 @@ function extractVariableAndTakeInput () {
                     # and it exists in this file (aka $variableFile)
                     checkConditionWithDefaultValueFile "AND" $variableFile ${andconditions[@]} 
                 else
-                    if [[ $andconditionsLookupFile == 'default' ]]
+                    if [[ $andconditionsLookupFile == 'default' && -f $defaultValuesFile ]]
                     then 
                         # this means the andconditions is based on an the default value file eg: management-cluster-config.yaml
                         checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions[@]}
@@ -224,7 +224,7 @@ function extractVariableAndTakeInput () {
 
 
         # value found in either defaultValuesFile (eg: mgmtclusterconfig.yaml) or environment variable 
-        if [[ -n $defaultvaluekey && $defaultvaluekey != null ]]
+        if [[ -n $defaultvaluekey && $defaultvaluekey != null && -f $defaultValuesFile ]]
         then
             # first get the value against the key mentioned
             local foundval=$(findValueForKey $defaultvaluekey $defaultValuesFile)
@@ -315,9 +315,15 @@ function extractVariableAndTakeInput () {
                 fi
             fi
 
+            local inputType=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .input_type' $templateFilesDIR/$promptsForVariablesJSON)
             
             while [[ -z $inp ]]; do
-                read -p "input value for $inputvar: " inp
+                if [[ -n $inputType && $inputType == 'password' ]]
+                then
+                    read -s -p "input value for $inputvar: " inp
+                else
+                    read -p "input value for $inputvar: " inp
+                fi
                 if [[ -z $inp ]]
                 then
                     if [[ $isEmptyAllowed == true && -n $defaultvalue && $defaultvalue != null ]]
