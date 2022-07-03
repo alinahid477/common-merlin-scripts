@@ -173,10 +173,10 @@ sleep 1
 kubectl get ns
 printf "\n"
 while true; do
-    read -p "Confirm if you are seeing expected namespaces to proceed further? [y/n]: " yn
+    read -p "Confirm if you are connected to the correct K8s? [y/n]: " yn
     case $yn in
         [Yy]* ) printf "\nyou confirmed yes\n"; break;;
-        [Nn]* ) printf "\n\nYou said no. \n\nExiting...\n\n"; exit 1;;
+        [Nn]* ) printf "\nYou confirmed no. \n\nExiting...\n\n"; exit 1;;
         * ) echo "Please answer y or n.";;
     esac
 done

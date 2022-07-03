@@ -23,7 +23,7 @@ then
         printf "\nERROR: Bastion host input provided but no id_rsa present in .ssh directory.\n"
         printf "You must place the private key called \"id_rsa\" in .ssh directory and add the public key to the bastion host server.\n"
         printf "exit 1...\n"
-        exit
+        exit 1
     fi
 fi
 
