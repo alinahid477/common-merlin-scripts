@@ -9,3 +9,4 @@ install-cluster-essential.sh
 select-from-available-options.sh
 keyvaluefile-functions.sh
 install-cloud-cli.sh
+install-essential-tools.sh
