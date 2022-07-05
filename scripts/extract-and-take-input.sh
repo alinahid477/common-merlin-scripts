@@ -316,20 +316,46 @@ function extractVariableAndTakeInput () {
             fi
 
             local inputType=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .input_type' $templateFilesDIR/$promptsForVariablesJSON)
-            
+
+            local arrayInputPrefixPerItem=''; 
+            local arrayInputSTR=''
+            if [[ $inputType == 'array' ]]
+            then
+                arrayInputPrefixPerItem=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .array_per_item_prefix' $templateFilesDIR/$promptsForVariablesJSON)
+            fi
+            local count=1
             while [[ -z $inp ]]; do
                 if [[ -n $inputType && $inputType == 'password' ]]
                 then
                     read -s -p "input value for $inputvar: " inp
+                elif [[ -n $inputType && $inputType == 'array' ]] # example usage of inputtype='array' is in tapwizard/binaries/wizard/comfigurekpack.sh
+                then
+                    printf "\nPlease type 'end' and press enter to end multiple inputs for $inputvar\n"
+                    read -p "Item #$count input value for $inputvar: " inp
+                    if [[ -z $arrayInputSTR && $inp != 'end' ]]
+                    then
+                        arrayInputSTR="$arrayInputPrefixPerItem$inp"
+                        inp=''
+                    elif [[ -n $arrayInputSTR && $inp != 'end' ]]
+                    then
+                        arrayInputSTR="$arrayInputSTR\n  - $arrayInputPrefixPerItem$inp"
+                        inp=''
+                    elif [[ $inp == 'end' ]]
+                    then
+                        inp=$arrayInputSTR
+                    fi
                 else
                     read -p "input value for $inputvar: " inp
                 fi
                 if [[ -z $inp ]]
                 then
-                    if [[ $isEmptyAllowed == true && -n $defaultvalue && $defaultvalue != null ]]
+                    if [[ $isEmptyAllowed == true && -n $defaultvalue && $defaultvalue != null && $inputType != 'array' ]]
                     then
                         # this means the input-for-values.json has optional=true and there exist default value (either defaultvalue: "some value" OR defaultvaluekey: "somekey")
                         inp=$defaultvalue    
+                    elif [[ $inputType == 'array'  ]]
+                    then
+                        printf "${yellowcolor}will continue for the item input for $inputvar.${normalcolor}\n"
                     else
                         printf "${redcolor}empty value is not allowed.${normalcolor}\n"
                     fi                
