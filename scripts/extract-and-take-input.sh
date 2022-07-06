@@ -330,7 +330,6 @@ function extractVariableAndTakeInput () {
                     read -s -p "input value for $inputvar: " inp
                 elif [[ -n $inputType && $inputType == 'array' ]] # example usage of inputtype='array' is in tapwizard/binaries/wizard/comfigurekpack.sh
                 then
-                    printf "\nPlease type 'end' and press enter to end multiple inputs for $inputvar\n"
                     read -p "Item #$count input value for $inputvar: " inp
                     if [[ -z $arrayInputSTR && $inp != 'end' ]]
                     then
@@ -338,7 +337,7 @@ function extractVariableAndTakeInput () {
                         inp=''
                     elif [[ -n $arrayInputSTR && $inp != 'end' ]]
                     then
-                        arrayInputSTR="$arrayInputSTR\n  - $arrayInputPrefixPerItem$inp"
+                        arrayInputSTR="$arrayInputSTR\n$arrayInputPrefixPerItem$inp"
                         inp=''
                     elif [[ $inp == 'end' ]]
                     then
@@ -355,7 +354,8 @@ function extractVariableAndTakeInput () {
                         inp=$defaultvalue    
                     elif [[ $inputType == 'array'  ]]
                     then
-                        printf "${yellowcolor}will continue for the item input for $inputvar.${normalcolor}\n"
+                        ((count=count+1))
+                        printf "${yellowcolor}will continue for the item #$count input for $inputvar. Type 'end' if do not want provide any more input for $inputvar.${normalcolor}\n"
                     else
                         printf "${redcolor}empty value is not allowed.${normalcolor}\n"
                     fi                
