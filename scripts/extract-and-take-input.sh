@@ -72,11 +72,13 @@ function customConditionParser () {
 
 
 function extractVariableAndTakeInput () {
+    local variableFile=$1
+    local defaultValuesFile=$2
+
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     local promptsForVariablesJSON='prompts-for-variables.json'
 
-    variableFile=$1
-    defaultValuesFile=$2
+    local ret=255
 
     if [[ -z $variableFile ]]
     then
@@ -103,6 +105,7 @@ function extractVariableAndTakeInput () {
 
 
     local isinputneeded='n'
+    local inputvar=''
 
     # iterate over each variable name that may need user input (if not exist as environment variable)
     for variableNameRaw in "${uniqueVariables[@]}"; do
@@ -133,7 +136,7 @@ function extractVariableAndTakeInput () {
         # Custom condition logic: this logic was added later. Mostlikely this is how default values with AND or OR or ISSET or NOTISSET conditions will be determined
         local conditionalvalue=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .conditionalvalue' $templateFilesDIR/$promptsForVariablesJSON)
 
-        local ret=255
+        ret=255
         local isAndConditionMet=true
         if [[ -n $conditionalvalue && $conditionalvalue != null ]]
         then
@@ -239,7 +242,7 @@ function extractVariableAndTakeInput () {
 
         
         # read hint from pompts variable file and display it
-        hint=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .hint' $templateFilesDIR/$promptsForVariablesJSON)
+        local hint=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .hint' $templateFilesDIR/$promptsForVariablesJSON)
         if [[ -n $hint && $hint != null ]]
         then
             printf "Variable: $inputvar\n${bluecolor}Hint: $hint ${normalcolor}\n"
@@ -264,7 +267,7 @@ function extractVariableAndTakeInput () {
         fi
 
         
-        unset inp
+        local inp=''
         # dynamic variable-->eg: variable name (NAME_OF_THE_VARIABLE) in a variable ('inputvar')
         # the way to access the value dynamic variable is: ${!inputvar}
 
@@ -323,7 +326,9 @@ function extractVariableAndTakeInput () {
             then
                 arrayInputPrefixPerItem=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .array_per_item_prefix' $templateFilesDIR/$promptsForVariablesJSON)
             fi
+
             local count=1
+            inp=''
             while [[ -z $inp ]]; do
                 if [[ -n $inputType && $inputType == 'password' ]]
                 then
@@ -384,7 +389,7 @@ function extractVariableAndTakeInput () {
             fi
             
             # read this property to see if this variable should be recorded in .env file for usage in developer workspace (eg: git-ops-secret)
-            isRecordAsEnvVar=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .isRecordAsEnvVar' $templateFilesDIR/$promptsForVariablesJSON)
+            local isRecordAsEnvVar=$(jq -r '.[] | select(.name == "'$variableNameRaw'") | .isRecordAsEnvVar' $templateFilesDIR/$promptsForVariablesJSON)
             # add to .env for later use if instructed in the prompt file (eg: during developer namespace creation)            
             if [[ -n $isRecordAsEnvVar && $isRecordAsEnvVar == true ]]
             then
