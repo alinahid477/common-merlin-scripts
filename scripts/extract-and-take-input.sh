@@ -328,7 +328,6 @@ function extractVariableAndTakeInput () {
             fi
 
             local count=1
-            inp=''
             while [[ -z $inp ]]; do
                 if [[ -n $inputType && $inputType == 'password' ]]
                 then
