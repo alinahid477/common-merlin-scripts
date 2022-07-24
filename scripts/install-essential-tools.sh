@@ -12,6 +12,10 @@ function downloadYttCLI () {
     curl -L https://github.com/vmware-tanzu/carvel-ytt/releases/download/$(curl -s https://api.github.com/repos/vmware-tanzu/carvel-ytt/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/ytt-linux-amd64 -o $HOME/essential-clis/ytt
 }
 
+function downloadYqCLI () {
+    curl -L  https://github.com/mikefarah/yq/releases/download/$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/yq_linux_amd64 -o $HOME/essential-clis/yq
+}
+
 function installEssentialTools() {
 
     if [[ ! -d $HOME/essential-clis ]]
@@ -47,6 +51,16 @@ function installEssentialTools() {
     then
         install $HOME/essential-clis/ytt /usr/local/bin/ytt
         chmod +x /usr/local/bin/ytt
+    fi
+
+    if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
+    then
+        downloadYqCLI
+    fi
+    if [[ ! -f /usr/local/bin/yq ]]
+    then
+        install $HOME/essential-clis/yq /usr/local/bin/yq
+        chmod +x /usr/local/bin/yq
     fi
 }
 
