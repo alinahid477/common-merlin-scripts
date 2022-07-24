@@ -69,14 +69,13 @@ function customConditionParser () {
     return 0
 }
 
-
-
-function extractVariableAndTakeInput () {
-    local variableFile=$1
-    local defaultValuesFile=$2
+function extractVariableAndTakeInputPrivate () {
+    local promptsForVariablesJSON=$1 # REQUIRED. file MUST be located in $HOME/binaries/templates dir
+    local variableFile=$2 # REQUIRED
+    local defaultValuesFile=$3 #Optional
 
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
-    local promptsForVariablesJSON='prompts-for-variables.json'
+    
 
     local ret=255
 
@@ -411,4 +410,21 @@ function extractVariableAndTakeInput () {
 
 
     return 0
+}
+
+
+function extractVariableAndTakeInput () {
+    local promptsForVariablesJSON='prompts-for-variables.json'
+    local variableFile=$1 # REQUIRED
+    local defaultValuesFile=$2 # Optional
+    
+    extractVariableAndTakeInputPrivate $promptsForVariablesJSON $variableFile $defaultValuesFile 
+}
+
+function extractVariableAndTakeInputUsingCustomPromptsFile () {
+    local promptsForVariablesJSON=$1 # REQUIRED. file MUST be located in $HOME/binaries/templates dir
+    local variableFile=$2 # REQUIRED
+    local defaultValuesFile=$2 #Optional
+
+    extractVariableAndTakeInputPrivate $promptsForVariablesJSON $variableFile $defaultValuesFile 
 }
