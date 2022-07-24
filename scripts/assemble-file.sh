@@ -8,11 +8,11 @@ source $HOME/binaries/scripts/keyvaluefile-functions.sh
 # read what to prompt for user input from a json file.
 function assembleFile () {
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
-    local promptsForFilesJSON='prompts-for-files.json'
+    local promptsForFilesJSON=$1 # REQUIRED, json file filename for prompts. Json file MUST be located in "$HOME/binaries/templates"
 
-    local baseFile=$1
-    local defaultValuesFile=$2
-
+    local baseFile=$2 # REQUIRED. Empty base file is allowed. 
+    local defaultValuesFile=$3 # Optional.
+    
     # iterate over array in json file (json file starts with array)
     # base64 decode is needed so that jq format is per line. Otherwise gettting value from the formatted item object becomes impossible 
     for promptItem in $(jq -r '.[] | @base64' $templateFilesDIR/$promptsForFilesJSON); do
@@ -29,7 +29,13 @@ function assembleFile () {
         if [[ -n $andconditions_forblock && $andconditions_forblock != null ]]
         then
             andconditions_forblock=($(echo "$andconditions_forblock" | jq -rc '.[]')) # read as array
-            checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forblock[@]}
+            if [[ -z $defaultValuesFile ]]
+            then
+                checkCondition "AND" ${andconditions_forblock[@]}
+            else
+                checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forblock[@]}
+            fi
+            
             ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
             if [[ $ret == 1 ]]
             then
@@ -52,7 +58,11 @@ function assembleFile () {
         # value for $defaultoptionkey will take precedence over $defaultoptionvalue
         if [[ -n $defaultoptionkey && $defaultoptionkey != null ]]
         then
-            local foundvalue=$(findValueForKey $defaultoptionkey $defaultValuesFile)
+            local foundvalue=''
+            if [[ -n $defaultValuesFile ]]
+            then
+                foundvalue=$(findValueForKey $defaultoptionkey $defaultValuesFile)
+            fi
             if [[ -n $foundvalue && $foundvalue != null ]]
             then
                 defaultoptionvalue=$foundvalue
@@ -67,7 +77,12 @@ function assembleFile () {
             if [[ -n $andconditions_forvalue && $andconditions_forvalue != null ]]
             then
                 andconditions_forvalue=($(echo "$andconditions_forvalue" | jq -rc '.[]')) # read as array
-                checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forvalue[@]}
+                if [[ -z $defaultValuesFile ]]
+                then
+                    checkCondition "AND" ${andconditions_forblock[@]}
+                else
+                    checkConditionWithDefaultValueFile "AND" $defaultValuesFile ${andconditions_forvalue[@]}
+                fi
                 ret=$? # 0 means checkCondition was true else 1 meaning check condition is false
                 if [[ $ret == 1 ]]
                 then
@@ -166,7 +181,11 @@ function assembleFile () {
             then
                 if [[ $filename =~ [\#]+ ]]
                 then
-                    local INFRASTRUCTURE_PROVIDER=$(findValueForKey 'INFRASTRUCTURE_PROVIDER' $defaultValuesFile)
+                    local INFRASTRUCTURE_PROVIDER=''
+                    if [[ -n $defaultValuesFile ]]
+                    then
+                        INFRASTRUCTURE_PROVIDER=$(findValueForKey 'INFRASTRUCTURE_PROVIDER' $defaultValuesFile)
+                    fi
                     filename=$(echo $filename | sed 's|\#|'$INFRASTRUCTURE_PROVIDER'|g')
                 fi
                 if [[ -n $selectedOption ]]
@@ -189,4 +208,13 @@ function assembleFile () {
     done
 
     return 0
+}
+
+function assembleFileWithDefaultPromptFile () {
+    local promptsForFilesJSON='prompts-for-files.json'
+
+    local baseFile=$1
+    local defaultValuesFile=$2
+
+    assembleFile $promptsForFilesJSON $baseFile $defaultValuesFile
 }

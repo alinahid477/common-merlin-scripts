@@ -84,7 +84,7 @@ generateTKCFile () {
     printf "\n"
 
     printf "generate TKG file...\n"
-    assembleFile $tmpTKCFile $clusterconfigfile || returnOrexit || return 1
+    assembleFileWithDefaultPromptFile $tmpTKCFile $clusterconfigfile || returnOrexit || return 1
     printf "\nTKG file generation...COMPLETE.\n"
 
 
