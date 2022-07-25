@@ -164,11 +164,13 @@ function assembleFile () {
                     confirmed='n' # no option was selected. Hence, no file should be appended.
                 else
                     selectedOption=${options[$ret]}
+                    confirmed='y'
                 fi
             else    
                 # only 1 option available. No point presenting with prompt
                 selectedOption="${options[0]}"
                 printf "${yellocolor}No need for user input as only 1 option is available. Default choice: $selectedOption${normalcolor}\n"
+                confirmed='y'
             fi
         fi
         
