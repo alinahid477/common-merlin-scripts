@@ -338,8 +338,21 @@
         "name": "<TKG_PROXY_CA_CERT>",
         "hint": "Set if your proxy server uses a self-signed certificate. Provide the CA certificate in base64 encoded format, for example TKG_PROXY_CA_CERT: \"LS0t[…]tLS0tLQ==\"",
         "optional": true
-    }
+    },
+    {
+        "name": "<DOCKERHUB_PASSWORD>",
+        "hint": "Dockerhub secret (This is required to avoid ratelimiting error from dockerhub).",
+        "use_special_replace": true,
+        "input_type":"password",
+        "isRecordAsEnvVar": true
+    },
     
-
+    {
+        "name": "<WORKLOAD_SELECTORS>",
+        "hint": "The selector that will also appear in workload.yaml based on which Cartographer will trigger the appropriate supply-chain.\neg: app.tanzu.vmware.com/workload-type: web or app.tanzu.vmware.com/workload-path: secured etc",
+        "input_type": "array",
+        "use_special_replace": true,
+        "array_per_item_prefix": "  "
+    }
 
 ]
