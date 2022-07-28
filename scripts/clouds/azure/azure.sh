@@ -281,9 +281,17 @@ function prepareAccount () {
                     sleep 1
                     createServicePrincipal $SERVICE_PRINCIPAL_NAME $SERVICE_PRINCIPAL_ROLE || returnOrexit || return 1
                     sleep 1
-                    printf "${yellowcolor}service principal creation complete. Logging out to login using SP $normalcolor\n"
+                    printf "${yellowcolor}service principal creation complete. Logging out to login using SP... $normalcolor\n"
                     az logout
                     sleep 1
+                    if [[ -d "$HOME/.azure" ]]
+                    then
+                        # remove .azure dir created during login.
+                        # as we are going to use ServicePrincipal to login going forward we no longer require the .azure dir during user login using az login
+                        # the .azure dir also conflicts with az login --service-principal hence it is CRITICAL that this dir is removed before performing az login --service-principal
+                        rm -r $HOME/.azure/
+                        sleep 1
+                    fi
                     doLogin || returnOrexit || return 1
                     break
                 fi
