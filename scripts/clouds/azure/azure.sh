@@ -131,6 +131,8 @@ function acceptBaseImageLicense () {
         done
         baseImageName=$inp
         printf "${greencolor}Accepted base image name: $baseImageName.${normalcolor}\n"
+    else 
+        printf "${yellowcolor}Supplied base image name: $baseImageName.${normalcolor}\n"
     fi
 
     printf "Executing az vm image terms accept --publisher vmware-inc --offer tkg-capi --plan $baseImageName --subscription $AZ_SUBSCRIPTION_ID...\n"
