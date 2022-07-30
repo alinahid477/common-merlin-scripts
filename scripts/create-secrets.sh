@@ -122,3 +122,69 @@ function createGitSSHSecret () {
         unset GIT_SERVER_HOST_FILE
     fi
 }
+
+
+function cretaBasicSecret () {
+    printf "Require user input k8s secret of type: kubernetes.io/basic-auth....\n"
+    local secretTemplateName="k8s-basic-auth-git-secret"
+    local secretFile=/tmp/$secretTemplateName.tmp
+    cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
+    extractVariableAndTakeInput $secretFile || returnOrexit || return 1
+
+    printf "Creating k8s secret of type kubernetes.io/basic-auth...."
+    kubectl apply -f $secretFile -n $namespace && printf "CREATED\n" || printf "FAILED\n"
+}
+
+function createDockerRegistrySecret () {
+    printf "Require user input for K8s secret of type docker-registry...\n"
+    local tmpCmdFile=/tmp/kubectl-docker-registry-secret-cmd.tmp
+    local cmdTemplate="kubectl create secret docker-registry <DOCKER_REGISTRY_SECRET_NAME> --docker-server <DOCKER_REGISTRY_SERVER> --docker-username <DOCKER_REGISTRY_USERNAME> --docker-password <DOCKER_REGISTRY_PASSWORD> --namespace <DOCKER_REGISTRY_SECRET_NAMESPACE>"
+
+    echo $cmdTemplate > $tmpCmdFile
+    extractVariableAndTakeInput $tmpCmdFile
+    cmdTemplate=$(cat $tmpCmdFile)
+    rm $tmpCmdFile
+    printf "\nCreating new K8s secret of type docker-registry..."
+    $(echo $cmdTemplate) && printf "CREATED" || printf "FAILED"
+    printf "\n"
+}
+
+
+function createServiceAccount () {
+
+    local serviceAccountName=$K8S_SERVICE_ACCOUNT_NAME
+    local serviceAccountNameSpace='default'
+    if [[ -n $K8S_SERVICE_ACCOUNT_NAMESPACE ]]
+    then
+        serviceAccountNameSpace=$K8S_SERVICE_ACCOUNT_NAMESPACE
+    fi
+    if [[ -z $serviceAccountName ]]
+    then
+        serviceAccountName='userinputname'
+    fi
+    
+    local saTemplateName="k8s-service-account"
+    local saFile=$HOME/configs/$saTemplateName.$serviceAccountName.yaml
+    cp $HOME/binaries/templates/$saTemplateName.template $saFile
+    extractVariableAndTakeInput $saFile || returnOrexit || return 1
+    local confirmed=''
+    while true; do
+        read -p "Would you like to add more secrets (eg: git-secret) to this service account? [y/n] " yn
+        case $yn in
+            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+            * ) echo "Please answer y or n.";
+        esac
+    done  
+    if [[ $confirmed == 'y' ]]
+    then
+        local secretTemplateName="k8s-service-account-secrets"
+        local secretFile=/tmp/$secretTemplateName.tmp
+        cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
+        extractVariableAndTakeInput $secretFile || returnOrexit || return 1
+        cat $secretFile >> $saFile
+        rm $secretFile
+    fi
+    printf "Applying k8s service account $serviceAccountName in namespace: $serviceAccountNameSpace...."
+    kubectl apply -f $saFile -n $serviceAccountNameSpace && printf "CREATED\n" || printf "FAILED\n"
+}
