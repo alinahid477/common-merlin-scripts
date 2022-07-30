@@ -124,7 +124,7 @@ function createGitSSHSecret () {
 }
 
 
-function cretaBasicSecret () {
+function cretaBasicAuthSecret () {
     printf "Require user input k8s secret of type: kubernetes.io/basic-auth....\n"
     local secretTemplateName="k8s-basic-auth-git-secret"
     local secretFile=/tmp/$secretTemplateName.tmp
