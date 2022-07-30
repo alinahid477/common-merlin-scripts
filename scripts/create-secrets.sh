@@ -125,18 +125,50 @@ function createGitSSHSecret () {
 
 
 function cretaBasicAuthSecret () {
-    printf "Require user input k8s secret of type: kubernetes.io/basic-auth....\n"
+    local filesaveDir=$1 # Optional
+    local filename='nouserinput'
+    if [[ -z $filesaveDir ]]
+    then
+        filesaveDir=/tmp
+    else
+        filename=''
+        while [[ -z $filename ]]; do
+            read -p "Provide a file name: " filename
+            if [[ -z $filename ]]
+            then
+                printf "WARN: empty value not allowed.\n"
+            fi
+        done
+    fi
+    printf "Require user input to create k8s secret of type: kubernetes.io/basic-auth....\n"
     local secretTemplateName="k8s-basic-auth-git-secret"
-    local secretFile=/tmp/$secretTemplateName.tmp
+    local secretFile=$filesaveDir/$secretTemplateName.$filename.tmp
     cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
 
+    local namespace=''
+    printf "\nHint:${bluecolor}the name of the namespace where this secret will be create. eg: default${normalcolor}\n"
+    printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
+    while [[ -z $namespace ]]; do
+        read -p "NAMESPACE: " namespace
+        if [[ -z $namespace ]]
+        then
+            namespace='default'
+            printf "${greencolor}accepted default value: default${normalcolor}\n"
+        fi
+    done
+
     printf "Creating k8s secret of type kubernetes.io/basic-auth...."
     kubectl apply -f $secretFile -n $namespace && printf "CREATED\n" || printf "FAILED\n"
+
+    if [[ $filesaveDir == '/tmp' ]]
+    then
+        rm $secretFile
+    fi
 }
 
 function createDockerRegistrySecret () {
-    printf "Require user input for K8s secret of type docker-registry...\n"
+    printf "Require user input to create K8s secret of type docker-registry...\n"
     local tmpCmdFile=/tmp/kubectl-docker-registry-secret-cmd.tmp
     local cmdTemplate="kubectl create secret docker-registry <DOCKER_REGISTRY_SECRET_NAME> --docker-server <DOCKER_REGISTRY_SERVER> --docker-username <DOCKER_REGISTRY_USERNAME> --docker-password <DOCKER_REGISTRY_PASSWORD> --namespace <DOCKER_REGISTRY_SECRET_NAMESPACE>"
 
@@ -152,19 +184,29 @@ function createDockerRegistrySecret () {
 
 function createServiceAccount () {
 
-    local serviceAccountName=$K8S_SERVICE_ACCOUNT_NAME
     local serviceAccountNameSpace='default'
+    local filesaveDir=$1 # Optional
+    local filename='nouserinput'
+    if [[ -z $filesaveDir ]]
+    then
+        filesaveDir=/tmp
+    else
+        filename=''
+        while [[ -z $filename ]]; do
+            read -p "Provide a file name: " filename
+            if [[ -z $filename ]]
+            then
+                printf "WARN: empty value not allowed.\n"
+            fi
+        done
+    fi
     if [[ -n $K8S_SERVICE_ACCOUNT_NAMESPACE ]]
     then
         serviceAccountNameSpace=$K8S_SERVICE_ACCOUNT_NAMESPACE
     fi
-    if [[ -z $serviceAccountName ]]
-    then
-        serviceAccountName='userinputname'
-    fi
     
     local saTemplateName="k8s-service-account"
-    local saFile=$HOME/configs/$saTemplateName.$serviceAccountName.yaml
+    local saFile=$filesaveDir/$saTemplateName.$filename.yaml
     cp $HOME/binaries/templates/$saTemplateName.template $saFile
     extractVariableAndTakeInput $saFile || returnOrexit || return 1
     local confirmed=''
@@ -185,6 +227,11 @@ function createServiceAccount () {
         cat $secretFile >> $saFile
         rm $secretFile
     fi
-    printf "Applying k8s service account $serviceAccountName in namespace: $serviceAccountNameSpace...."
+    printf "Applying $saFile for k8s service account in namespace: $serviceAccountNameSpace...."
     kubectl apply -f $saFile -n $serviceAccountNameSpace && printf "CREATED\n" || printf "FAILED\n"
+
+    if [[ $filesaveDir == '/tmp' ]]
+    then
+        rm $saFile
+    fi
 }
