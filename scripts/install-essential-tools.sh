@@ -21,8 +21,10 @@ function downloadKrew () {
     local ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')"
     local KREW="krew-${OS}_${ARCH}"
     curl -L "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" -o $HOME/essential-clis/${KREW}.tar.gz
+    cd $HOME/essential-clis/
     tar zxvf "${KREW}.tar.gz"
-    mv ${KREW} krew
+    mv ${KREW} kubectl-krew
+    cd $HOME
 }
 
 function installEssentialTools() {
@@ -79,17 +81,19 @@ function installEssentialTools() {
 
 
     printf "installing tree (via krew)...\n"
-    if [[ ! -f $HOME/essential-clis/krew && ! -f /usr/local/bin/krew ]]
+    if [[ ! -f $HOME/essential-clis/kubectl-krew && ! -f /usr/local/bin/kubectl-krew ]]
     then
         downloadKrew
     fi
-    if [[ ! -f /usr/local/bin/krew ]]
+    if [[ ! -f /usr/local/bin/kubectl-krew ]]
     then
-        install $HOME/essential-clis/krew /usr/local/bin/krew
-        chmod +x /usr/local/bin/krew
+        install $HOME/essential-clis/kubectl-krew /usr/local/bin/kubectl-krew
+        chmod +x /usr/local/bin/kubectl-krew
 
         kubectl krew install tree
     fi
+    export PATH="${PATH}:${HOME}/.krew/bin"
+    printf "kubectl tree installation..COMPLETE"
 }
 
 # installEssentialTools
