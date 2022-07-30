@@ -16,6 +16,15 @@ function downloadYqCLI () {
     curl -L  https://github.com/mikefarah/yq/releases/download/$(curl -s https://api.github.com/repos/mikefarah/yq/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/yq_linux_amd64 -o $HOME/essential-clis/yq
 }
 
+function downloadKrew () {
+    local OS="$(uname | tr '[:upper:]' '[:lower:]')"
+    local ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')"
+    local KREW="krew-${OS}_${ARCH}"
+    curl -L "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" -o $HOME/essential-clis/${KREW}.tar.gz
+    tar zxvf "${KREW}.tar.gz"
+    mv ${KREW} krew
+}
+
 function installEssentialTools() {
 
     if [[ ! -d $HOME/essential-clis ]]
@@ -23,6 +32,7 @@ function installEssentialTools() {
         mkdir -p $HOME/essential-clis
     fi
 
+    printf "installing kpack...\n"
     if [[ ! -f $HOME/essential-clis/kp && ! -f /usr/local/bin/kp ]]
     then
         downloadKpackCLI
@@ -33,6 +43,7 @@ function installEssentialTools() {
         chmod +x /usr/local/bin/kp
     fi
 
+    printf "installing kapp...\n"
     if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
     then
         downloadKappCLI
@@ -43,6 +54,7 @@ function installEssentialTools() {
         chmod +x /usr/local/bin/kapp
     fi
 
+    printf "installing ytt...\n"
     if [[ ! -f $HOME/essential-clis/ytt && ! -f /usr/local/bin/ytt ]]
     then
         downloadYttCLI
@@ -53,6 +65,8 @@ function installEssentialTools() {
         chmod +x /usr/local/bin/ytt
     fi
 
+
+    printf "installing yq...\n"
     if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
     then
         downloadYqCLI
@@ -61,6 +75,20 @@ function installEssentialTools() {
     then
         install $HOME/essential-clis/yq /usr/local/bin/yq
         chmod +x /usr/local/bin/yq
+    fi
+
+
+    printf "installing tree (via krew)...\n"
+    if [[ ! -f $HOME/essential-clis/krew && ! -f /usr/local/bin/krew ]]
+    then
+        downloadKrew
+    fi
+    if [[ ! -f /usr/local/bin/krew ]]
+    then
+        install $HOME/essential-clis/krew /usr/local/bin/krew
+        chmod +x /usr/local/bin/krew
+
+        kubectl krew install tree
     fi
 }
 
