@@ -107,7 +107,7 @@ function createGitSSHSecret () {
 
         export $(cat $HOME/.env | xargs)
 
-        printf "\nCreating git ssh secret: $GITOPS_SECRET_NAME..."
+        printf "\nCreating git ssh secret..."
         kubectl apply -f /tmp/gitops-secret-$filename.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
         printf "\n"
         if [[ -d $HOME/configs ]]
