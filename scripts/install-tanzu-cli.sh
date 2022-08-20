@@ -156,6 +156,7 @@ installTanzuCLI () {
                     # the manifest file exist in the case of TAP distribution of TANZU CLI
                     printf "installing tanzu plugin from local..."
                     tanzu plugin install --local cli all || returnOrexit || return 1
+                    tanzu plugin install --local ./cli apps
                     printf "\nCOMPLETE.\n"
                 else
                     # ENT Tanzu CLI install
