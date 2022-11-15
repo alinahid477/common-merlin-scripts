@@ -147,7 +147,7 @@ installClusterEssential () {
             printf "\nInstalling cluster essential in k8s cluster...\n\n"
             sleep 5
             cd $HOME/tanzu-cluster-essentials
-            source ./install.sh
+            source ./install.sh --yes
             printf "\nTanzu cluster essential instllation....COMPLETED\n\n"
 
             sleep 2
