@@ -10,7 +10,7 @@
         "isRecordAsEnvVar": true
     },
     {
-        "name": "<PVT_REGISTRY_REPO>",
+        "name": "<PVT_REGISTRY_PROJECT_REPO>",
         "hint": "This is where workload images are stored in the registry.\nImages are written to SERVER-NAME/REPO-NAME/workload-name.\neg: my-project/petclinic or my-dockerhub-username",
         "isRecordAsEnvVar": true
     },
