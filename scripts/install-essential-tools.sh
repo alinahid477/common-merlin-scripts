@@ -34,66 +34,86 @@ function installEssentialTools() {
         mkdir -p $HOME/essential-clis
     fi
 
-    printf "installing kpack...\n"
-    if [[ ! -f $HOME/essential-clis/kp && ! -f /usr/local/bin/kp ]]
+    # incase the tools are installed with carvel tools or some other means during docker build, I need to check if it already exist. 
+    # If not then download and install.
+    local isexist=$(which kp)
+    if [[ -z $isexist ]]
     then
-        downloadKpackCLI
-    fi
-    if [[ ! -f /usr/local/bin/kp ]]
-    then
-        install $HOME/essential-clis/kp /usr/local/bin/kp
-        chmod +x /usr/local/bin/kp
-    fi
-
-    printf "installing kapp...\n"
-    if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
-    then
-        downloadKappCLI
-    fi
-    if [[ ! -f /usr/local/bin/kapp ]]
-    then
-        install $HOME/essential-clis/kapp /usr/local/bin/kapp
-        chmod +x /usr/local/bin/kapp
+        printf "installing kpack...\n"
+        if [[ ! -f $HOME/essential-clis/kp && ! -f /usr/local/bin/kp ]]
+        then
+            downloadKpackCLI
+        fi
+        if [[ ! -f /usr/local/bin/kp ]]
+        then
+            install $HOME/essential-clis/kp /usr/local/bin/kp
+            chmod +x /usr/local/bin/kp
+        fi
     fi
 
-    printf "installing ytt...\n"
-    if [[ ! -f $HOME/essential-clis/ytt && ! -f /usr/local/bin/ytt ]]
+    isexist=$(which kapp)
+    if [[ -z $isexist ]]
     then
-        downloadYttCLI
-    fi
-    if [[ ! -f /usr/local/bin/ytt ]]
-    then
-        install $HOME/essential-clis/ytt /usr/local/bin/ytt
-        chmod +x /usr/local/bin/ytt
-    fi
-
-
-    printf "installing yq...\n"
-    if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
-    then
-        downloadYqCLI
-    fi
-    if [[ ! -f /usr/local/bin/yq ]]
-    then
-        install $HOME/essential-clis/yq /usr/local/bin/yq
-        chmod +x /usr/local/bin/yq
+        printf "installing kapp...\n"
+        if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
+        then
+            downloadKappCLI
+        fi
+        if [[ ! -f /usr/local/bin/kapp ]]
+        then
+            install $HOME/essential-clis/kapp /usr/local/bin/kapp
+            chmod +x /usr/local/bin/kapp
+        fi
     fi
 
-
-    printf "installing tree (via krew)...\n"
-    if [[ ! -f $HOME/essential-clis/kubectl-krew && ! -f /usr/local/bin/kubectl-krew ]]
+    isexist=$(which ytt)
+    if [[ -z $isexist ]]
     then
-        downloadKrew
+        printf "installing ytt...\n"
+        if [[ ! -f $HOME/essential-clis/ytt && ! -f /usr/local/bin/ytt ]]
+        then
+            downloadYttCLI
+        fi
+        if [[ ! -f /usr/local/bin/ytt ]]
+        then
+            install $HOME/essential-clis/ytt /usr/local/bin/ytt
+            chmod +x /usr/local/bin/ytt
+        fi
     fi
-    if [[ ! -f /usr/local/bin/kubectl-krew ]]
-    then
-        install $HOME/essential-clis/kubectl-krew /usr/local/bin/kubectl-krew
-        chmod +x /usr/local/bin/kubectl-krew
 
-        kubectl krew install tree
+    isexist=$(which yq)
+    if [[ -z $isexist ]]
+    then
+        printf "installing yq...\n"
+        if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
+        then
+            downloadYqCLI
+        fi
+        if [[ ! -f /usr/local/bin/yq ]]
+        then
+            install $HOME/essential-clis/yq /usr/local/bin/yq
+            chmod +x /usr/local/bin/yq
+        fi
     fi
-    export PATH="${PATH}:${HOME}/.krew/bin"
-    printf "kubectl tree installation..COMPLETE"
+
+    isexist=$(kubectl tree --help)
+    if [[ -z $isexist ]]
+    then
+        printf "installing tree (via krew)...\n"
+        if [[ ! -f $HOME/essential-clis/kubectl-krew && ! -f /usr/local/bin/kubectl-krew ]]
+        then
+            downloadKrew
+        fi
+        if [[ ! -f /usr/local/bin/kubectl-krew ]]
+        then
+            install $HOME/essential-clis/kubectl-krew /usr/local/bin/kubectl-krew
+            chmod +x /usr/local/bin/kubectl-krew
+
+            kubectl krew install tree
+        fi
+        export PATH="${PATH}:${HOME}/.krew/bin"
+        printf "kubectl tree installation..COMPLETE"
+    fi
 }
 
 # installEssentialTools

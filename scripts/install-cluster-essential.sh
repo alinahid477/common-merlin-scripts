@@ -3,6 +3,35 @@ export $(cat $HOME/.env | xargs)
 
 
 installClusterEssential () {
+
+    printf "\nChecking kapp-controller and secretgen-controller presence in the cluster..."
+    local isInstallClusterEssential=''
+    
+    local isKappControllerExist=$(kubectl get pods -A | grep -w kapp-controller)
+    local isSecretgenControllerExist=$(kubectl get pods -A | grep -w secretgen-controller)
+    
+    if [[ -n $isKappControllerExist && -n $isSecretgenControllerExist ]]
+    then
+        printf "FOUND.\n"
+        printf "No need to install cluster-essential.\n"
+        isInstallClusterEssential='n'
+        if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL ]]
+        then
+            printf "Found kapp-controller and secretgen-controller in the k8s but .env is not marked as complete. Marking as complete....."
+            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
+            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+            export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
+            printf "DONE.\n"
+            sleep 2
+        fi
+        returnOrexit || return 1
+    fi
+
+    if [[ -z $isKappControllerExist && -z $isSecretgenControllerExist ]]
+    then
+        local isInstallClusterEssential='y'
+    fi
+
     printf "\nChecking Tanzu cluster essential binary..."
     sleep 1
     local isinflatedCE='n'
