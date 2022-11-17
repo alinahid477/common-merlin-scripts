@@ -9,6 +9,16 @@ function createGitSSHSecret () {
 
     if [[ -z $namespacename ]]
     then
+        printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
+        printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
+        while [[ -z $namespacename ]]; do
+            read -p "NAMESPACE: " namespacename
+            if [[ -z $namespacename ]]
+            then
+                namespacename='default'
+                printf "${greencolor}accepted default value: default${normalcolor}\n"
+            fi
+        done
         namespacename='default'
     fi
     if [[ ! -d $HOME/.git-ops ]]
@@ -147,7 +157,7 @@ function cretaBasicAuthSecret () {
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
 
     local namespace=''
-    printf "\nHint:${bluecolor}the name of the namespace where this secret will be create. eg: default${normalcolor}\n"
+    printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
     printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
     while [[ -z $namespace ]]; do
         read -p "NAMESPACE: " namespace
@@ -184,9 +194,16 @@ function createDockerRegistrySecret () {
 
 function createServiceAccount () {
 
-    local serviceAccountNameSpace='default'
     local filesaveDir=$1 # Optional
     local filename='nouserinput'
+
+    local serviceAccountNameSpace=$2
+
+    if [[ -z $serviceAccountNameSpace ]]
+    then
+        serviceAccountNameSpace='default'
+    fi
+
     if [[ -z $filesaveDir ]]
     then
         filesaveDir=/tmp
