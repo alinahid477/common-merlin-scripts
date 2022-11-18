@@ -19,10 +19,10 @@ installTanzuCLI () {
     sleep 1
     if [[ $isinflatedTZ == 'n' ]]
     then
-        printf "\nInflating Tanzu CLI in $DIR.\n"
+        printf "\nFinding tanzu cli binaries...."
         # default look for: tanzu tap cli
-        tarfilenamingpattern="tanzu-framework-linux-amd64*"
-        tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+        local tarfilenamingpattern="tanzu-framework-linux-amd64*"
+        local tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
         if [[ -z $tanzuclibinary ]]
         then
             # fallback look for: tanzu ent
@@ -43,25 +43,25 @@ installTanzuCLI () {
             numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
-                printf "\nERRR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
+                printf "\nERROR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
                 returnOrexit || return 1
+            else
+                printf "found: $tanzuclibinary\n"
             fi
         fi
     fi
-    printf "COMPLETED\n\n"
     sleep 1
 
-    DIR="$HOME/tanzu"
     if [[ $isinflatedTZ == 'n' && -n $tanzuclibinary ]]
     then
         # at this point we have identified that it has not been untared before. AND we have 1 tar file of tanzu cli distribution
         # let's untar it.
-        printf "\nInflating Tanzu CLI...\n"
+        printf "\nInflating Tanzu CLI in $DIR...\n"
         sleep 1
         if [ ! -d "$DIR" ]
         then
             printf "Creating new $DIR..."
-            mkdir $HOME/tanzu && printf "OK" || printf "FAILED"
+            mkdir -p $HOME/tanzu && printf "OK" || printf "FAILED"
             printf "\n"
         else
             if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
@@ -87,17 +87,17 @@ installTanzuCLI () {
             printf "\n$DIR does not exist. Not proceed further...\n"
             returnOrexit || return 1
         fi
-        printf "\nExtracting $tanzuclibinary in $DIR....\n"
+        printf "Extracting $tanzuclibinary in $DIR....\n"
         tar -xvf $tanzuclibinary -C $HOME/tanzu/ || returnOrexit || return 1
-        printf "\n$tanzuclibinary extract in $DIR......COMPLETED.\n\n"
+        printf "$tanzuclibinary extracted in $DIR......COMPLETED.\n\n"
     fi
-
+    sleep 1
     cd ~
     local isexist=$(which tanzu)
     if [[ -d $DIR && -z $isexist ]]
     then
         # default check tce
-        tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+        local tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
         if [[ -n $tcedirname ]]
         then
             # this mean we are dealing with tce tanzu cli.
@@ -134,7 +134,7 @@ installTanzuCLI () {
             fi            
         else
             # fallback to tanzu cli TAP or ENT. bellow is same for both of them.
-            tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")
+            local tanzuframworkVersion=$(ls $HOME/tanzu/cli/core/ | grep "^v[0-9\.]*$")
             if [[ -z $tanzuframworkVersion ]]
             then
                 printf "\nERROR: could not found version dir in the $HOME/tanzu/cli/core for tanzu cli.\n"
