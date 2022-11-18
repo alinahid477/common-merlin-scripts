@@ -24,7 +24,7 @@ installClusterEssential () {
             printf "DONE.\n"
             sleep 2
         fi
-        returnOrexit || return 1
+        returnOrexit || return 2
     fi
 
     if [[ -z $isKappControllerExist && -z $isSecretgenControllerExist ]]
@@ -90,7 +90,7 @@ installClusterEssential () {
         fi
         if [[ $doinflate == 'n' ]]
         then
-            returnOrexit || return 1;
+            returnOrexit || return 2;
         fi
         if [ ! -d "$DIR" ]
         then

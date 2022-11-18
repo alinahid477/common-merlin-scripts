@@ -80,7 +80,7 @@ installTanzuCLI () {
         if [[ $doinflate == 'n' ]]
         then
             # user is saying no inflate here. so nothing to do here.
-            returnOrexit || return 1;
+            returnOrexit || return 2;
         fi
         if [ ! -d "$DIR" ]
         then
