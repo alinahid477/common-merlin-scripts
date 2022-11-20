@@ -19,21 +19,39 @@ function createGitSSHSecret () {
                 printf "${greencolor}accepted default value: default${normalcolor}\n"
             fi
         done
-        namespacename='default'
+        # namespacename='default'
     fi
     if [[ ! -d $HOME/.git-ops ]]
     then
         mkdir -p $HOME/.git-ops
     fi
     
-    if [[ ! -f $HOME/.git-ops/identity || ! -f $HOME/.git-ops/identity.pub ]]
+    local identityFileName=''
+    if [[ -z $identityFileName ]]
     then
-        printf "Identity files for git repository (public and private key files) not found.\n"
-        printf "If you already have one for git repository confirm 'n' and place the files in $HOME/.git-ops/ directory.\n"
-        printf "File names MUST be with name identity and identity.pub\n"
+        printf "\nHint:${bluecolor}identity file name(public and private key files). eg: when identity filename=identity then files are: ~/.git-ops/identity and ~/.git-ops/identity.pub${normalcolor}\n"
+        printf "${greencolor}Hit enter to accept default: identity${normalcolor}\n"
+        while [[ -z $identityFileName ]]; do
+            read -p "identity prefix: " identityFileName
+            if [[ -z $identityFileName ]]
+            then
+                identityFileName='identity'
+                printf "${greencolor}accepted default value: identity${normalcolor}\n"
+            fi
+        done
+    fi
+
+    printf "Checking for files: $HOME/.git-ops/$identityFileName and $HOME/.git-ops/$identityFileName.pub..."
+    sleep 1
+    if [[ ! -f $HOME/.git-ops/$identityFileName || ! -f $HOME/.git-ops/$identityFileName.pub ]]
+    then
+        printf "Not found.\n"
+        sleep 1
+        printf "If you already have one unused for git repository confirm 'n' and place the files under $HOME/.git-ops/ directory.\n"
+        printf "File names MUST match with name you input previously\n"
         printf "Otherwise, confirm y to create a new one.\n"
         while true; do
-            read -p "Would you like to create identity file for your git repo? [y/n] " yn
+            read -p "Would you like to create identity files pair (public and private key pair) for your git repo? [y/n] " yn
             case $yn in
                 [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
                 [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
@@ -52,26 +70,30 @@ function createGitSSHSecret () {
                 fi
             done
             printf "Generating key pair..."
-            ssh-keygen -f $HOME/.git-ops/identity -q -t rsa -b 4096 -C "$keyemail" -N ""
+            ssh-keygen -f $HOME/.git-ops/$identityFileName -q -t rsa -b 4096 -C "$keyemail" -N ""
             sleep 2
             printf "COMPLETE\n"
         fi
     else
-        printf "Git repo identity keypair for GitOps found in $HOME/.git-ops/.\n"
+        printf "Found in $HOME/.git-ops/.\n"
         sleep 2
     fi
 
-    printf "${bluecolor}Please make sure that identity.pub exists in the gitrepo.\n"
+    printf "\n\n"
+    printf "************************************************\n"
+    printf "Here's the generated $HOME/.git-ops/$identityFileName.pub\n"
+    cat $HOME/.git-ops/$identityFileName.pub
+    sleep 2
+    printf "${bluecolor}Please make sure that $identityFileName.pub exists in the gitrepo.\n"
     printf "eg: for bitbucket it is in: https://bitbucket.org/<projectname>/<reponame>/admin/addon/admin/pipelines/ssh-keys\n"
     printf "OR for githun it is in: https://github.com/<username>/<reponame>/settings/keys/new${normalcolor}\n"
-    sleep 2
-
-    printf "Here's identity.pub\n"
-    cat $HOME/.git-ops/identity.pub
+    printf "************************************************\n"
     sleep 2
     printf "\n\n"
+
+
     while true; do
-        read -p "Confirm to continue to create secret in k8s cluster using the Git repo keypair? [y/n] " yn
+        read -p "Confirm to continue to create secret in k8s cluster using the identity file pair? [y/n] " yn
         case $yn in
             [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
             [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
@@ -81,32 +103,38 @@ function createGitSSHSecret () {
 
     if [[ $confirmed == 'y' ]]
     then
-        if [[ ! -f $HOME/.git-ops/known_hosts ]]
+        printf "Hint: ${bluecolor}Gitrepo host name. eg: github.com, bitbucket.org${normalcolor}\n"
+        local gitprovidername=''
+        while [[ -z $gitprovidername ]]; do
+            read -p "Input the hostname of the git repo: " gitprovidername
+            if [[ -z $gitprovidername ]]
+            then
+                printf "WARN: empty value not allowed.\n"
+            fi
+        done
+
+        printf "Checking $identityFileName-known_host file..."
+        if [[ ! -f $HOME/.git-ops/$identityFileName-known_hosts ]]
         then
-            printf "Hint: ${bluecolor}Gitrepo host name. eg: github.com, bitbucket.org${normalcolor}\n"
-
-            local gitprovidername=''
-            while [[ -z $gitprovidername ]]; do
-                read -p "Input the hostname of they git repo: " gitprovidername
-                if [[ -z $gitprovidername ]]
-                then
-                    printf "WARN: empty value not allowed.\n"
-                fi
-            done
-
+            printf "not found.\n"
+            sleep 1
             printf "Creating known_hosts file for $gitprovidername..."
-            ssh-keyscan $gitprovidername > $HOME/.git-ops/known_hosts || returnOrexit || return 1
+            ssh-keyscan $gitprovidername > $HOME/.git-ops/$identityFileName-known_hosts || returnOrexit || return 1
             printf "COMPLETE\n"
+        else
+            printf "found.\n"
+            sleep 1
         fi
 
         export GIT_SERVER_HOST=$gitprovidername
-        export GIT_SSH_PRIVATE_KEY=$(cat $HOME/.git-ops/identity | base64 -w 0)
-        export GIT_SSH_PUBLIC_KEY=$(cat $HOME/.git-ops/identity.pub | base64 -w 0)
-        export GIT_SERVER_HOST_FILE=$(cat $HOME/.git-ops/known_hosts | base64 -w 0)
+        export GIT_SSH_PRIVATE_KEY=$(cat $HOME/.git-ops/$identityFileName | base64 -w 0)
+        export GIT_SSH_PUBLIC_KEY=$(cat $HOME/.git-ops/$identityFileName.pub | base64 -w 0)
+        export GIT_SERVER_HOST_FILE=$(cat $HOME/.git-ops/$identityFileName-known_hosts | base64 -w 0)
         
+        printf "hint: ${bluecolor}Creating $HOME/binaries/templates/gitops-secret-<filename-suffix>.yaml${normalcolor}\n"
         local filename=''
-        while [[ -z $filename ]]; do
-            read -p "Provide a file name: " filename
+        while [[ -z $filename ]]; do            
+            read -p "Provide a file name suffix for the K8s secret declarative yaml file: " filename
             if [[ -z $filename ]]
             then
                 printf "WARN: empty value not allowed.\n"
