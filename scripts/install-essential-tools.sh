@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function downloadKpackCLI () {
-    curl -L https://github.com/vmware-tanzu/kpack-cli/releases/download/$(curl -s https://api.github.com/repos/vmware-tanzu/kpack-cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/kp-linux-$(curl -s https://api.github.com/repos/vmware-tanzu/kpack-cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed -E 's/v//') -o $HOME/essential-clis/kp
+    curl -L https://github.com/vmware-tanzu/kpack-cli/releases/download/$(curl -s https://api.github.com/repos/vmware-tanzu/kpack-cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')/kp-linux-amd64-$(curl -s https://api.github.com/repos/vmware-tanzu/kpack-cli/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | sed -E 's/v//') -o $HOME/essential-clis/kp
 }
 
 function downloadKappCLI () {
