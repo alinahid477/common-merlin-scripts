@@ -79,14 +79,19 @@ installClusterEssential () {
             printf "\n"
         else
             printf "\n$DIR already exits...\n"
-            while true; do
-                read -p "Confirm to untar in $DIR [y/n]: " yn
-                case $yn in
-                    [Yy]* ) doinflate="y"; printf "\nyou confirmed yes\n"; break;;
-                    [Nn]* ) doinflate="n";printf "\n\nYou said no.\n"; break;;
-                    * ) echo "Please answer y or n.";;
-                esac
-            done
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                while true; do
+                    read -p "Confirm to untar in $DIR [y/n]: " yn
+                    case $yn in
+                        [Yy]* ) doinflate="y"; printf "\nyou confirmed yes\n"; break;;
+                        [Nn]* ) doinflate="n";printf "\n\nYou said no.\n"; break;;
+                        * ) echo "Please answer y or n.";;
+                    esac
+                done
+            else
+                doinflate="y"
+            fi
         fi
         if [[ $doinflate == 'n' ]]
         then
@@ -145,31 +150,39 @@ installClusterEssential () {
         fi
 
         local redeploy='n'
-        if [[ $INSTALL_TANZU_CLUSTER_ESSENTIAL == 'COMPLETED' && $isinflatedCE == 'n' ]]
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
-            printf "${yellowcolor}Tanzu-Cluster-Essential is marked as COMPLETED in the .env.\n"
-            printf "However, this installation detected a new inflation of tanzu-cluster-essentials-linux-amd64-x.x.x.tgz in the $DIR.${normalcolor}\n"
-            while true; do
-                read -p "Would you like to re-deploy tanzu-cluster-essential? [y/n]: " yn
-                case $yn in
-                    [Yy]* ) redeploy='y'; printf "you confirmed yes.\n"; break;;
-                    [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
-                    * ) echo "Please answer y or n.";;
-                esac
-            done
+            if [[ $INSTALL_TANZU_CLUSTER_ESSENTIAL == 'COMPLETED' && $isinflatedCE == 'n' ]]
+            then
+                printf "${yellowcolor}Tanzu-Cluster-Essential is marked as COMPLETED in the .env.\n"
+                printf "However, this installation detected a new inflation of tanzu-cluster-essentials-linux-amd64-x.x.x.tgz in the $DIR.${normalcolor}\n"
+                while true; do
+                    read -p "Would you like to re-deploy tanzu-cluster-essential? [y/n]: " yn
+                    case $yn in
+                        [Yy]* ) redeploy='y'; printf "you confirmed yes.\n"; break;;
+                        [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
+                        * ) echo "Please answer y or n.";;
+                    esac
+                done
+            fi
+        else
+            redeploy='y'
         fi
         if [[ $redeploy == 'y' ]]
         then
             printf "\nPerforming kubectl get all in the namespace:tanzu-cluster-essential before re-deploy...\n"
             kubectl get all -n tanzu-cluster-essentials
-            while true; do
-                read -p "Are you sure you want to re-deploy tanzu-cluster-essential? [y/n]: " yn
-                case $yn in
-                    [Yy]* ) redeploy='y'; printf "you confirmed yes\n"; break;;
-                    [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
-                    * ) echo "Please answer y or n.";;
-                esac
-            done
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                while true; do
+                    read -p "Are you sure you want to re-deploy tanzu-cluster-essential? [y/n]: " yn
+                    case $yn in
+                        [Yy]* ) redeploy='y'; printf "you confirmed yes\n"; break;;
+                        [Nn]* ) redeploy='n'; printf "You said no.\n"; break;;
+                        * ) echo "Please answer y or n.";;
+                    esac
+                done
+            fi
         fi
         if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL || $redeploy == 'y' ]]
         then

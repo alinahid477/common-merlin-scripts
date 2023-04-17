@@ -46,7 +46,7 @@ installTapProfile()
         printf "\nTAP_PROFILE_FILE_NAME=$TAP_PROFILE_FILE_NAME" >> $HOME/.env
 
         local confirmed=''
-        if [[ $SILENTMODE != 'YES' ]]
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then            
             while true; do
                 read -p "Review the file and confirm to continue? [y/n] " yn
@@ -56,6 +56,8 @@ installTapProfile()
                     * ) echo "Please answer y or n.";
                 esac
             done
+        else
+            confirmed='y'
         fi
 
         if [[ $confirmed == 'n' ]]
@@ -77,14 +79,20 @@ installTapProfile()
             if [[ -n $TAP_PACKAGE_VERSION && "$TAP_PACKAGE_VERSION" != "$tapPackageVersion" ]]
             then
                 printf "\n${redcolor}WARN: .env variable TAP_PACKAGE_VERSION=$TAP_PACKAGE_VERSION does not match version installed on cluster tapPackageVersion=$tapPackageVersion.${normalcolor}\n"
-                while true; do
-                    read -p "confirm to continue install profile using version $tapPackageVersion? [y/n] " yn
-                    case $yn in
-                        [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                        [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; returnOrexit || return 1;;
-                        * ) echo "Please answer y or n.";
-                    esac
-                done
+                if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+                then
+                    while true; do
+                        read -p "confirm to continue install profile using version $tapPackageVersion? [y/n] " yn
+                        case $yn in
+                            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; returnOrexit || return 1;;
+                            * ) echo "Please answer y or n.";
+                        esac
+                    done
+                else
+                    printf "\n${yellowcolor}WARN: continuing install profile using version $tapPackageVersion.${normalcolor}\n"
+                    confirmed='y'
+                fi
             fi
         fi
 
@@ -101,10 +109,15 @@ installTapProfile()
 
         
         # printf "DEBUG: tanzu package installed list -A"
-        count=1
-        unset reconcileStatus
-        unset ingressReconcileStatus
-        while [[ -z $reconcileStatus && count -lt 5 ]]; do
+        local count=1
+        local reconcileStatus=''
+        local ingressReconcileStatus=''
+        local maxCount=5
+        if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+        then
+            maxCount=30
+        fi
+        while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
             printf "\nVerify that TAP is installed....\n"
             reconcileStatus=$(tanzu package installed list -A -o json | jq -r '.[] | select(.name == "tap") | .status')
             if [[ $reconcileStatus == *@("failed")* ]]
@@ -117,7 +130,7 @@ installTapProfile()
                 printf "Received status: $reconcileStatus\n."
                 break
             fi
-            printf "wait 2m before checking again ($count out of 4 max)...."
+            printf "wait 2m before checking again ($count out of $maxCount max)...."
             ((count=$count+1))
             sleep 2m
         done
@@ -128,14 +141,23 @@ installTapProfile()
         tanzu package installed list -A
 
         confirmed='n'
-        while true; do
-            read -p "Please confirm if reconcile for needed packages are successful? [y/n] " yn
-            case $yn in
-                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                [Nn]* ) printf "You confirmed no.\n"; break;;
-                * ) echo "Please answer y or n.";
-            esac
-        done
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while true; do
+                read -p "Please confirm if reconcile for needed packages are successful? [y/n] " yn
+                case $yn in
+                    [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                    [Nn]* ) printf "You confirmed no.\n"; break;;
+                    * ) echo "Please answer y or n.";
+                esac
+            done
+        else
+            sleep 5
+            if [[ $reconcileStatus == *@("succeeded")* ]]
+            then
+                confirmed='y'
+            fi            
+        fi
 
         printf "\n\n"
         

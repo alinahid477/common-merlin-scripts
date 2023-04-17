@@ -116,6 +116,48 @@ function installEssentialTools() {
     fi
 }
 
+
+function installEssentialToolsLite() {
+
+    if [[ ! -d $HOME/essential-clis ]]
+    then
+        mkdir -p $HOME/essential-clis
+    fi
+
+    # incase the tools are installed with carvel tools or some other means during docker build, I need to check if it already exist. 
+    # If not then download and install.
+    isexist=$(which kapp)
+    if [[ -z $isexist ]]
+    then
+        printf "installing kapp...\n"
+        if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
+        then
+            downloadKappCLI
+        fi
+        if [[ ! -f /usr/local/bin/kapp ]]
+        then
+            install $HOME/essential-clis/kapp /usr/local/bin/kapp
+            chmod +x /usr/local/bin/kapp
+        fi
+    fi
+
+
+    isexist=$(which yq)
+    if [[ -z $isexist ]]
+    then
+        printf "installing yq...\n"
+        if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
+        then
+            downloadYqCLI
+        fi
+        if [[ ! -f /usr/local/bin/yq ]]
+        then
+            install $HOME/essential-clis/yq /usr/local/bin/yq
+            chmod +x /usr/local/bin/yq
+        fi
+    fi
+}
+
 # installEssentialTools
 # if [ "$(ls -A $HOME/essential-clis)" ]; then
 #     echo "Take action $HOME/essential-clis is not Empty"

@@ -55,28 +55,36 @@ installTap()
         printf "Performing tanzu package installed get tap -n tap-install...\n"
         tanzu package installed get tap -n tap-install
         printf "\n\n"
-        while true; do
-            read -p "Would you like to re-deploy tap? [y/n]: " yn
-            case $yn in
-                [Yy]* ) isexist='n'; printf "you confirmed yes.\n"; break;;
-                [Nn]* ) isexist='y'; printf "You said no.\n"; break;;
-                * ) echo "Please answer y or n.";;
-            esac
-        done
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while true; do
+                read -p "Would you like to re-deploy tap? [y/n]: " yn
+                case $yn in
+                    [Yy]* ) isexist='n'; printf "you confirmed yes.\n"; break;;
+                    [Nn]* ) isexist='y'; printf "You said no.\n"; break;;
+                    * ) echo "Please answer y or n.";;
+                esac
+            done
+        fi
     fi
-
+    sleep 2
     local doinstall=''
 
     if [[ $isexist == "n" && $INSTALL_TAP_PACKAGE_REPOSITORY != 'COMPLETED' ]]
     then
-        while true; do
-            read -p "Confirm if you like to deploy Tanzu Application Platform (TAP) on this k8s cluster now [y/n]: " yn
-            case $yn in
-                [Yy]* ) doinstall="y"; printf "\nyou confirmed yes\n"; break;;
-                [Nn]* ) printf "\n\nYou said no.\n"; break;;
-                * ) echo "Please answer y or n.";;
-            esac
-        done
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while true; do
+                read -p "Confirm if you like to deploy Tanzu Application Platform (TAP) on this k8s cluster now [y/n]: " yn
+                case $yn in
+                    [Yy]* ) doinstall="y"; printf "\nyou confirmed yes\n"; break;;
+                    [Nn]* ) printf "\n\nYou said no.\n"; break;;
+                    * ) echo "Please answer y or n.";;
+                esac
+            done
+        else 
+            doinstall="y";
+        fi
     fi
 
     if [[ $INSTALL_TAP_PACKAGE_REPOSITORY == 'COMPLETED' ]]
@@ -89,15 +97,20 @@ installTap()
         local performinstall=''
         if [[ $INSTALL_TAP_PACKAGE_REPOSITORY == 'COMPLETED' ]]
         then
-            printf "\nFound package repository installation is marked as complete\n"
-            while true; do
-                read -p "Do you want to trigger install tap-package-repository again? [y/n]: " yn
-                case $yn in
-                    [Yy]* ) performinstall="y"; printf "you confirmed yes\n"; break;;
-                    [Nn]* ) performinstall="n";printf "You said no.\n"; break;;
-                    * ) echo "Please answer y or n.";;
-                esac
-            done
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                printf "\nFound package repository installation is marked as complete\n"
+                while true; do
+                    read -p "Do you want to trigger install tap-package-repository again? [y/n]: " yn
+                    case $yn in
+                        [Yy]* ) performinstall="y"; printf "you confirmed yes\n"; break;;
+                        [Nn]* ) performinstall="n";printf "You said no.\n"; break;;
+                        * ) echo "Please answer y or n.";;
+                    esac
+                done
+            else
+                performinstall="y"
+            fi
         else
             performinstall='y'
         fi
@@ -112,20 +125,25 @@ installTap()
         performinstall='n'
         if [[ $INSTALL_TAP_PACKAGE_REPOSITORY == 'COMPLETED' ]]
         then
-            while true; do
-                if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
-                then
-                    read -p "Would you like to re-deploy TAP profile now? [y/n]: " yn
-                else
-                    read -p "Would you like to deploy TAP profile now? [y/n]: " yn
-                fi
-                
-                case $yn in
-                    [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
-                    [Nn]* ) printf "You said no.\n\nExiting...\n\n"; break;;
-                    * ) echo "Please answer y or n.\n";;
-                esac
-            done
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                while true; do
+                    if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
+                    then
+                        read -p "Would you like to re-deploy TAP profile now? [y/n]: " yn
+                    else
+                        read -p "Would you like to deploy TAP profile now? [y/n]: " yn
+                    fi
+                    
+                    case $yn in
+                        [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
+                        [Nn]* ) printf "You said no.\n\nExiting...\n\n"; break;;
+                        * ) echo "Please answer y or n.\n";;
+                    esac
+                done
+            else
+               performinstall='y' 
+            fi
         fi
         
         if [[ $performinstall == 'y' ]]

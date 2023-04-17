@@ -54,14 +54,19 @@ installTapPackageRepository()
     
 
     local confirmed=''
-    while true; do
-        read -p "Confirm to install tap-repository? [y/n]: " yn
-        case $yn in
-            [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
-            [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
-            * ) echo "Please answer y or n.";;
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "Confirm to install tap-repository? [y/n]: " yn
+            case $yn in
+                [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
+                [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
+                * ) echo "Please answer y or n.";;
+            esac
+        done
+    else
+        confirmed='y'
+    fi
 
     if [[ $confirmed == 'n' ]]
     then
@@ -121,14 +126,22 @@ installTapPackageRepository()
     sleep 2
 
     confirmed=''
-    while true; do
-        read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_REGISTRY_INSTALL_REPO}? [y/n]: " yn
-        case $yn in
-            [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
-            [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
-            * ) echo "Please answer y or n.";;
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_REGISTRY_INSTALL_REPO}? [y/n]: " yn
+            case $yn in
+                [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
+                [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
+                * ) echo "Please answer y or n.";;
+            esac
+        done
+    else
+        if [[ -n $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY && $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY == 'YES' ]]
+        then
+            confirmed='y'
+        fi
+    fi
 
     if [[ $confirmed == 'y' ]]
     then
