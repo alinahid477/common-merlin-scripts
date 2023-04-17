@@ -62,12 +62,12 @@ function deployTKC() {
         latesttkrversion=$inp
     fi
 
-    printf "Creating k8s cluster from yaml called ~/workload-clusters/$CLUSTER_NAME.yaml\n\n"
-    tanzu cluster create  --file $configfile -v 9 --tkr $latesttkrversion # --dry-run > ~/workload-clusters/$CLUSTER_NAME-dryrun.yaml
+    printf "Creating k8s cluster from yaml called $HOME/workload-clusters/$CLUSTER_NAME.yaml\n\n"
+    tanzu cluster create  --file $configfile -v 9 --tkr $latesttkrversion # --dry-run > $HOME/workload-clusters/$CLUSTER_NAME-dryrun.yaml
     printf "\n\nDONE.\n\n\n"
 
-    # printf "applying ~/workload-clusters/$CLUSTER_NAME-dryrun.yaml\n\n"
-    # kubectl apply -f ~/workload-clusters/$CLUSTER_NAME-dryrun.yaml
+    # printf "applying $HOME/workload-clusters/$CLUSTER_NAME-dryrun.yaml\n\n"
+    # kubectl apply -f $HOME/workload-clusters/$CLUSTER_NAME-dryrun.yaml
     # printf "\n\nDONE.\n\n\n"
 
     printf "\nWaiting 1 mins to complete cluster create\n"

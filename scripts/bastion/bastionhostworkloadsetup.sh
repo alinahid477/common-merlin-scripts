@@ -1,7 +1,7 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
-remoteDIR="~/merlin/merlin-tkg"
+remoteDIR="$HOME/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"
 localBastionDIR=$HOME/binaries/scripts/bastion
 localScriptsDIR=$HOME/binaries/scripts
@@ -109,7 +109,7 @@ function prepareRemote () {
         ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'mkdir -p '$remoteDIR'/.ssh' || returnOrexit || return 1
     fi
     
-    isexist=$(ssh -i ~/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR'/workload-clusters')
+    isexist=$(ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'ls -l '$remoteDIR'/workload-clusters')
     if [[ -z $isexist ]]
     then
         printf "\nCreating directory '$remoteDIR'/workload-clusters' in $BASTION_USERNAME@$BASTION_HOST home dir"
@@ -227,7 +227,7 @@ function prepareRemote () {
         scp $HOME/.dockerignore $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/ || returnOrexit || return 1
     fi
 
-    isexist=$(ls ~/.ssh/tkg_rsa)
+    isexist=$(ls $HOME/.ssh/tkg_rsa)
     isexistidrsa=$(cat /tmp/bastionhosthomefiles.txt | grep -w "id_rsa$")
     if [[ -n $isexist && -z $isexistidrsa ]]
     then
@@ -315,7 +315,7 @@ function startTKGCreate () {
 
 
     printf "\nPerforming ssh-add..."
-    docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add ~/.ssh/id_rsa" || returnOrexit || return 1
+    docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add $HOME/.ssh/id_rsa" || returnOrexit || return 1
     printf "COMPLETED\n"
 
     printf "\nchecking for cluster plugin....\n"

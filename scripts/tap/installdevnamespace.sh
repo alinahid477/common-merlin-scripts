@@ -22,7 +22,7 @@ createDevNS () {
             tapvaluesfile=$TAP_PROFILE_FILE_NAME
         else
             while [[ -z $tapvaluesfile ]]; do
-                printf "\nHINT: requires full path of the tap values file. (eg: /root/configs/tap-profile-my.yaml)\n"
+                printf "\nHINT: requires full path of the tap values file. (eg: $HOME/configs/tap-profile-my.yaml)\n"
                 read -p "full path of the tap values file: " tapvaluesfile
                 if [[ -z $tapvaluesfile || ! -f $tapvaluesfile ]]
                 then

@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 source $HOME/binaries/scripts/contains-element.sh
 source $HOME/binaries/scripts/select-from-available-options.sh

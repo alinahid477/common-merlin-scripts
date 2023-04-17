@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 installTanzuCLI () {
     printf "\nChecking Tanzu CLI binary..."

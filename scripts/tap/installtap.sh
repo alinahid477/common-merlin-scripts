@@ -19,8 +19,8 @@ installTap()
         if [[ -n $istapinstalled ]]
         then
             printf "Found tap in tap-install ns in the k8s but .env is not marked as complete. Marking as complete...."
-            sed -i '/INSTALL_TAP_PROFILE/d' /root/.env
-            printf "\nINSTALL_TAP_PROFILE=COMPLETED" >> /root/.env
+            sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
+            printf "\nINSTALL_TAP_PROFILE=COMPLETED" >> $HOME/.env
             export INSTALL_TAP_PROFILE=COMPLETED
             printf "DONE.\n"
         else
@@ -40,8 +40,8 @@ installTap()
             # printf "Checking tap package version..."
             # istapversion=$(tanzu package available list tap.tanzu.vmware.com --namespace tap-install -o json | jq -r '[ .[] | {version: .version, released: .["released-at"]|split(" ")[0]} ] | sort_by(.released) | reverse[0] | .version')
             printf "\n\n.env is not marked as overall completed. Marking as complete...."
-            sed -i '/COMPLETE/d' /root/.env
-            printf "\nCOMPLETE=YES" >> /root/.env
+            sed -i '/COMPLETE/d' $HOME/.env
+            printf "\nCOMPLETE=YES" >> $HOME/.env
             export COMPLETE=YES
             printf "DONE.\n\n"
         fi

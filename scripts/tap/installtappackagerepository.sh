@@ -8,7 +8,7 @@ source $HOME/binaries/scripts/returnOrexit.sh
 
 installTapPackageRepository()
 {
-    export $(cat /root/.env | xargs)
+    export $(cat $HOME/.env | xargs)
 
     printf "\n\n\n********* Checking pre-requisites *************\n\n\n"
     sleep 1

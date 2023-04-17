@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 
 function checkBastionHost () {
@@ -11,11 +11,11 @@ function checkBastionHost () {
         returnOrexit || return 1
     fi
 
-    isexists=$(ls ~/.ssh/id_rsa)
+    isexists=$(ls $HOME/.ssh/id_rsa)
     if [[ -z $isexists ]]
     then
         printf "\nERROR: Bastion host parameter supplied BUT no id_rsa file present in .ssh\n"
-        printf "\nPlease place a id_rsa file in ~/.ssh dir"
+        printf "\nPlease place a id_rsa file in $HOME/.ssh dir"
         printf "\nQuiting...\n\n"
         returnOrexit || return 1
     fi
@@ -90,7 +90,7 @@ function create_bastion_tunnel () {
     fi
     printf "\nCreating bastion tunnel for $hostPort:$host:$port through bastion $BASTION_USERNAME@$BASTION_HOST..."
     sleep 1
-    ssh -i /root/.ssh/id_rsa -4 -fNT -L $hostPort:$host:$port $BASTION_USERNAME@$BASTION_HOST || returnOrexit || return 1
+    ssh -i $HOME/.ssh/id_rsa -4 -fNT -L $hostPort:$host:$port $BASTION_USERNAME@$BASTION_HOST || returnOrexit || return 1
     printf "Tunnel CREATED.\n"
 }
 
@@ -136,7 +136,7 @@ function create_bastion_tunnel_for_cluster_endpoints () {
 }
 
 # params (required): path/to/kubeconfig
-# eg: ~/.kube-tkg/config
+# eg: $HOME/.kube-tkg/config
 function create_bastion_tunnel_from_kubeconfig () {
     
     local kubeconfigfile=''
@@ -198,7 +198,7 @@ function create_bastion_tunnel_from_kubeconfig () {
                 local x=$(echo $kubeconfigfile | xargs) 
                 if [[ -f $HOME/.kube/config && "$kubeconfigfile" != "$HOME/.kube/config" ]]
                 then
-                    sed -i '0,/'$serverurl'/s//kubernetes/' ~/.kube/config
+                    sed -i '0,/'$serverurl'/s//kubernetes/' $HOME/.kube/config
                 fi
             fi
             printf "$status\n"

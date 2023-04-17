@@ -53,31 +53,31 @@ then
     if [ -z "$IS_KUBECTL_VSPHERE_EXISTS" ]
     then 
         printf "\n\nkubectl vsphere not installed.\nChecking for binaries...\n"
-        IS_KUBECTL_VSPHERE_BINARY_EXISTS=$(ls ~/binaries/ | grep kubectl-vsphere)
+        IS_KUBECTL_VSPHERE_BINARY_EXISTS=$(ls $HOME/binaries/ | grep kubectl-vsphere)
         if [ -z "$IS_KUBECTL_VSPHERE_BINARY_EXISTS" ]
         then            
-            printf "\n\nDid not find kubectl-vsphere binary in ~/binaries/.\nDownloding in ~/binaries/ directory...\n"
+            printf "\n\nDid not find kubectl-vsphere binary in $HOME/binaries/.\nDownloding in $HOME/binaries/ directory...\n"
             if [[ -n $BASTION_HOST ]]
             then
-                ssh -i /root/.ssh/id_rsa -4 -fNT -L 443:$TKG_VSPHERE_SUPERVISOR_ENDPOINT:443 $BASTION_USERNAME@$BASTION_HOST
-                curl -kL https://localhost/wcp/plugin/linux-amd64/vsphere-plugin.zip -o ~/binaries/vsphere-plugin.zip
+                ssh -i $HOME/.ssh/id_rsa -4 -fNT -L 443:$TKG_VSPHERE_SUPERVISOR_ENDPOINT:443 $BASTION_USERNAME@$BASTION_HOST
+                curl -kL https://localhost/wcp/plugin/linux-amd64/vsphere-plugin.zip -o $HOME/binaries/vsphere-plugin.zip
                 sleep 2
                 fuser -k 443/tcp
             else 
-                curl -kL https://$TKG_VSPHERE_SUPERVISOR_ENDPOINT/wcp/plugin/linux-amd64/vsphere-plugin.zip -o ~/binaries/vsphere-plugin.zip
+                curl -kL https://$TKG_VSPHERE_SUPERVISOR_ENDPOINT/wcp/plugin/linux-amd64/vsphere-plugin.zip -o $HOME/binaries/vsphere-plugin.zip
             fi            
-            unzip ~/binaries/vsphere-plugin.zip -d ~/binaries/vsphere-plugin/
-            mv ~/binaries/vsphere-plugin/bin/kubectl-vsphere ~/binaries/
-            rm -R ~/binaries/vsphere-plugin/
-            rm ~/binaries/vsphere-plugin.zip
+            unzip $HOME/binaries/vsphere-plugin.zip -d $HOME/binaries/vsphere-plugin/
+            mv $HOME/binaries/vsphere-plugin/bin/kubectl-vsphere $HOME/binaries/
+            rm -R $HOME/binaries/vsphere-plugin/
+            rm $HOME/binaries/vsphere-plugin.zip
             
-            printf "\n\nkubectl-vsphere is now downloaded in ~/binaries/...\n"
+            printf "\n\nkubectl-vsphere is now downloaded in $HOME/binaries/...\n"
         else
             printf "kubectl-vsphere found in binaries dir...\n"
         fi
         printf "\n\nAdjusting the dockerfile to incluse kubectl-binaries...\n"
-        sed -i '/COPY binaries\/kubectl-vsphere \/usr\/local\/bin\//s/^# //' ~/Dockerfile
-        sed -i '/RUN chmod +x \/usr\/local\/bin\/kubectl-vsphere/s/^# //' ~/Dockerfile
+        sed -i '/COPY binaries\/kubectl-vsphere \/usr\/local\/bin\//s/^# //' $HOME/Dockerfile
+        sed -i '/RUN chmod +x \/usr\/local\/bin\/kubectl-vsphere/s/^# //' $HOME/Dockerfile
 
         printf "\n\nDockerfile is now adjusted with kubectl-vsphre.\n\n"
         printf "\n\nPlease rebuild the docker image and run again (or ./start.sh merlin-tap forcebuild).\n\n"
@@ -91,7 +91,7 @@ then
     export KUBECTL_VSPHERE_PASSWORD=$(echo $TKG_VSPHERE_PASSWORD | xargs)
 
 
-    EXISTING_JWT_EXP=$(awk '/users/{flag=1} flag && /'$TKG_VSPHERE_CLUSTER_ENDPOINT'/{flag2=1} flag2 && /token:/ {print $NF;exit}' /root/.kube/config | jq -R 'split(".") | .[1] | @base64d | fromjson | .exp')
+    EXISTING_JWT_EXP=$(awk '/users/{flag=1} flag && /'$TKG_VSPHERE_CLUSTER_ENDPOINT'/{flag2=1} flag2 && /token:/ {print $NF;exit}' $HOME/.kube/config | jq -R 'split(".") | .[1] | @base64d | fromjson | .exp')
 
     if [ -z "$EXISTING_JWT_EXP" ]
     then
@@ -113,18 +113,18 @@ then
         else
             printf "\n\n\n***********Creating Tunnel through bastion $BASTION_USERNAME@$BASTION_HOST ...*************\n"            
             ssh-keyscan $BASTION_HOST > $HOME/.ssh/known_hosts
-            printf "\nssh -i /root/.ssh/id_rsa -4 -fNT -L 443:$TKG_VSPHERE_SUPERVISOR_ENDPOINT:443 $BASTION_USERNAME@$BASTION_HOST\n"
+            printf "\nssh -i $HOME/.ssh/id_rsa -4 -fNT -L 443:$TKG_VSPHERE_SUPERVISOR_ENDPOINT:443 $BASTION_USERNAME@$BASTION_HOST\n"
             ssh -i $HOME/.ssh/id_rsa -4 -fNT -L 443:$TKG_VSPHERE_SUPERVISOR_ENDPOINT:443 $BASTION_USERNAME@$BASTION_HOST
             sleep 1
             printf "\n\n\n***********Authenticating to cluster $TKG_VSPHERE_CLUSTER_NAME-->IP:$TKG_VSPHERE_CLUSTER_ENDPOINT  ...*************\n"
             kubectl vsphere login --tanzu-kubernetes-cluster-name $TKG_VSPHERE_CLUSTER_NAME --server kubernetes --insecure-skip-tls-verify -u $TKG_VSPHERE_USERNAME
             sleep 1
             printf "\n\n\n***********Adjusting your kubeconfig...*************\n"
-            sed -i 's/kubernetes/'$TKG_VSPHERE_SUPERVISOR_ENDPOINT'/g' ~/.kube/config
+            sed -i 's/kubernetes/'$TKG_VSPHERE_SUPERVISOR_ENDPOINT'/g' $HOME/.kube/config
             kubectl config use-context $TKG_VSPHERE_CLUSTER_NAME
 
-            sed -i '0,/'$TKG_VSPHERE_CLUSTER_ENDPOINT'/s//kubernetes/' ~/.kube/config
-            ssh -i /root/.ssh/id_rsa -4 -fNT -L 6443:$TKG_VSPHERE_CLUSTER_ENDPOINT:6443 $BASTION_USERNAME@$BASTION_HOST
+            sed -i '0,/'$TKG_VSPHERE_CLUSTER_ENDPOINT'/s//kubernetes/' $HOME/.kube/config
+            ssh -i $HOME/.ssh/id_rsa -4 -fNT -L 6443:$TKG_VSPHERE_CLUSTER_ENDPOINT:6443 $BASTION_USERNAME@$BASTION_HOST
             printf "DONE\n\n\n"
             sleep 2
         fi
@@ -134,7 +134,7 @@ then
         then
             printf "\n\n\n***********Creating K8s endpoint Tunnel through bastion $BASTION_USERNAME@$BASTION_HOST ...*************\n"
             sleep 1
-            ssh -i /root/.ssh/id_rsa -4 -fNT -L 6443:$TKG_VSPHERE_CLUSTER_ENDPOINT:6443 $BASTION_USERNAME@$BASTION_HOST
+            ssh -i $HOME/.ssh/id_rsa -4 -fNT -L 6443:$TKG_VSPHERE_CLUSTER_ENDPOINT:6443 $BASTION_USERNAME@$BASTION_HOST
             printf "DONE\n\n\n"
             sleep 2
         fi
@@ -152,17 +152,17 @@ else
         printf "Bastion host specified...\n"
         sleep 1
         printf "Extracting server url...\n"
-        serverurl=$(awk '/server/ {print $NF;exit}' /root/.kube/config | awk -F/ '{print $3}' | awk -F: '{print $1}')
+        serverurl=$(awk '/server/ {print $NF;exit}' $HOME/.kube/config | awk -F/ '{print $3}' | awk -F: '{print $1}')
         printf "server url: $serverurl\n"
         printf "Extracting port...\n"
-        port=$(awk '/server/ {print $NF;exit}' /root/.kube/config | awk -F/ '{print $3}' | awk -F: '{print $2}')
+        port=$(awk '/server/ {print $NF;exit}' $HOME/.kube/config | awk -F/ '{print $3}' | awk -F: '{print $2}')
         if [[ -z $port ]]
         then
             port=80
         fi
         printf "port: $port\n"
         printf "\n\n\n***********Creating K8s endpoint Tunnel through bastion $BASTION_USERNAME@$BASTION_HOST ...*************\n"
-        ssh -i /root/.ssh/id_rsa -4 -fNT -L $port:$serverurl:$port $BASTION_USERNAME@$BASTION_HOST
+        ssh -i $HOME/.ssh/id_rsa -4 -fNT -L $port:$serverurl:$port $BASTION_USERNAME@$BASTION_HOST
         printf "DONE\n\n\n"
         sleep 2
     fi

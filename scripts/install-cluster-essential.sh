@@ -18,8 +18,8 @@ installClusterEssential () {
         if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL ]]
         then
             printf "Found kapp-controller and secretgen-controller in the k8s but .env is not marked as complete. Marking as complete....."
-            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
-            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' $HOME/.env
+            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> $HOME/.env
             export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
             printf "DONE.\n"
             sleep 2
@@ -46,13 +46,13 @@ installClusterEssential () {
     sleep 1
     if [[ $isinflatedCE == 'n' ]]
     then
-        local clusteressentialsbinary=$(ls ~/binaries/tanzu-cluster-essentials-linux-amd64*)
+        local clusteressentialsbinary=$(ls $HOME/binaries/tanzu-cluster-essentials-linux-amd64*)
         if [[ -z $clusteressentialsbinary ]]
         then
             printf "\nERROR: tanzu-cluster-essentials-linux-amd64-x.x.x.tgz is a required binary for TAP installation.\nYou must place this binary under binaries directory.\n"
             returnOrexit || return 1
         else
-            local numberoftarfound=$(find ~/binaries/tanzu-cluster-essentials-linux-amd64* -type f -printf "." | wc -c)
+            local numberoftarfound=$(find $HOME/binaries/tanzu-cluster-essentials-linux-amd64* -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
                 printf "\nERROR: More than 1 tanzu-cluster-essentials-linux-amd64-x.x.x.tgz found in the binaries directory.\nOnly 1 is allowed.\n"
@@ -136,8 +136,8 @@ installClusterEssential () {
             if [[ -n $isclusteressential ]]
             then
                 printf "Found kapp-controller in the k8s but .env is not marked as complete. Marking as complete....."
-                sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
-                printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+                sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' $HOME/.env
+                printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> $HOME/.env
                 export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
                 printf "DONE.\n"
             fi
@@ -181,8 +181,8 @@ installClusterEssential () {
 
             sleep 2
 
-            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' /root/.env
-            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> /root/.env
+            sed -i '/INSTALL_TANZU_CLUSTER_ESSENTIAL/d' $HOME/.env
+            printf "\nINSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED" >> $HOME/.env
             export INSTALL_TANZU_CLUSTER_ESSENTIAL=COMPLETED
             sleep 1
         fi

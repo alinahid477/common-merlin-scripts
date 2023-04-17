@@ -10,7 +10,7 @@ source $HOME/binaries/scripts/extract-and-take-input.sh
 function buildCartoValuesFile () {
     local valuesType=$1 # REQUIRED. Possible Values: templates, supply-chain
     local cartoDir=$2 # REQUIRED. the directory where carto files will be created
-    local outputLocation=$3 # REQUIRED. A file containing the location/path of the generated values file. eg: file /tmp/vlocation containing this line "~/configs/carto/values.templates.yaml"
+    local outputLocation=$3 # REQUIRED. A file containing the location/path of the generated values file. eg: file /tmp/vlocation containing this line "$HOME/configs/carto/values.templates.yaml"
 
     if [[ -z $valuesType || -z $outputLocation ]]
     then

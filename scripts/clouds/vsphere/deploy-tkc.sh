@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 function deployTKC() {
     local configfile=$1

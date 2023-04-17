@@ -1,7 +1,7 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
-remoteDIR="~/merlin/merlin-tkg"
+remoteDIR="$HOME/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"
 localBastionDIR=$HOME/binaries/scripts/bastion
 localScriptsDIR=$HOME/binaries/scripts
@@ -236,7 +236,7 @@ function prepareRemote () {
         scp $HOME/.dockerignore $BASTION_USERNAME@$BASTION_HOST:$remoteDIR/ || returnOrexit || return 1
     fi
 
-    isexist=$(ls ~/.ssh/tkg_rsa)
+    isexist=$(ls $HOME/.ssh/tkg_rsa)
     isexistidrsa=$(cat /tmp/bastionhosthomefiles.txt | grep -w "id_rsa$")
     if [[ -n $isexist && -z $isexistidrsa ]]
     then
@@ -314,7 +314,7 @@ function startTKGCreate () {
     
 
     printf "\nPerforming ssh-add..."
-    docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add ~/.ssh/id_rsa" || returnOrexit || return 1
+    docker exec -idt $remoteDockerName bash -c "cd ~ ; ssh-add $HOME/.ssh/id_rsa" || returnOrexit || return 1
     printf "COMPLETED\n"
 
     printf "\nStarting tanzu in remote context..."
@@ -484,97 +484,97 @@ function startTKGCreate () {
 function downloadTKGFiles () {
     printf "\n\n\n***********Downloading files from bastion host...***********\n\n\n"
 
-    printf "\nDownloading management cluster configs from ~/.config/tanzu/tkg/clusterconfigs/...\n"
+    printf "\nDownloading management cluster configs from $HOME/.config/tanzu/tkg/clusterconfigs/...\n"
     cd ~
     mkdir -p $HOME/.config/tanzu/tkg/clusterconfigs
-    filename=$(docker exec $remoteDockerName ls -1tc ~/.config/tanzu/tkg/clusterconfigs/ | head -1 || printf "")
+    filename=$(docker exec $remoteDockerName ls -1tc $HOME/.config/tanzu/tkg/clusterconfigs/ | head -1 || printf "")
     count=1
     while [[ -z $filename && $count -lt 5 ]]; do
         printf "failed getting filename. retrying in 5s...\n"
         sleep 5
-        filename=$(docker exec $remoteDockerName ls -1tc ~/.config/tanzu/tkg/clusterconfigs/ | head -1 || printf "")
+        filename=$(docker exec $remoteDockerName ls -1tc $HOME/.config/tanzu/tkg/clusterconfigs/ | head -1 || printf "")
         ((count=count+1))
     done
     sleep 1
     error='n'
-    docker exec $remoteDockerName cat ~/.config/tanzu/tkg/clusterconfigs/$filename > $HOME/.config/tanzu/tkg/clusterconfigs/$filename || error='y'
+    docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/clusterconfigs/$filename > $HOME/.config/tanzu/tkg/clusterconfigs/$filename || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
         printf "failed downloading. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.config/tanzu/tkg/clusterconfigs/$filename > $HOME/.config/tanzu/tkg/clusterconfigs/$filename || error='y'
+        docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/clusterconfigs/$filename > $HOME/.config/tanzu/tkg/clusterconfigs/$filename || error='y'
         ((count=count+1))
     done
 
 
     sleep 1
-    printf "\nDownloading ~/.config/tanzu/config.yaml...\n"
+    printf "\nDownloading $HOME/.config/tanzu/config.yaml...\n"
     error='n'
-    docker exec $remoteDockerName cat ~/.config/tanzu/config.yaml > $HOME/.config/tanzu/config.yaml || error='y'
+    docker exec $remoteDockerName cat $HOME/.config/tanzu/config.yaml > $HOME/.config/tanzu/config.yaml || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
         printf "failed downloading. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.config/tanzu/config.yaml > $HOME/.config/tanzu/config.yaml || error='y'
+        docker exec $remoteDockerName cat $HOME/.config/tanzu/config.yaml > $HOME/.config/tanzu/config.yaml || error='y'
         ((count=count+1))
     done
 
     sleep 1
-    printf "\nDownloading ~/.config/tanzu/tkg/cluster-config.yaml...\n"
+    printf "\nDownloading $HOME/.config/tanzu/tkg/cluster-config.yaml...\n"
     error='n'
-    docker exec $remoteDockerName cat ~/.config/tanzu/tkg/cluster-config.yaml > $HOME/.config/tanzu/tkg/cluster-config.yaml || error='y'
+    docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/cluster-config.yaml > $HOME/.config/tanzu/tkg/cluster-config.yaml || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
         printf "failed downloading. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.config/tanzu/tkg/cluster-config.yaml > $HOME/.config/tanzu/tkg/cluster-config.yaml || error='y'
+        docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/cluster-config.yaml > $HOME/.config/tanzu/tkg/cluster-config.yaml || error='y'
         ((count=count+1))
     done
 
     sleep 1
-    printf "\nDownloading ~/.config/tanzu/tkg/features.json...\n"
+    printf "\nDownloading $HOME/.config/tanzu/tkg/features.json...\n"
     error='n'
-    docker exec $remoteDockerName cat ~/.config/tanzu/tkg/features.json > $HOME/.config/tanzu/tkg/features.json || error='y'
+    docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/features.json > $HOME/.config/tanzu/tkg/features.json || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
         printf "failed downloading. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.config/tanzu/tkg/features.json > $HOME/.config/tanzu/tkg/features.json || error='y'
+        docker exec $remoteDockerName cat $HOME/.config/tanzu/tkg/features.json > $HOME/.config/tanzu/tkg/features.json || error='y'
         ((count=count+1))
     done
 
     sleep 1
-    printf "\nDownloading ~/.kube/config...\n"
+    printf "\nDownloading $HOME/.kube/config...\n"
     error='n'
-    docker exec $remoteDockerName cat ~/.kube/config > $HOME/.kube/config || error='y'
+    docker exec $remoteDockerName cat $HOME/.kube/config > $HOME/.kube/config || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
         printf "failed downloading kubeconfig. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.kube/config > $HOME/.kube/config || error='y'
+        docker exec $remoteDockerName cat $HOME/.kube/config > $HOME/.kube/config || error='y'
         ((count=count+1))
     done
 
-    mkdir -p ~/.kube-tkg
+    mkdir -p $HOME/.kube-tkg
     sleep 1
-    printf "\nDownloading ~/.kube-tkg/config...\n"
+    printf "\nDownloading $HOME/.kube-tkg/config...\n"
     error='n'
-    docker exec $remoteDockerName cat ~/.kube-tkg/config > $HOME/.kube-tkg/config || error='y'
+    docker exec $remoteDockerName cat $HOME/.kube-tkg/config > $HOME/.kube-tkg/config || error='y'
     count=1
     while [[ $error == 'y' && $count -lt 5 ]]; do
-        printf "failed downloading ~/.kube-tkg/kubeconfig. retrying in 5s...\n"
+        printf "failed downloading $HOME/.kube-tkg/kubeconfig. retrying in 5s...\n"
         sleep 5
         error='n'
-        docker exec $remoteDockerName cat ~/.kube-tkg/config > $HOME/.kube-tkg/config || error='y'
+        docker exec $remoteDockerName cat $HOME/.kube-tkg/config > $HOME/.kube-tkg/config || error='y'
         ((count=count+1))
     done
 
-    # scp -r $BASTION_USERNAME@$BASTION_HOST:~/merlin/tkgonvsphere/.config/tanzu/tkg/clusterconfigs ~/.config/tanzu/tkg/
+    # scp -r $BASTION_USERNAME@$BASTION_HOST:$HOME/merlin/tkgonvsphere/.config/tanzu/tkg/clusterconfigs $HOME/.config/tanzu/tkg/
     sleep 2
     printf "==> DONE\n"
     # sleep 10
@@ -621,7 +621,7 @@ function cleanBastion () {
     printf "COMPLETED\n"
 
     # printf "\n\n"
-    # printf "\nDuring the installation process Tanzu CLI created few files in the bastion host under directory ~/merlin of user $BASTION_USERNAME"
+    # printf "\nDuring the installation process Tanzu CLI created few files in the bastion host under directory $HOME/merlin of user $BASTION_USERNAME"
     # printf "\nNecessary files are downloaded on your local (this docker container) directory for local connection to tanzu kubernetes grid."
     # printf "\nThus you have copy of the required files in your local so it is safe to delete the remote files."
     # printf "\nHowever, If you have enough space on the bastion host you may choose keep these files on the bastion host, just in case."
@@ -641,19 +641,19 @@ function cleanBastion () {
     #     printf "\nCleanup bastion's files...\n"
     #     sleep 2
     #     error='n'
-    #     docker exec merlintkgonvsphere rm -r ~/.cache/ ~/.config/ ~/.local/ ~/.kube-tkg/ ~/.kube/ || error='y'
+    #     docker exec merlintkgonvsphere rm -r $HOME/.cache/ $HOME/.config/ $HOME/.local/ $HOME/.kube-tkg/ $HOME/.kube/ || error='y'
     #     count=1
     #     while [[ $error == 'y' && $count -lt 5 ]]; do
     #         printf "failed. retrying in 5s...\n"
     #         sleep 5
     #         error='n'
-    #         docker exec merlintkgonvsphere rm -r ~/.cache/ ~/.config/ ~/.local/ ~/.kube-tkg/ ~/.kube/ || error='y'
+    #         docker exec merlintkgonvsphere rm -r $HOME/.cache/ $HOME/.config/ $HOME/.local/ $HOME/.kube-tkg/ $HOME/.kube/ || error='y'
     #         ((count=count+1))
     #     done
     #     printf "\nRemoved configs and caches files..."
     #     sleep 2
-    #     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'rm -r ~/merlin/tkgonvsphere'
-    #     printf "\nRemoved tkgonvsphere under ~/merlin/..."
+    #     ssh -i $HOME/.ssh/id_rsa $BASTION_USERNAME@$BASTION_HOST 'rm -r $HOME/merlin/tkgonvsphere'
+    #     printf "\nRemoved tkgonvsphere under $HOME/merlin/..."
     # fi
 
 

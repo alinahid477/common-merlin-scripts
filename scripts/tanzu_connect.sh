@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+export $(cat $HOME/.env | xargs)
 
 source $HOME/binaries/scripts/bastion_host_util.sh
 
@@ -82,7 +82,7 @@ function tanzu_connect () {
             clustername=$(cat $HOME/.config/tanzu/tkg/clusterconfigs/$filename | awk -F: '$1=="CLUSTER_NAME"{print $2}' | xargs)
             if [[ -z $clustername ]]
             then
-                printf "\n${redcolor}ERROR: CLUSTER_NAME could not be extracted. Please check file ~/.config/tanzu/tkg/clusterconfigs/$filename.${normalcolor} Exiting...\n"
+                printf "\n${redcolor}ERROR: CLUSTER_NAME could not be extracted. Please check file $HOME/.config/tanzu/tkg/clusterconfigs/$filename.${normalcolor} Exiting...\n"
                 returnOrexit || return 1
             fi            
             contextname=$(parse_yaml $kubeconfigfile | grep "\@$clustername" | awk -F= '$1=="contexts_name"{print $2}' | xargs)    

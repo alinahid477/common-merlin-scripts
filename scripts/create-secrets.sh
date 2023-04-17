@@ -29,7 +29,7 @@ function createGitSSHSecret () {
     local identityFileName=''
     if [[ -z $identityFileName ]]
     then
-        printf "\nHint:${bluecolor}identity file name(public and private key files). eg: when identity filename=identity then files are: ~/.git-ops/identity and ~/.git-ops/identity.pub${normalcolor}\n"
+        printf "\nHint:${bluecolor}identity file name(public and private key files). eg: when identity filename=identity then files are: $HOME/.git-ops/identity and $HOME/.git-ops/identity.pub${normalcolor}\n"
         printf "${greencolor}Hit enter to accept default: identity${normalcolor}\n"
         while [[ -z $identityFileName ]]; do
             read -p "identity prefix: " identityFileName
