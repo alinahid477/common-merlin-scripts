@@ -102,9 +102,19 @@ installTapProfile()
             returnOrexit || return 1
         fi
 
+
+        # added 25/04/2023
+        # TAP 1.5.0 introduced secretname and secret_namespare is the values file (instead of username and password).
+        # This opens up the possibility to create the secret (eg: registry-credential) and refer it in the tap values file by default
+        # with the usage of namespace provisioner this secret will also be available in the developer-namespace.
+        # hence I can create registry-credential in tap-install namespace now and make it available to all other developer-namespace.
         if [[ $tapPackageVersion > 1.4.0 ]]
         then
-            tanzu secret registry add registry-credential --username ${PVT_REGISTRY_USERNAME} --password ${PVT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace tap-install
+            if [[ -z $TARGET_REGISTRY_CREDENTIALS_SECRET_NAME ]]
+            then
+                export TARGET_REGISTRY_CREDENTIALS_SECRET_NAME="registry-credentials"
+            fi
+            tanzu secret registry add $TARGET_REGISTRY_CREDENTIALS_SECRET_NAME --username ${PVT_REGISTRY_USERNAME} --password ${PVT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace tap-install
         fi
 
 

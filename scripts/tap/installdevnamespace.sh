@@ -21,27 +21,37 @@ createDevNS () {
             printf "\nSetting tapvaluesfile from .env file TAP_PROFILE_FILE_NAME=$TAP_PROFILE_FILE_NAME\n"
             tapvaluesfile=$TAP_PROFILE_FILE_NAME
         else
-            while [[ -z $tapvaluesfile ]]; do
-                printf "\nHINT: requires full path of the tap values file. (eg: $HOME/configs/tap-profile-my.yaml)\n"
-                read -p "full path of the tap values file: " tapvaluesfile
-                if [[ -z $tapvaluesfile || ! -f $tapvaluesfile ]]
-                then
-                    printf "empty or invalid value is not allowed.\n"
-                fi
-            done        
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                while [[ -z $tapvaluesfile ]]; do
+                    printf "\nHINT: requires full path of the tap values file. (eg: $HOME/configs/tap-profile-my.yaml)\n"
+                    read -p "full path of the tap values file: " tapvaluesfile
+                    if [[ -z $tapvaluesfile || ! -f $tapvaluesfile ]]
+                    then
+                        printf "empty or invalid value is not allowed.\n"
+                    fi
+                done        
+            else
+                printf "Invalid profile file found OR profile file is missing. Installation failed @ creating developer-namespace...\n"
+                returnOrexit || return 1
+            fi
         fi
     fi
 
     printf "\nSet Tap Values File: $tapvaluesfile\n"
-
-    while true; do
-        read -p "confirm to continue? [y/n] " yn
-        case $yn in
-            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-            * ) echo "Please answer y or n.";
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "confirm to continue? [y/n] " yn
+            case $yn in
+                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                * ) echo "Please answer y or n.";
+            esac
+        done
+    else
+        confirmed='y'
+    fi
 
     if [[ $confirmed == 'n' ]]
     then
@@ -51,13 +61,27 @@ createDevNS () {
     printf "\n*******Starting developer namespace wizard*******\n\n"
 
     local namespacename=''
-    while [[ -z $namespacename ]]; do
-        read -p "name of the namespace: " namespacename
-        if [[ -z $namespacename && ! $namespacename =~ ^[A-Za-z0-9_\-]+$ ]]
-        then
-            printf "empty or invalid value is not allowed.\n"
-        fi
-    done
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+    then
+        namespacename=$DEFAULT_DEVELOPER_NAMESPACE_NAME
+    fi
+
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while [[ -z $namespacename ]]; do
+            read -p "name of the namespace: " namespacename
+            if [[ -z $namespacename && ! $namespacename =~ ^[A-Za-z0-9_\-]+$ ]]
+            then
+                printf "empty or invalid value is not allowed.\n"
+            fi
+        done
+    fi
+
+    if [[ -z $namespacename ]]
+    then
+        printf "empty or invalid value is not allowed.\n"
+        returnOrexit || return 1
+    fi
 
     printf "\nChecking namcespace in the cluster....\n"
     local isexist=$(kubectl get ns | grep "^$namespacename")
@@ -86,20 +110,27 @@ createDevNS () {
         then
             selectedSupplyChainType='gitops'
         else
-            local supplyChainTypes=("local_iteration" "local_iteration_with_code_from_git" "gitops")
-            selectFromAvailableOptions ${supplyChainTypes[@]}
-            ret=$?
-            if [[ $ret == 255 ]]
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
             then
-                printf "${redcolor}No selection were made. Remove the entry${normalcolor}\n"
-                returnOrexit || return 1
-            else
-                # selected option
-                selectedSupplyChainType=${supplyChainTypes[$ret]}
+                local supplyChainTypes=("local_iteration" "local_iteration_with_code_from_git" "gitops")
+                selectFromAvailableOptions ${supplyChainTypes[@]}
+                ret=$?
+                if [[ $ret == 255 ]]
+                then
+                    printf "${redcolor}No selection were made. Installation failed @ crating developer-namespace.${normalcolor}\n"
+                    returnOrexit || return 1
+                else
+                    # selected option
+                    selectedSupplyChainType=${supplyChainTypes[$ret]}
+                fi
             fi
         fi
     fi
-    
+    if [[ -z $selectedSupplyChainType ]]
+    then
+        printf "${redcolor}No selection were made. Installation failed @ crating developer-namespace.${normalcolor}\n"
+        returnOrexit || return 1
+    fi
     if [[ $selectedSupplyChainType != 'local_iteration' ]]
     then
         ###
@@ -204,15 +235,20 @@ createDevNS () {
                 # export GIT_SERVER_HOST_FILE=$(cat $HOME/.git-ops/known_hosts | base64 -w 0)
 
                 confirmed=''
-                printf "\nCreating ssh secret for git repo access (both private source and gitops repo)...\n"
-                while true; do
-                    read -p "confirm to continue? [y/n] " yn
-                    case $yn in
-                        [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                        [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-                        * ) echo "Please answer y or n.";
-                    esac
-                done
+                if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+                then
+                    printf "\nCreating ssh secret for git repo access (both private source and gitops repo)...\n"
+                    while true; do
+                        read -p "confirm to continue? [y/n] " yn
+                        case $yn in
+                            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                            * ) echo "Please answer y or n.";
+                        esac
+                    done
+                else
+                    confirmed='y'
+                fi
                 if [[ $confirmed == 'y' ]]
                 then
                     # cp $HOME/binaries/templates/tap-git-secret.yaml /tmp/tap-git-secret.yaml
@@ -239,14 +275,24 @@ createDevNS () {
     
     printf "\nCreating registry credential for pvt registry access...\n"
     confirmed=''
-    while true; do
-        read -p "confirm to continue? [y/n] " yn
-        case $yn in
-            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-            * ) echo "Please answer y or n.";
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "confirm to continue? [y/n] " yn
+            case $yn in
+                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                * ) echo "Please answer y or n.";
+            esac
+        done
+    else
+        if [[ -z  $TARGET_REGISTRY_CREDENTIALS_SECRET_NAME ]]
+        then
+            printf "${bluecolor}TARGET_REGISTRY_CREDENTIALS_SECRET_NAME not found.\n\r${normalcolor}"
+            returnOrexit || return 1
+        fi
+        confirmed='y'
+    fi
     if [[ $confirmed == 'y' ]]
     then
         local tmpCmdFile=/tmp/devnamespacecmd.tmp
@@ -265,14 +311,19 @@ createDevNS () {
 
     printf "\nAlso need to create a dockerhub secret called: dockerhubregcred for Dockerhub rate limiting issue. This credential is used for things like maven test tekton pipeline pulling maven base image etc\n"
     confirmed=''
-    while true; do
-        read -p "Would you like to create docker hub secret called 'dockerhubregcred' now? [y/n] " yn
-        case $yn in
-            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-            * ) echo "Please answer y or n.";
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "Would you like to create docker hub secret called 'dockerhubregcred' now? [y/n] " yn
+            case $yn in
+                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                * ) echo "Please answer y or n.";
+            esac
+        done
+    else
+        confirmed='y'
+    fi
     if [[ $confirmed == 'y' ]]
     then
         local tmpCmdFile=/tmp/devnamespacecmd.tmp
@@ -291,14 +342,19 @@ createDevNS () {
 
     printf "\nGenerating RBAC, SA for associating TAP and registry using name: default..."
     confirmed=''
-    while true; do
-        read -p "confirm to continue? [y/n] " yn
-        case $yn in
-            [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-            [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-            * ) echo "Please answer y or n.";
-        esac
-    done
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        while true; do
+            read -p "confirm to continue? [y/n] " yn
+            case $yn in
+                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                * ) echo "Please answer y or n.";
+            esac
+        done
+    else
+        confirmed='y'
+    fi
     if [[ $confirmed == 'y' ]]
     then
         cp $HOME/binaries/templates/workload-ns-setup.yaml /tmp/workload-ns-setup-$namespacename.yaml
@@ -310,19 +366,24 @@ createDevNS () {
         printf "\n"
     fi
 
-    isexist=$(cat $tapvaluesfile | grep -w 'grype:$')
+    isexist=$(cat $tapvaluesfile | grep -w 'scanning:$')
     if [[ -n $isexist ]]
     then
         confirmed='n'
-        printf "\nDetected user input for scanning functionlity (grype). A 'kind: ScanPolicy' needs to be present in the namespace.\n"
-        while true; do
-            read -p "Would you create scan policy using $HOME/binaries/templates/tap-scan-policy.yaml file? [y/n] " yn
-            case $yn in
-                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-                * ) echo "Please answer y or n.";
-            esac
-        done
+        printf "\nDetected user input for scanning functionlity. A 'kind: ScanPolicy' needs to be present in the namespace.\n"
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while true; do
+                read -p "Would you create scan policy using $HOME/binaries/templates/tap-scan-policy.yaml file? [y/n] " yn
+                case $yn in
+                    [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                    [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                    * ) echo "Please answer y or n.";
+                esac
+            done
+        else
+            confirmed='y'
+        fi
         if [[ $confirmed == 'y' ]]
         then
             printf "\nApplying scan policy as per $HOME/binaries/templates/tap-scan-policy.yaml.\nThis is pre-configured for java app and only detects critical level severity. Please change accordingly.\n"
@@ -337,14 +398,19 @@ createDevNS () {
     then
         printf "Yes.\nSupply Chain detected with testing functionlity. Applying a maven test tekton pipeline based on file $HOME/binaries/templates/tap-maven-test-tekton-pipeline.yaml...\n"
         confirmed='n'
-        while true; do
-            read -p "Would you create maven-test-tekton-pipeline? [y/n] " yn
-            case $yn in
-                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-                * ) echo "Please answer y or n.";
-            esac
-        done
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while true; do
+                read -p "Would you create maven-test-tekton-pipeline? [y/n] " yn
+                case $yn in
+                    [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+                    [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+                    * ) echo "Please answer y or n.";
+                esac
+            done
+        else
+            confirmed='y'
+        fi
         if [[ $confirmed == 'y' ]]
         then
             printf "\nCreating pipeline..\n"
