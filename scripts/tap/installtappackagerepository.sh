@@ -21,7 +21,7 @@ installTapPackageRepository()
     sleep 1
     printf "COMPLETED.\n\n"
     # printf "\nChecking Cluster Specific Registry...\n"
-    # if [[ -z $PVT_REGISTRY || -z $PVT_REGISTRY_USERNAME || -z $PVT_REGISTRY_PASSWORD ]]
+    # if [[ -z $PVT_INSTALL_REGISTRY_SERVER || -z $PVT_INSTALL_REGISTRY_USERNAME || -z $PVT_INSTALL_REGISTRY_PASSWORD ]]
     # then
     #     printf "\nERROR: Access information to container registry is missing.\n"
     # fi
@@ -113,23 +113,23 @@ installTapPackageRepository()
     printf "\nPerforming docker login for pvt registry and tanzu-net...\n"
     # PATCH: Dockerhub is special case
     # This patch is so that 
-    local myregistryserver=$PVT_REGISTRY_SERVER
-    if [[ -n $PVT_REGISTRY_SERVER && $PVT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+    local myregistryserver=$PVT_INSTALL_REGISTRY_SERVER
+    if [[ -n $PVT_INSTALL_REGISTRY_SERVER && $PVT_INSTALL_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
     then
-        myregistryserver="index.docker.io"        
+        myregistryserver="index.docker.io"
     fi
     printf "\ndocker login to registry.tanzu.vmware.com...\n"
     docker login ${INSTALL_REGISTRY_HOSTNAME} -u ${INSTALL_REGISTRY_USERNAME} -p ${INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     sleep 1
-    printf "\ndocker login to ${myregistryserver}/${PVT_REGISTRY_INSTALL_REPO}...\n"
-    docker login ${myregistryserver} -u ${PVT_REGISTRY_USERNAME} -p ${PVT_REGISTRY_PASSWORD} && printf "DONE.\n"
+    printf "\ndocker login to ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
+    docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     sleep 2
 
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
     then
         while true; do
-            read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_REGISTRY_INSTALL_REPO}? [y/n]: " yn
+            read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: " yn
             case $yn in
                 [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
                 [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
@@ -156,19 +156,22 @@ installTapPackageRepository()
             printf "FOUND.\n"
         fi
         printf "\nExecuting imgpkg copy...\n"
-        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_REGISTRY_INSTALL_REPO} && printf "\n\nCOPY COMPLETE.\n\n";
+        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} && printf "\n\nCOPY COMPLETE.\n\n";
     else
         printf "\nSkipping image relocation for this installation as per user instruction\n"
         sleep 1
     fi
 
-
-    printf "\nCreate a registry secret for ${PVT_REGISTRY_SERVER}...\n"
-    tanzu secret registry add tap-registry --username ${PVT_REGISTRY_USERNAME} --password ${PVT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace tap-install
+    if [[ -z $PVT_INSTALL_REGISTRY_SECRET_NAMESPACE ]]
+    then
+        export PVT_INSTALL_REGISTRY_SECRET_NAMESPACE="tap-install"
+    fi
+    printf "\nCreate a registry secret for ${PVT_INSTALL_REGISTRY_SERVER}...\n"
+    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_INSTALL_REGISTRY_SECRET_NAMESPACE
     printf "\n...COMPLETE\n\n"
 
     printf "\nCreate tanzu-tap-repository...\n"
-    tanzu package repository add tanzu-tap-repository --url ${PVT_REGISTRY_SERVER}/${PVT_REGISTRY_INSTALL_REPO}:${TAP_VERSION} --namespace tap-install
+    tanzu package repository add tanzu-tap-repository --url ${PVT_INSTALL_REGISTRY_SERVER}/${PVT_INSTALL_REGISTRY_REPO}:${TAP_VERSION} --namespace tap-install
 
     printf "\nWaiting 3m before checking...\n"
     sleep 3m

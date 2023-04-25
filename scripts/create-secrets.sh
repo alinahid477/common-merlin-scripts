@@ -35,10 +35,6 @@ function createGitSSHSecret () {
     local identityFileName=''
     if [[ -z $identityFileName ]]
     then
-        if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-        then
-            identityFileName="id_rsa"
-        fi
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
             printf "\nHint:${bluecolor}identity file name(public and private key files). eg: when identity filename=identity then files are: $HOME/.git-ops/identity and $HOME/.git-ops/identity.pub${normalcolor}\n"
@@ -51,6 +47,8 @@ function createGitSSHSecret () {
                     printf "${greencolor}accepted default value: identity${normalcolor}\n"
                 fi
             done
+        else
+            identityFileName='identity'
         fi
     fi
 
@@ -143,7 +141,7 @@ function createGitSSHSecret () {
                 fi
             done
         else
-            gitprovidername=$DEFAULT_GIT_PROVIDER_NAME
+            gitprovidername=$DEFAULT_GIT_PROVIDER_HOST_NAME
         fi
         if [[ -z $gitprovidername ]]
         then
@@ -180,7 +178,10 @@ function createGitSSHSecret () {
                 fi
             done
         else
-            export GITOPS_SECRET_NAME='git-ssh'
+            if [[ -z $GITOPS_SECRET_NAME ]]
+            then
+                export GITOPS_SECRET_NAME='git-ssh'
+            fi
             filename='git-ssh'
         fi
         cp $HOME/binaries/templates/gitops-secret.yaml /tmp/gitops-secret-$filename.yaml

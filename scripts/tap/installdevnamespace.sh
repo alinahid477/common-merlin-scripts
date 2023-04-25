@@ -286,9 +286,9 @@ createDevNS () {
             esac
         done
     else
-        if [[ -z  $TARGET_REGISTRY_CREDENTIALS_SECRET_NAME ]]
+        if [[ -z  $PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME ]]
         then
-            printf "${bluecolor}TARGET_REGISTRY_CREDENTIALS_SECRET_NAME not found.\n\r${normalcolor}"
+            printf "${bluecolor}PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME not found.\n\r${normalcolor}"
             returnOrexit || return 1
         fi
         confirmed='y'
@@ -296,13 +296,13 @@ createDevNS () {
     if [[ $confirmed == 'y' ]]
     then
         local tmpCmdFile=/tmp/devnamespacecmd.tmp
-        local cmdTemplate="tanzu secret registry add <TARGET-REGISTRY-CREDENTIALS-SECRET-NAME> --server <PVT_REGISTRY_SERVER> --username <PVT_REGISTRY_USERNAME> --password <PVT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
+        local cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
 
         echo $cmdTemplate > $tmpCmdFile
         extractVariableAndTakeInput $tmpCmdFile
         cmdTemplate=$(cat $tmpCmdFile)
 
-        printf "\nCreating new secret for private registry with name: $TARGET_REGISTRY_CREDENTIALS_SECRET_NAME..."
+        printf "\nCreating new secret for private registry with name: $PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME..."
         $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
         printf "\n"
         rm $tmpCmdFile
