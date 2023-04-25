@@ -65,6 +65,7 @@ installTapProfile()
             returnOrexit || return 1
         fi
 
+        confirmed='n'
         printf "\n\nChecking installed tap package version....."
         local tapPackageVersion=$(tanzu package available list tap.tanzu.vmware.com --namespace tap-install -o json | jq -r '[ .[] | {version: .version, released: .["released-at"]|split(" ")[0]} ] | sort_by(.released) | reverse[0] | .version')
         printf "found $tapPackageVersion\n\n"
@@ -95,6 +96,17 @@ installTapProfile()
                 fi
             fi
         fi
+
+        if [[ $confirmed == 'n' ]]
+        then
+            returnOrexit || return 1
+        fi
+
+        if [[ $tapPackageVersion > 1.4.0 ]]
+        then
+            tanzu secret registry add registry-credential --username ${PVT_REGISTRY_USERNAME} --password ${PVT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace tap-install
+        fi
+
 
         printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install...\n"
         #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
@@ -161,38 +173,42 @@ installTapProfile()
 
         printf "\n\n"
         
-        local isexist=$(cat $profilefilename | grep -w 'scanning:$')
-        if [[ -n $isexist ]]
+        # from TAP 1.4.0 the metadatastore is auto. eg: metadataStoreAutoconfiguration: true # Create a service account, the Kubernetes control plane token and the requisite app_config block to enable communications between Tanzu Application Platform GUI and SCST - Store.
+        # hence only do manual SA creattion and token add if it is version 1.3.x or older.
+        if [[ $tapPackageVersion < 1.4.0 ]]
         then
-            printf "\nDetected user input for scanning functionlity. Metadata store needs to be wired with TAP-GUI in order for scan result to get displayed in the GUI supply chain."
-            printf "\nCreating readonly service account name 'metadata-store-read-client' and rolebindings for it...\n"
-            kubectl apply -f $HOME/binaries/templates/tap-metadata-store-readonly-sa.yaml
-            printf "\nCreated===\nServiceAccount: metadata-store-read-client in NS: metadata-store\nClusterRoleBinding: metadata-store-ready-only with RoleRef: metadata-store-read-only for SA: metadata-store-read-client\n"
-            sleep 1
-            printf "\nGetting access token for the above created SA..."
-            local METADATA_STORE_ACCESS_TOKEN=$(kubectl get secrets -n metadata-store -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='metadata-store-read-client')].data.token}" | base64 -di)
-            if [[ -n $METADATA_STORE_ACCESS_TOKEN ]]
+            local isexist=$(cat $profilefilename | grep -w 'scanning:$')
+            if [[ -n $isexist ]]
             then
-                printf "OBTAINED METADATA_STORE_ACCESS_TOKEN.\nSee below:\n"
-                echo $METADATA_STORE_ACCESS_TOKEN
-                printf "\n\nReplacing TAPGUI_READONLY_CLIENT_SA_TOKEN in $profilefilename file with the access token...\n"
-                local replaceText='TAPGUI_READONLY_CLIENT_SA_TOKEN'
-                awk -v old=$replaceText -v new="$METADATA_STORE_ACCESS_TOKEN" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $profilefilename > $profilefilename.tmp && mv $profilefilename.tmp $profilefilename
+                printf "\nDetected user input for scanning functionlity. Metadata store needs to be wired with TAP-GUI in order for scan result to get displayed in the GUI supply chain."
+                printf "\nCreating readonly service account name 'metadata-store-read-client' and rolebindings for it...\n"
+                kubectl apply -f $HOME/binaries/templates/tap-metadata-store-readonly-sa.yaml
+                printf "\nCreated===\nServiceAccount: metadata-store-read-client in NS: metadata-store\nClusterRoleBinding: metadata-store-ready-only with RoleRef: metadata-store-read-only for SA: metadata-store-read-client\n"
                 sleep 1
-                printf "\n$profilefilename file updated with the access token...\n"
+                printf "\nGetting access token for the above created SA..."
+                local METADATA_STORE_ACCESS_TOKEN=$(kubectl get secrets -n metadata-store -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='metadata-store-read-client')].data.token}" | base64 -di)
+                if [[ -n $METADATA_STORE_ACCESS_TOKEN ]]
+                then
+                    printf "OBTAINED METADATA_STORE_ACCESS_TOKEN.\nSee below:\n"
+                    echo $METADATA_STORE_ACCESS_TOKEN
+                    printf "\n\nReplacing TAPGUI_READONLY_CLIENT_SA_TOKEN in $profilefilename file with the access token...\n"
+                    local replaceText='TAPGUI_READONLY_CLIENT_SA_TOKEN'
+                    awk -v old=$replaceText -v new="$METADATA_STORE_ACCESS_TOKEN" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $profilefilename > $profilefilename.tmp && mv $profilefilename.tmp $profilefilename
+                    sleep 1
+                    printf "\n$profilefilename file updated with the access token...\n"
+                    sleep 1
+                    printf "\nUpdating TAP $TAP_VERSION to reflect this change...\n"
+                    tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install
+                    printf "\nWaiting 20s..."
+                    sleep 20
+                else
+                    printf "\n${redcolor}ERROR: Failed to retrieve metadata store access token. Please maniually update the file: $profilefilename in section tap_gui.app_config.proxy.metadata-store.headers.Authorization ${normalcolor}\n"
+                    sleep 1
+                fi
                 sleep 1
-                printf "\nUpdating TAP $TAP_VERSION to reflect this change...\n"
-                tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install
-                printf "\nWaiting 20s..."
-                sleep 20
-            else
-                printf "\n${redcolor}ERROR: Failed to retrieve metadata store access token. Please maniually update the file: $profilefilename in section tap_gui.app_config.proxy.metadata-store.headers.Authorization ${normalcolor}\n"
-                sleep 1
+                printf "DONE.\n"
             fi
-            sleep 1
-            printf "DONE.\n"
         fi
-
 
         if [[ $confirmed == 'y' ]]
         then
