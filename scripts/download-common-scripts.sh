@@ -1,6 +1,15 @@
 #!/bin/bash
 
-sourceUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main"
+#### USAGE ####
+# $HOME/binaries/scripts/download-common-scripts.sh list.{name-of-the-list-file} {sourceDir or readDir} {destinationDie or writeDir} 
+# OR
+# $HOME/binaries/scripts/download-common-scripts.sh list.{name-of-the-list-file} {destinationDie or writeDir} 
+# ---- in this case the sourceDir and destinationDir is the same.
+###############
+
+
+
+baseUrl="https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main"
 
 printf "\nStarting download script...\n"
 
@@ -15,14 +24,23 @@ then
     downloadFilesList=$1
 fi
 
+sourceUrlDir="$baseUrl/scripts"
 destinationDir="$HOME/binaries"
-if [[ -n $2 ]]
+if [[ -n $2 && -n $3 ]]
 then
-    destinationDir=$HOME/binaries/$2
+    # both sourceDir and destinationDir is present
+    sourceUrlDir=$baseUrl/$2
+    destinationDir=$HOME/binaries/$3
+elif [[ -n $2 ]]
+then
+    # only destinationDir is present
+    sourceUrlDir=$baseUrl/$2
+    destinationDir=$HOME/binaries/$2  
 fi
 
 
-readarray -t scripts < <(curl -L $sourceUrl/list.$downloadFilesList)
+
+readarray -t scripts < <(curl -L $baseUrl/list.$downloadFilesList)
 
 printf "\nDestinatin DIR = $destinationDir\n"
 printf "\nScripts download = $downloadFilesList\n"
@@ -36,11 +54,14 @@ if [[ -d $destinationDir ]]
 then
     cd $destinationDir
     for i in ${scripts[@]}; do
-        printf "\ncurl -L -O $sourceUrl/$2/$i"
-        curl -L -O $sourceUrl/$2/$i
+        printf "\nget: $sourceUrlDir/$i"
+        curl -L -O $sourceUrlDir/$i
     done
     printf "\n\nsetting permssions...\n"    
     ls -l *.sh | awk '{print $9}' | xargs chmod +x
+    ls -l *.template | awk '{print $9}' | xargs chmod +rw
+    ls -l *.json | awk '{print $9}' | xargs chmod +rw
+    ls -l *.yaml | awk '{print $9}' | xargs chmod +rw
     if [[ -f Dockerfile ]]
     then
         ls -l Dockerfile | awk '{print $9}' | xargs chmod +rw
