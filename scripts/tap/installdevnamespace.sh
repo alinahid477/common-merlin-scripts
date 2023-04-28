@@ -63,7 +63,7 @@ createDevNS () {
     local namespacename=''
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
-        namespacename=$DEFAULT_DEVELOPER_NAMESPACE_NAME
+        namespacename=$DEVELOPER_NAMESPACE_NAME
     fi
 
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
@@ -79,7 +79,7 @@ createDevNS () {
 
     if [[ -z $namespacename ]]
     then
-        printf "empty or invalid value is not allowed.\n"
+        printf "empty or invalid Developer Namespace name is not allowed.\n"
         returnOrexit || return 1
     fi
 

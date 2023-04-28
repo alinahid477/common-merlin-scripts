@@ -141,7 +141,7 @@ function createGitSSHSecret () {
                 fi
             done
         else
-            gitprovidername=$DEFAULT_GIT_PROVIDER_HOST_NAME
+            gitprovidername=$GIT_PROVIDER_HOST_NAME
         fi
         if [[ -z $gitprovidername ]]
         then

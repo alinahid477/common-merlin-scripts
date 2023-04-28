@@ -118,30 +118,48 @@ installTapPackageRepository()
     then
         myregistryserver="index.docker.io"
     fi
-    printf "\ndocker login to registry.tanzu.vmware.com...\n"
-    docker login ${INSTALL_REGISTRY_HOSTNAME} -u ${INSTALL_REGISTRY_USERNAME} -p ${INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
-    sleep 1
+    if [[ -z $PVT_INSTALL_REGISTRY_SERVER || $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
+    then
+        export PVT_INSTALL_REGISTRY_SERVER=$INSTALL_REGISTRY_HOSTNAME
+        myregistryserver=$INSTALL_REGISTRY_HOSTNAME
+        export PVT_INSTALL_REGISTRY_USERNAME=$INSTALL_REGISTRY_USERNAME
+        export PVT_INSTALL_REGISTRY_PASSWORD=$INSTALL_REGISTRY_PASSWORD
+        export PVT_INSTALL_REGISTRY_REPO=$INSTALL_REGISTRY_REPO
+    else
+        printf "\ndocker login to registry.tanzu.vmware.com...\n"
+        docker login ${INSTALL_REGISTRY_HOSTNAME} -u ${INSTALL_REGISTRY_USERNAME} -p ${INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
+        sleep 1
+    fi
+    
     printf "\ndocker login to ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
     docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     sleep 2
 
     confirmed=''
-    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    if [[ $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
     then
-        while true; do
-            read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: " yn
-            case $yn in
-                [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
-                [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
-                * ) echo "Please answer y or n.";;
-            esac
-        done
+        confirmed='n'
+        printf "\nInstalling directly from $myregistryserver. No need for image relocation.\n"
+        sleep 1
     else
-        if [[ -n $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY && $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY == 'YES' ]]
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
-            confirmed='y'
+            while true; do
+                read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: " yn
+                case $yn in
+                    [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
+                    [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
+                    * ) echo "Please answer y or n.";;
+                esac
+            done
+        else
+            if [[ -n $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY && $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY == true ]]
+            then
+                confirmed='y'
+            fi
         fi
     fi
+    
 
     if [[ $confirmed == 'y' ]]
     then
@@ -158,16 +176,16 @@ installTapPackageRepository()
         printf "\nExecuting imgpkg copy...\n"
         imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} && printf "\n\nCOPY COMPLETE.\n\n";
     else
-        printf "\nSkipping image relocation for this installation as per user instruction\n"
+        printf "\nSkipping image relocation for this installation\n"
         sleep 1
     fi
 
-    if [[ -z $PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE ]]
+    if [[ -z $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE ]]
     then
-        export PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
+        export INSTALL_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
     fi
     printf "\nCreate a registry secret for ${PVT_INSTALL_REGISTRY_SERVER}...\n"
-    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
+    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
     printf "\n...COMPLETE\n\n"
 
     printf "\nCreate tanzu-tap-repository...\n"
