@@ -162,12 +162,12 @@ installTapPackageRepository()
         sleep 1
     fi
 
-    if [[ -z $PVT_INSTALL_REGISTRY_SECRET_NAMESPACE ]]
+    if [[ -z $PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE ]]
     then
-        export PVT_INSTALL_REGISTRY_SECRET_NAMESPACE="tap-install"
+        export PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
     fi
     printf "\nCreate a registry secret for ${PVT_INSTALL_REGISTRY_SERVER}...\n"
-    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_INSTALL_REGISTRY_SECRET_NAMESPACE
+    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
     printf "\n...COMPLETE\n\n"
 
     printf "\nCreate tanzu-tap-repository...\n"

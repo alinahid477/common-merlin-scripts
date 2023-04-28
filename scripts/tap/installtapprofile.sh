@@ -110,20 +110,20 @@ installTapProfile()
         # hence I can create registry-credential in tap-install namespace now and make it available to all other developer-namespace.
         if [[ $tapPackageVersion > 1.4.0 ]]
         then
-            if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME ]]
+            if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
             then
-                export PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME="registry-credentials"
+                export PVT_PROJECT_REGISTRY_CREDENTIALS_NAME="registry-credentials"
             fi
             local myregistryserver=$PVT_PROJECT_REGISTRY_SERVER
             if [[ -n $PVT_PROJECT_REGISTRY_SERVER && $PVT_PROJECT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
             then
                 myregistryserver="index.docker.io"
             fi
-            if [[ -z $PVT_PROJECT_REGISTRY_SECRET_NAMESPACE ]]
+            if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE ]]
             then
-                export PVT_PROJECT_REGISTRY_SECRET_NAMESPACE="tap-install"
+                export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
             fi
-            tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_SECRET_NAMESPACE
+            tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
         fi
 
 
