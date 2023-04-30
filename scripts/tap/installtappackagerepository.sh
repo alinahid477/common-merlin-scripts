@@ -174,7 +174,12 @@ installTapPackageRepository()
             printf "FOUND.\n"
         fi
         printf "\nExecuting imgpkg copy...\n"
-        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} && printf "\n\nCOPY COMPLETE.\n\n";
+        if [[ $myregistryserver == "index.docker.io" ]]
+        then
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} && printf "\n\nCOPY COMPLETE.\n\n";
+        else
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages && printf "\n\nCOPY COMPLETE.\n\n";
+        fi
     else
         printf "\nSkipping image relocation for this installation\n"
         sleep 1
@@ -189,7 +194,12 @@ installTapPackageRepository()
     printf "\n...COMPLETE\n\n"
 
     printf "\nCreate tanzu-tap-repository...\n"
-    tanzu package repository add tanzu-tap-repository --url ${PVT_INSTALL_REGISTRY_SERVER}/${PVT_INSTALL_REGISTRY_REPO}:${TAP_VERSION} --namespace tap-install
+    if [[ $myregistryserver == "index.docker.io" ]]
+    then
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}:${TAP_VERSION} --namespace tap-install
+    else
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install
+    fi
 
     printf "\nWaiting 3m before checking...\n"
     sleep 3m
