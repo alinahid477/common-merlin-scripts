@@ -89,7 +89,7 @@ function createGitSSHSecret () {
                     fi
                 done
             else
-                keyemail='admin@cluster.local'    
+                keyemail='merlin_tap_admin@cluster.local'    
             fi
             printf "Generating key pair..."
             ssh-keygen -f $HOME/.git-ops/$identityFileName -q -t rsa -b 4096 -C "$keyemail" -N ""
@@ -108,7 +108,7 @@ function createGitSSHSecret () {
     sleep 2
     printf "${bluecolor}Please make sure that $identityFileName.pub exists in the gitrepo.\n"
     printf "eg: for bitbucket it is in: https://bitbucket.org/<projectname>/<reponame>/admin/addon/admin/pipelines/ssh-keys\n"
-    printf "OR for githun it is in: https://github.com/<username>/<reponame>/settings/keys/new${normalcolor}\n"
+    printf "OR for github it is in: https://github.com/<username>/<reponame>/settings/keys/new${normalcolor}\n"
     printf "************************************************\n"
     sleep 5
     printf "\n\n"
