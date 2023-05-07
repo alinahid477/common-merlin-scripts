@@ -65,19 +65,23 @@ then
         curl -L -O $sourceUrlDir/$i
     done
     printf "\n\nsetting permssions...\n" 
-    if [[ ls *.sh &>/dev/null ]]
+    filecount=`ls -1 *.sh 2>/dev/null | wc -l`
+    if [[ $filecount != 0 ]]
     then
         ls -l *.sh | awk '{print $9}' | xargs chmod +x
     fi
-    if [[ ls *.template &>/dev/null ]]
+    filecount=`ls -1 *.template 2>/dev/null | wc -l`
+    if [[ $filecount != 0 ]]
     then
         ls -l *.template | awk '{print $9}' | xargs chmod +rw
     fi
-    if [[ ls *.json &>/dev/null ]]
+    filecount=`ls -1 *.json 2>/dev/null | wc -l`
+    if [[ $filecount != 0 ]]
     then
         ls -l *.json | awk '{print $9}' | xargs chmod +rw
     fi
-    if [[ ls *.yaml &>/dev/null ]]
+    filecount=`ls -1 *.yaml 2>/dev/null | wc -l`
+    if [[ $filecount != 0 ]]
     then
         ls -l *.yaml | awk '{print $9}' | xargs chmod +rw
     fi    
