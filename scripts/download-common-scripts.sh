@@ -62,7 +62,7 @@ then
     cd $destinationDir
     for i in ${scripts[@]}; do
         printf "\nget: $sourceUrlDir/$i"
-        curl -L -O $sourceUrlDir/$i
+        curl -s -L -O $sourceUrlDir/$i
     done
     printf "\n\nsetting permssions...\n" 
     filecount=`ls -1 *.sh 2>/dev/null | wc -l`
