@@ -101,17 +101,30 @@ function createGitSSHSecret () {
         sleep 2
     fi
 
-    printf "\n\n"
-    printf "************************************************\n"
-    printf "Here's the generated $HOME/.git-ops/$identityFileName.pub\n"
-    cat $HOME/.git-ops/$identityFileName.pub
-    sleep 2
-    printf "${bluecolor}Please make sure that $identityFileName.pub exists in the gitrepo.\n"
-    printf "eg: for bitbucket it is in: https://bitbucket.org/<projectname>/<reponame>/admin/addon/admin/pipelines/ssh-keys\n"
-    printf "OR for github it is in: https://github.com/<username>/<reponame>/settings/keys/new${normalcolor}\n"
-    printf "************************************************\n"
-    sleep 5
-    printf "\n\n"
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        printf "\n\n"
+        printf "************************************************\n"
+        printf "Here's the generated $HOME/.git-ops/$identityFileName.pub\n"
+        cat $HOME/.git-ops/$identityFileName.pub
+        sleep 1
+        printf "${bluecolor}Please make sure that $identityFileName.pub exists in the gitrepo.\n"
+        printf "eg: for bitbucket it is in: https://bitbucket.org/<projectname>/<reponame>/admin/addon/admin/pipelines/ssh-keys\n"
+        printf "OR for github it is in: https://github.com/<username>/<reponame>/settings/keys/new${normalcolor}\n"
+        printf "************************************************\n"
+        sleep 5
+        printf "\n\n"
+    else
+        local gitopsPublicIdentity=$(cat $HOME/.git-ops/$identityFileName.pub)
+        local gitopsPrivateIdentity=$(cat $HOME/.git-ops/$identityFileName)
+        echo "GITOPS_PUBLIC_IDENTITY#$gitopsPublicIdentity" >> $HOME/configs/output
+        echo "GITOPS_PRIVATE_IDENTITY#$gitopsPrivateIdentity" >> $HOME/configs/output
+        sleep 1
+        printf "\n\n"
+    fi
+    
+
+    
 
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
     then

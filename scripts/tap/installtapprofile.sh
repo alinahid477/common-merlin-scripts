@@ -232,15 +232,27 @@ installTapProfile()
         if [[ $confirmed == 'y' ]]
         then
             printf "\nExtracting ip of the load balancer...."
-            lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].ip')
+            local lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].ip')
             if [[ -z $lbip || $lbip == null ]]
             then
-                lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].hostname')
-                lbip=$(dig $lbip +short)
+                local lbhostname=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].hostname')
+                printf "Available at Hostname: $lbhostname\n\n"
+                if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+                then
+                    echo "LB_HOSTNAME#$lbhostname" >> $HOME/configs/output
+                    sleep 1
+                fi
+                lbip=$(dig $lbhostname +short)
+                sleep 1               
+            fi  
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then
+                echo "LB_IP#$lbip" >> $HOME/configs/output
+                sleep 1
             fi
-            printf "IP: $lbip"
+            printf "Available at IP: $lbip\n\n\n"          
             printf "\n"
-            printf "${bluecolor}use this ip to create A record in the DNS zone or update profile with this ip if using xip.io or nip.io ${normalcolor}\n"
+            printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free xip.$lbip.io or nip.$lbip.io in which case you will need to update profile with it.${normalcolor}\n"
             printf "${bluecolor}To update run the below command: ${normalcolor}\n"
             printf "${bluecolor}tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install${normalcolor}\n"
 
@@ -249,6 +261,6 @@ installTapProfile()
             printf "\nINSTALL_TAP_PROFILE=COMPLETED\n" >> $HOME/.env
             printf "\n\n********TAP profile deployment....COMPLETE**********\n\n\n" 
             sleep 3
-        fi                  
+        fi
     fi
 }

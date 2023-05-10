@@ -68,6 +68,7 @@ ls -l $HOME/binaries/templates/* | awk '{print $9}' | xargs chmod +rw
 sleep 1
 ## housekeeping
 rm /tmp/checkedConnectedK8s > /dev/null 2>&1
+rm $HOME/configs/output > /dev/null 2>&1
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/color-file.sh
