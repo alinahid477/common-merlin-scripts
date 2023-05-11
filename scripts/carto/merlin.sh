@@ -10,7 +10,8 @@ source $HOME/binaries/scripts/tap/installtappackagerepository.sh
 source $HOME/binaries/scripts/tap/installtapprofile.sh
 source $HOME/binaries/scripts/tap/installdevnamespace.sh
 
-
+source $HOME/binaries/scripts/kpack/configurekpack.sh
+source $HOME/binaries/scripts/carto/carto.sh
 
 function helpFunction()
 {
@@ -21,6 +22,10 @@ function helpFunction()
     echo -e "\t-r | --install-tap-package-repository no paramater needed. Signals the wizard to start the process for installing package repository for TAP."
     echo -e "\t-p | --install-tap-profile Signals the wizard to launch the UI for user input to take necessary inputs and deploy TAP based on profile curated from user input. Optionally pass profile file using -f or --file flag."
     echo -e "\t-n | --create-developer-namespace signals the wizard create developer namespace."
+    echo -e "\t-k | --configure-kpack signals the wizard to configure kpack."
+    echo -e "\t-c | --configure-carto-templates signals the wizard start creating cartographer templates for supply-chain."
+    echo -e "\t-s | --create-carto-supplychain signals the wizard start creating cartographer supply-chain."
+    echo -e "\t-d | --create-carto-delivery signals the wizard start creating cartographer delivery (for git-ops)."
     echo -e "\t-v | --create-service-account signals the wizard start creating service account."
     echo -e "\t-x | --create-docker-registry-secret signals the wizard start creating docker registry secret."
     echo -e "\t-y | --create-basic-auth-secret signals the wizard start creating basic auth secret."
@@ -35,6 +40,10 @@ unset tceAppToolkitInstall
 unset tapPackageRepositoryInstall
 unset tapProfileInstall
 unset tapDeveloperNamespaceCreate
+unset wizardConfigureKpack
+unset wizardConfigureCartoTemplates
+unset wizardCreateCartoSupplychain
+unset wizardCreateCartoDelivery
 unset wizardUTILCreateServiceAccount
 unset wizardUTILCreateDockerSecret
 unset wizardUTILCreateBasicAuthSecret
@@ -118,6 +127,34 @@ function executeCommand () {
         returnOrexit || return 1
     fi
 
+    if [[ $wizardConfigureKpack == 'y' ]]
+    then
+        unset wizardConfigureKpack
+        startConfigureKpack
+        returnOrexit || return 1
+    fi
+
+    if [[ $wizardConfigureCartoTemplates == 'y' ]]
+    then
+        unset wizardConfigureCartoTemplates
+        createCartoTemplates
+        returnOrexit || return 1
+    fi
+
+    if [[ $wizardCreateCartoSupplychain == 'y' ]]
+    then
+        unset wizardCreateCartoSupplychain
+        createSupplyChain
+        returnOrexit || return 1
+    fi
+
+    if [[ $wizardCreateCartoDelivery == 'y' ]]
+    then
+        unset wizardCreateCartoDelivery
+        createDeliveryBasic
+        returnOrexit || return 1
+    fi
+
     if [[ $wizardUTILCreateBasicAuthSecret == 'y' ]]
     then
         unset wizardUTILCreateBasicAuthSecret
@@ -159,7 +196,7 @@ function executeCommand () {
 output=""
 
 # read the options
-TEMP=`getopt -o tarpnkf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
+TEMP=`getopt -o tarpnkf:i:bcsdvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,configure-carto-templates,create-carto-supplychain,create-carto-delivery,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -190,6 +227,27 @@ while true ; do
                 "" ) tapProfileInstall='y'; shift 2 ;;
                 * ) tapProfileInstall='y' ; shift 1 ;;
             esac ;;
+        -k | --configure-kpack )
+            case "$2" in
+                "" ) wizardConfigureKpack='y'; shift 2 ;;
+                * ) wizardConfigureKpack='y' ; shift 1 ;;
+            esac ;;
+        -c | --configure-carto-templates )
+            case "$2" in
+                "" ) wizardConfigureCartoTemplates='y'; shift 2 ;;
+                * ) wizardConfigureCartoTemplates='y' ; shift 1 ;;
+            esac ;;
+        -s | --create-carto-supplychain )
+            case "$2" in
+                "" ) wizardCreateCartoSupplychain='y'; shift 2 ;;
+                * ) wizardCreateCartoSupplychain='y' ; shift 1 ;;
+            esac ;;
+        -d | --create-carto-delivery )
+            case "$2" in
+                "" ) wizardCreateCartoDelivery='y'; shift 2 ;;
+                * ) wizardCreateCartoDelivery='y' ; shift 1 ;;
+            esac ;;
+
         -v | --create-service-account )
             case "$2" in
                 "" ) wizardUTILCreateServiceAccount='y'; shift 2 ;;

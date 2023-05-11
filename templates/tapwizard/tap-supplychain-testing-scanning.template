@@ -7,7 +7,7 @@ ootb_supply_chain_testing_scanning:
   gitops:
     server_address: <GITOPS_REPOSITORY_SERVER_ADDRESS>
     repository_owner: <GITOPS_REPOSITORY_OWNER>
-    repository_name: <GITOPS_REPOSITORY_NAME>
+    repository_name: <GITOPS_REPOSITORY_ADDRESS>
     branch: "<GITOPS_REPOSITORY_BRANCH>"
     user_name: "<GITOPS_COMMIT_USERNAME>"
     user_email: "<GITOPS_COMMIT_EMAIL>"
