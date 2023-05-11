@@ -11,6 +11,7 @@ installTapProfile()
     local normalcolor=$(tput sgr0)
     local profilefilename=$1
 
+    local isexist=""
 
     # PATCH: Dockerhub is special case
     # This patch is so that 
@@ -196,7 +197,7 @@ installTapProfile()
         # hence only do manual SA creattion and token add if it is version 1.3.x or older.
         if [[ $tapPackageVersion < 1.4.0 ]]
         then
-            local isexist=$(cat $profilefilename | grep -w 'scanning:$')
+            isexist=$(cat $profilefilename | grep -w 'scanning:$')
             if [[ -n $isexist ]]
             then
                 printf "\nDetected user input for scanning functionlity. Metadata store needs to be wired with TAP-GUI in order for scan result to get displayed in the GUI supply chain."
@@ -252,10 +253,27 @@ installTapProfile()
             fi
             printf "Available at IP: $lbip\n\n\n"          
             printf "\n"
-            printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free xip.$lbip.io or nip.$lbip.io in which case you will need to update profile with it.${normalcolor}\n"
-            printf "${bluecolor}To update run the below command: ${normalcolor}\n"
-            printf "${bluecolor}tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install${normalcolor}\n"
-
+            printf "Checking presence of token LB_IP in the TAP values file...\n"
+            isexist=$(cat tap-values-generated.yaml | grep LB_IP)
+            if [[ -n $isexist && -n $lbip ]]
+            then
+                printf "${bluecolor}Found LB_IP token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"
+                printf "replacing LB_IP with $lbip...\n"
+                local replaceText='LB_IP'
+                awk -v old=$replaceText -v new="$lbip" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $profilefilename > $profilefilename.tmp \
+                    && sleep 1 \
+                    && mv $profilefilename.tmp $profilefilename \
+                    && sleep 1 \
+                    && printf "${bluecolor}Replace complete.${normalcolor}\nExecuting tanzu package update...\n" \
+                    && tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install \
+                    && sleep 2m \
+                    && printf "${bluecolor}Update complete.${normalcolor}\n"
+            else
+                printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free xip.$lbip.io or nip.$lbip.io in which case you will need to update profile with it.${normalcolor}\n"
+                printf "${bluecolor}To update run the below command: ${normalcolor}\n"
+                printf "${bluecolor}tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install${normalcolor}\n"
+            fi
+            
             export INSTALL_TAP_PROFILE='COMPLETED'
             sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
             printf "\nINSTALL_TAP_PROFILE=COMPLETED\n" >> $HOME/.env
