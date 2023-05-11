@@ -81,8 +81,8 @@
         "hint": "username of the repository owner. (eg: https://github.com/OWNER meaning https://github.com/alinahid477 thus the value is alinahid477)"
     },
     {
-        "name": "<GITOPS_REPOSITORY_ADDRESS>",
-        "hint": "address of the reposity. (eg: https://github.com/OWNER/REPO meaning https://github.com/alinahid477/apps-gitops)"
+        "name": "<GITOPS_REPOSITORY_NAME>",
+        "hint": "Name of the reposity. (eg: https://github.com/OWNER/REPO meaning https://github.com/alinahid477/apps-gitops)"
     },
     {
         "name": "<GITOPS_REPOSITORY_BRANCH>",
