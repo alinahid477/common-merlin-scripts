@@ -3,7 +3,6 @@
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/color-file.sh
 
-# source $HOME/binaries/wizards/installtceapptoolkit.sh 
 source $HOME/binaries/scripts/tap/installtap.sh 
 
 source $HOME/binaries/scripts/tap/installtappackagerepository.sh
@@ -17,7 +16,6 @@ function helpFunction()
     printf "\n"
     echo "Usage:"
     echo -e "\t-t | --install-tap no paramater needed. Signals the wizard to start the process for installing TAP for Tanzu Enterprise. Optionally pass values file using -f or --file flag."
-    # echo -e "\t-a | --install-app-toolkit no paramater needed. Signals the wizard to start the process for installing App Toolkit package for TCE. Optionally pass values file using -f or --file flag."
     echo -e "\t-r | --install-tap-package-repository no paramater needed. Signals the wizard to start the process for installing package repository for TAP."
     echo -e "\t-p | --install-tap-profile Signals the wizard to launch the UI for user input to take necessary inputs and deploy TAP based on profile curated from user input. Optionally pass profile file using -f or --file flag."
     echo -e "\t-n | --create-developer-namespace signals the wizard create developer namespace."
@@ -31,7 +29,6 @@ function helpFunction()
 
 
 unset tapInstall
-unset tceAppToolkitInstall
 unset tapPackageRepositoryInstall
 unset tapProfileInstall
 unset tapDeveloperNamespaceCreate
@@ -76,19 +73,6 @@ function executeCommand () {
             printf "\nDBG: Argument file: $file\n"
             installTap $file
         fi
-        returnOrexit || return 1
-    fi
-    
-    if [[ $tceAppToolkitInstall == 'y' ]]
-    then
-        unset tceAppToolkitInstall
-        if [[ -z $file ]]
-        then
-            installTCEAppToolkit
-        else
-            printf "\nDBG: Argument file: $file\n"
-            installTCEAppToolkit $file
-        fi        
         returnOrexit || return 1
     fi
 
@@ -170,11 +154,6 @@ while true ; do
                 "" ) tapInstall='y';  shift 2 ;;
                 * ) tapInstall='y' ;  shift 1 ;;
             esac ;;
-        # -a | --install-app-toolkit )
-        #     case "$2" in
-        #         "" ) tceAppToolkitInstall='y'; shift 2 ;;
-        #         * ) tceAppToolkitInstall='y' ; shift 1 ;;
-        #     esac ;;
         -n | --create-developer-namespace )
             case "$2" in
                 "" ) tapDeveloperNamespaceCreate='y'; shift 2 ;;
