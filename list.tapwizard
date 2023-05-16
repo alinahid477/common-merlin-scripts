@@ -2,3 +2,5 @@ installtappackagerepository.sh
 installtap.sh
 installtapprofile.sh
 installdevnamespace.sh
+generate-profile-file.sh
+build-profile-file.sh
