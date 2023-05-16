@@ -98,7 +98,7 @@ installTapProfile()
             else
                 if [[ -n $tapPackageVersion && -n $SILENTMODE && $SILENTMODE == 'YES' ]]
                 then
-                    printf "\n${yellowcolor}continuing install using version: $tapPackageVersion.${normalcolor}\n"
+                    printf "\n${yellowcolor}continuing install using found version: $tapPackageVersion.${normalcolor}\n"
                     confirmed='y'
                 else 
                     printf "\n${redcolor}Error: Failed to retrieve Tap Package Version from package repository.\nWill attept to continue from TAP_PACKAGE_VERSION=$TAP_PACKAGE_VERSION${normalcolor}\n"
