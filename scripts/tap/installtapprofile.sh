@@ -140,8 +140,14 @@ installTapProfile()
 
         printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install...\n"
         #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
-        tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s
 
+        local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install)
+
+        if [[ -z $isSuccess ]]
+        then
+            printf "\nError performing tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install\n"
+            returnOrexit || return 1
+        fi
         printf "\nwait 2m...\n"
         sleep 2m
 
