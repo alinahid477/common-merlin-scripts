@@ -176,9 +176,9 @@ installTapPackageRepository()
         printf "\nExecuting imgpkg copy...\n"
         if [[ $myregistryserver == "index.docker.io" ]]
         then
-            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} && printf "\n\nCOPY COMPLETE.\n\n";
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} && printf "\n\nCOPY COMPLETE.\n\n";
         else
-            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages && printf "\n\nCOPY COMPLETE.\n\n";
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages && printf "\n\nCOPY COMPLETE.\n\n";
         fi
     else
         printf "\nSkipping image relocation for this installation\n"
