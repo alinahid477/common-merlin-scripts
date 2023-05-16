@@ -57,7 +57,6 @@ then
 fi
 
 printf "\n\nsetting executable permssion to all binaries sh\n\n"
-ls -l $HOME/binaries/wizards/*.sh | awk '{print $9}' | xargs chmod +x
 ls -l $HOME/binaries/scripts/*.sh | awk '{print $9}' | xargs chmod +x
 ls -l $HOME/binaries/scripts/tap/*.sh | awk '{print $9}' | xargs chmod +x
 ls -l $HOME/binaries/scripts/carto/*.sh | awk '{print $9}' | xargs chmod +x
