@@ -163,7 +163,7 @@ installTapProfile()
         local maxCount=5
         if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
         then
-            maxCount=30
+            maxCount=5
         fi
         while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
             printf "\nVerify that TAP is installed....\n"

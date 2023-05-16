@@ -195,12 +195,18 @@ installTapPackageRepository()
     tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
     printf "\n...COMPLETE\n\n"
 
+    local appendForSilentMode=""
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+    then
+        appendForSilentMode='--yes'
+    fi    
+
     printf "\nCreate tanzu-tap-repository...\n"
     if [[ $myregistryserver == "index.docker.io" ]]
     then
-        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}:${TAP_VERSION} --namespace tap-install
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     else
-        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     fi
 
     printf "\nWaiting 3m before checking...\n"
