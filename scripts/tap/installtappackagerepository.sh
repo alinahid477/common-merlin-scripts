@@ -173,12 +173,13 @@ installTapPackageRepository()
             sleep 1
             printf "FOUND.\n"
         fi
-        printf "\nExecuting imgpkg copy...\n"
+        printf "\nExecuting imgpkg copy from registry.tanzu.vmware.com to $myregistryserver...\n"
+        printf "\nThis may take few mins (15mins - 20mins)..\n"
         if [[ $myregistryserver == "index.docker.io" ]]
         then
             imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} && printf "\n\nCOPY COMPLETE.\n\n";
         else
-            echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
+            # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
             imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y --debug && printf "\n\nCOPY COMPLETE.\n\n";
         fi
     else

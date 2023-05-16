@@ -47,7 +47,7 @@ fi
 
 
 
-readarray -t scripts < <(curl -L $baseUrl/list.$downloadFilesList)
+readarray -t scripts < <(curl -s -L $baseUrl/list.$downloadFilesList)
 
 printf "\nDestinatin DIR = $destinationDir\n"
 printf "\nScripts download = $downloadFilesList\n"
