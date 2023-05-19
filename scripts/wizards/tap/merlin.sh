@@ -39,6 +39,7 @@ unset wizardUTILCreateGitSSHSecret
 unset argFile
 unset ishelp
 unset isSkipK8sCheck
+unset adjustContourForValuesFile
 
 
 function doCheckK8sOnlyOnce()
@@ -135,6 +136,18 @@ function executeCommand () {
         returnOrexit || return 1
     fi
 
+
+    if [[ $adjustContourForValuesFile == 'y' ]]
+    then
+        unset adjustContourForValuesFile
+        if [[ -n $file ]]
+        then
+            printf "\nAdjusting Contour Block in file: $file\n"
+            addContourBlockAccordinglyInProfileFile $file            
+        fi
+        returnOrexit || return 1
+    fi
+
     printf "\nThis shouldn't have happened. Embarrasing.\n"
 }
 
@@ -142,8 +155,16 @@ function executeCommand () {
 
 output=""
 
+# NEW LOGIC: adjust-contour-for-valuesfile. 19.05.2023
+# this is to add contour block for tap-values-file (eg: use nlb for aws)
+# the immidiate usecase for this is the webUI. This so that I can call command to add the contour block in the tap-values file so that
+#   I can show the updated file in the webUI.
+# The values file template in the webUI does not have contour block and need to get that block populated dynamically
+#  based on the fact which cluster is it in (eg: is it AWS or Is it something else)
+
+
 # read the options
-TEMP=`getopt -o tarpnkf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
+TEMP=`getopt -o tarpnkf:i:bvxyzuh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,adjust-contour-for-valuesfile,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -204,6 +225,11 @@ while true ; do
             case "$2" in
                 "" ) isSkipK8sCheck='y'; shift 2 ;;
                 * ) isSkipK8sCheck='y';  shift 1 ;;
+            esac ;;
+        -u | --adjust-contour-for-valuesfile )
+            case "$2" in
+                "" ) adjustContourForValuesFile='y'; shift 2 ;;
+                * ) adjustContourForValuesFile='y';  shift 1 ;;
             esac ;;
         -h | --help ) ishelp='y'; helpFunction; break;; 
         -- ) shift; break;; 

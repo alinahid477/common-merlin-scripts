@@ -30,4 +30,6 @@ tap-supplychain-basic.template
 tap-supplychain-testing-scanning.template
 tap-supplychain-testing.template
 tap-tapgui.template
+tap-contour-block-aws.template
+tap-contour-block-generic.template
 workload-ns-setup.yaml

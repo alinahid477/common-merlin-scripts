@@ -45,7 +45,7 @@ installTapProfile()
         export TAP_PROFILE_FILE_NAME=$profilefilename
         sed -i '/TAP_PROFILE_FILE_NAME/d' $HOME/.env
         printf "\nTAP_PROFILE_FILE_NAME=$TAP_PROFILE_FILE_NAME" >> $HOME/.env
-
+        
         local confirmed=''
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then            
@@ -207,7 +207,7 @@ installTapProfile()
             fi            
         fi
 
-        printf "\n\n"
+        printf "tap.tanzu.vmware.com install COMPLETE\n\n"
         
         # from TAP 1.4.0 the metadatastore is auto. eg: metadataStoreAutoconfiguration: true # Create a service account, the Kubernetes control plane token and the requisite app_config block to enable communications between Tanzu Application Platform GUI and SCST - Store.
         # hence only do manual SA creattion and token add if it is version 1.3.x or older.
@@ -254,15 +254,16 @@ installTapProfile()
             then
                 local lbhostname=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].hostname')
                 printf "Available at Hostname: $lbhostname\n\n"
-                if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+                if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
                 then
                     echo "LB_HOSTNAME#$lbhostname" >> $HOME/configs/output
                     sleep 1
                 fi
-                lbip=$(dig $lbhostname +short)
+                # lbip=$(dig $lbhostname +short)
+                lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
                 sleep 1               
             fi  
-            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
             then
                 echo "LB_IP#$lbip" >> $HOME/configs/output
                 sleep 1
