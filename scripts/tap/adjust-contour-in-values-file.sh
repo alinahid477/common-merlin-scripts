@@ -9,7 +9,7 @@ addContourBlockAccordinglyInProfileFile()
     # if contour block already exists means user had put it in the file (so he/she must have done it correctly) OR 
     # it is backward compatibility of this script.
     local profilefilename=$1
-
+    printf "\nDBG: profilefilename $profilefilename\n"
     if [[ -f $profilefilename ]]
     then
         local isexist=$(cat $profilefilename | grep -w 'contour:$')
