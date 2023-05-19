@@ -118,7 +118,7 @@ installTapPackageRepository()
     then
         myregistryserver="index.docker.io"
     fi
-    if [[ -z $PVT_INSTALL_REGISTRY_SERVER || $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
+    if [[ $INSTALL_FROM_TANZUNET == true || -z $PVT_INSTALL_REGISTRY_SERVER || $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
     then
         export PVT_INSTALL_REGISTRY_SERVER=$INSTALL_REGISTRY_HOSTNAME
         myregistryserver=$INSTALL_REGISTRY_HOSTNAME
@@ -153,7 +153,7 @@ installTapPackageRepository()
                 esac
             done
         else
-            if [[ -n $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY && $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY == true ]]
+            if [[ (-z $INSTALL_FROM_TANZUNET || $INSTALL_FROM_TANZUNET == false) && $RELOCATE_TAP_INSTALL_IMAGES_TO_PRIVATE_REGISTRY == true ]]
             then
                 confirmed='y'
             fi

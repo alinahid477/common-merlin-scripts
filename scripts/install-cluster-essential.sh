@@ -165,8 +165,6 @@ installClusterEssential () {
                     esac
                 done
             fi
-        else
-            redeploy='y'
         fi
         if [[ $redeploy == 'y' ]]
         then
