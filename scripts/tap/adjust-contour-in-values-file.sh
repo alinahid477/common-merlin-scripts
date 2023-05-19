@@ -21,7 +21,7 @@ addContourBlockAccordinglyInProfileFile()
                 isUseAWSNLB=$USE_AWS_NLB
             else
                 local CONTEXT=$(kubectl config current-context)
-                if[[ -n $CONTEXT ]]
+                if [[ -n $CONTEXT ]]
                 then
                     local CLUSTER=$(kubectl config view -o json | jq -r --arg context "${CONTEXT}" '.contexts[] | select(.name == $context) | .context.cluster')
                     if [[ -n $CLUSTER ]]
@@ -38,7 +38,7 @@ addContourBlockAccordinglyInProfileFile()
 
             echo "" >> $profilefilename
             
-            if [[ -n $isUseAWSNLB && $isUseAWSNLB === 'YES' ]]
+            if [[ -n $isUseAWSNLB && $isUseAWSNLB == 'YES' ]]
             then
                 cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
             else
