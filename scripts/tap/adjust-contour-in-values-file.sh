@@ -26,8 +26,7 @@ addContourBlockAccordinglyInProfileFile()
                     local CLUSTER=$(kubectl config view -o json | jq -r --arg context "${CONTEXT}" '.contexts[] | select(.name == $context) | .context.cluster')
                     if [[ -n $CLUSTER ]]
                     then
-                        local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "${CLUSTER}" '.clusters[] | select(.name == $cluster) | .cluster.server' | echo $endpoint | grep 'amazonaws.')
-                        
+                        local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "${CLUSTER}" '.clusters[] | select(.name == $cluster) | .cluster.server' | grep 'amazonaws.')                        
                         if [[ -n $isAWSEndPoint ]]
                         then
                             isUseAWSNLB='YES'
