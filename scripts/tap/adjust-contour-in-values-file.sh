@@ -15,29 +15,33 @@ addContourBlockAccordinglyInProfileFile()
         local isexist=$(cat $profilefilename | grep -w 'contour:$')
         if [[ -z isexist ]]
         then
+            printf "\nDBG: no countour\n"
             local isUseAWSNLB=''
             if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
             then
                 isUseAWSNLB=$USE_AWS_NLB
             else
                 local CONTEXT=$(kubectl config current-context)
+                printf "\nDBG: context $CONTEXT\n"
                 if [[ -n $CONTEXT ]]
                 then
-                    local CLUSTER=$(kubectl config view -o json | jq -r --arg context "${CONTEXT}" '.contexts[] | select(.name == $context) | .context.cluster')
+                    local CLUSTER=$(kubectl config view -o json | jq -r --arg context "$CONTEXT" '.contexts[] | select(.name == $context) | .context.cluster')
+                    printf "\nDBG: context $CLUSTER\n"
                     if [[ -n $CLUSTER ]]
                     then
-                        local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "${CLUSTER}" '.clusters[] | select(.name == $cluster) | .cluster.server' | grep 'amazonaws.')                        
+                        local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "$CLUSTER" '.clusters[] | select(.name == $cluster) | .cluster.server' | grep 'amazonaws.')
+                        printf "\nDBG: endpoint: $isAWSEndPoint\n"
                         if [[ -n $isAWSEndPoint ]]
                         then
-                            isUseAWSNLB='YES'
+                            isUseAWSNLB="YES"
                         fi
                     fi
                 fi
             fi
 
             echo "" >> $profilefilename
-            
-            if [[ -n $isUseAWSNLB && $isUseAWSNLB == 'YES' ]]
+            printf "\nisUseAWSNLB=$isUseAWSNLB\n"
+            if [[ -n $isUseAWSNLB && $isUseAWSNLB == "YES" ]]
             then
                 cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
             else
