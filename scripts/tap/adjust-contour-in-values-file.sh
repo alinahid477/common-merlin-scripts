@@ -16,7 +16,7 @@ addContourBlockAccordinglyInProfileFile()
         if [[ -z isexist ]]
         then
             local isUseAWSNLB=''
-            if [[ -n $USE_AWS_NLB && $USE_AWS_NLB === 'YES' ]]
+            if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
             then
                 isUseAWSNLB=$USE_AWS_NLB
             else
