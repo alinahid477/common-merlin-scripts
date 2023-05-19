@@ -43,8 +43,10 @@ addContourBlockAccordinglyInProfileFile()
             printf "\nisUseAWSNLB=$isUseAWSNLB\n"
             if [[ -n $isUseAWSNLB && $isUseAWSNLB == "YES" ]]
             then
+                printf "\nDBG: cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename\n"
                 cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
             else
+                printf "\nDBG: cat $HOME/binaries/templates/tap-contour-block-generic.template >> $profilefilename\n"
                 cat $HOME/binaries/templates/tap-contour-block-generic.template >> $profilefilename
             fi
         fi
