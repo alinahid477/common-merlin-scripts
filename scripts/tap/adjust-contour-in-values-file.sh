@@ -12,8 +12,10 @@ addContourBlockAccordinglyInProfileFile()
     printf "\nDBG: profilefilename $profilefilename\n"
     if [[ -f $profilefilename ]]
     then
+        
         local isexist=$(cat $profilefilename | grep -w 'contour:$')
-        if [[ -z isexist ]]
+        printf "\nDBG: isexist $isexist\n"
+        if [[ -z $isexist ]]
         then
             printf "\nDBG: no countour\n"
             local isUseAWSNLB=''
