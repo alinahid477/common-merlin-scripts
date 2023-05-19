@@ -1,3 +1,5 @@
+#!/bin/bash
+
 addContourBlockAccordinglyInProfileFile()
 {
     # new logic add: when it is K8s in AWS then add a different block for contour. https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.5/tap/install-online-profile.html#full-profile-3
@@ -46,4 +48,5 @@ addContourBlockAccordinglyInProfileFile()
     fi    
 }
 
+# this file is getting called from WebUI interface. server.js-->writeToProfileFile-->../merlin/run-adjust-file.sh
 addContourBlockAccordinglyInProfileFile $1
