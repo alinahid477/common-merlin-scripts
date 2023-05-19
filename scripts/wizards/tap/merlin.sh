@@ -39,7 +39,7 @@ unset wizardUTILCreateGitSSHSecret
 unset argFile
 unset ishelp
 unset isSkipK8sCheck
-unset adjustContourForValuesFile
+# unset adjustContourForValuesFile
 
 
 function doCheckK8sOnlyOnce()
@@ -137,16 +137,16 @@ function executeCommand () {
     fi
 
 
-    if [[ $adjustContourForValuesFile == 'y' ]]
-    then
-        unset adjustContourForValuesFile
-        if [[ -n $file ]]
-        then
-            printf "\nAdjusting Contour Block in file: $file\n"
-            addContourBlockAccordinglyInProfileFile $file            
-        fi
-        returnOrexit || return 1
-    fi
+    # if [[ $adjustContourForValuesFile == 'y' ]]
+    # then
+    #     unset adjustContourForValuesFile
+    #     if [[ -n $file ]]
+    #     then
+    #         printf "\nAdjusting Contour Block in file: $file\n"
+    #         addContourBlockAccordinglyInProfileFile $file            
+    #     fi
+    #     returnOrexit || return 1
+    # fi
 
     printf "\nThis shouldn't have happened. Embarrasing.\n"
 }
@@ -164,7 +164,7 @@ output=""
 
 
 # read the options
-TEMP=`getopt -o tarpnkf:i:bvxyzuh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,adjust-contour-for-valuesfile,help -n $0 -- "$@"`
+TEMP=`getopt -o tarpnkf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -225,11 +225,6 @@ while true ; do
             case "$2" in
                 "" ) isSkipK8sCheck='y'; shift 2 ;;
                 * ) isSkipK8sCheck='y';  shift 1 ;;
-            esac ;;
-        -u | --adjust-contour-for-valuesfile )
-            case "$2" in
-                "" ) adjustContourForValuesFile='y'; shift 2 ;;
-                * ) adjustContourForValuesFile='y';  shift 1 ;;
             esac ;;
         -h | --help ) ishelp='y'; helpFunction; break;; 
         -- ) shift; break;; 
