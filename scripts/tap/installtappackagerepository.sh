@@ -174,13 +174,19 @@ installTapPackageRepository()
             printf "FOUND.\n"
         fi
         printf "\nExecuting imgpkg copy from registry.tanzu.vmware.com to $myregistryserver...\n"
-        printf "\nThis may take few mins (15mins - 20mins)..\n"
+        printf "\nThis may take few mins (30mins - 40mins depending on your speed of internet and image registries)..\n"
         if [[ $myregistryserver == "index.docker.io" ]]
         then
-            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} && printf "\n\nCOPY COMPLETE.\n\n";
+            $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            printf "\n...IMG RELOCATION FINISHED...\n"
+            kill "$progressloop_pid"
         else
+            $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
             # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
-            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y --debug && printf "\n\nCOPY COMPLETE.\n\n";
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            printf "\n....IMG RELOCATION FINISHED...\n"
+            kill "$progressloop_pid"
         fi
     else
         printf "\nSkipping image relocation for this installation\n"
