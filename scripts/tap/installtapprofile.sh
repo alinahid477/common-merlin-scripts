@@ -271,7 +271,7 @@ installTapProfile()
             printf "Available at IP: $lbip\n\n\n"          
             printf "\n"
             printf "Checking presence of token LB_IP in the TAP values file...\n"
-            isexist=$(cat tap-values-generated.yaml | grep LB_IP)
+            isexist=$(cat $profilefilename | grep LB_IP)
             if [[ -n $isexist && -n $lbip ]]
             then
                 printf "${bluecolor}Found LB_IP token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"

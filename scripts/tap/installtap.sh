@@ -155,26 +155,30 @@ installTap()
 
         performinstall='n'
         if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
-        then            
-            while true; do
-                read -p "Would you like to configure developer workspace now? [y/n] " yn
-                case $yn in
-                    [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
-                    [Nn]* ) printf "You confirmed no.\n"; break;;
-                    * ) echo "Please answer y or n.";
-                esac
-            done
-
+        then   
+            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+            then         
+                while true; do
+                    read -p "Would you like to configure developer workspace now? [y/n] " yn
+                    case $yn in
+                        [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
+                        [Nn]* ) printf "You confirmed no.\n"; break;;
+                        * ) echo "Please answer y or n.";
+                    esac
+                done
+            else
+                performinstall='y'
+            fi
             if [[ $performinstall == 'y' ]]
             then
                 source $HOME/binaries/scripts/tap/installdevnamespace.sh
                 createDevNS $tapValueFile
+                printf "\nDeveloper Namespace setup complete...\n"
             fi
-        fi
-
+        fi  
     fi    
  
-
+    printf "\ninstaller processing completed.\n"
     
 
 }
