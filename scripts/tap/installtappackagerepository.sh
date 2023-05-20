@@ -180,13 +180,13 @@ installTapPackageRepository()
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
             imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
             printf "\n...IMG RELOCATION FINISHED...\n"
-            kill "$progressloop_pid"
+            kill "$progressloop_pid" > /dev/null 2>&1 || true
         else
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
             # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
             imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
             printf "\n....IMG RELOCATION FINISHED...\n"
-            kill "$progressloop_pid"
+            kill "$progressloop_pid" > /dev/null 2>&1 || true
         fi
     else
         printf "\nSkipping image relocation for this installation\n"

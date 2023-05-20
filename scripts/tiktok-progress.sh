@@ -3,7 +3,7 @@
 # usage: 
 # code: $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
 # code: your process
-# code: kill "$progressloop_pid"
+# code: kill "$progressloop_pid" > /dev/null 2>&1 || true
 # usedin: installtappackagerespository.sh
 # eg: $HOME/binaries/scripts/tiktok-progress.sh 
 #    - parent_processid ($$ gives you current script's process id) 
