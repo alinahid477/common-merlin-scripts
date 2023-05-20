@@ -14,17 +14,17 @@
 
 
 tiktok() {
-    local bigcount=1
+    local bigcount=$((1+0))
     local count=1
     local parentprocessid=$1
-    local totalbigcount=$2    
+    local totalbigcount=$(($2 + 1))
     local processname=$3
     if [[ -z $totalbigcount ]]
     then
         totalbigcount=7200 # default 2hrs
     fi
     printf "\nStarting progress check for $processname. Total tolerance: $totalbigcount...\n"
-    while [[ $bigcount < $totalbigcount ]]; do
+    while [[ $bigcount -lt $totalbigcount ]]; do
         if [[ $count == 60 ]]
         then
             local isexist=$(ps -ef | grep $parentprocessid | awk '{print $2}' | grep -w $parentprocessid)
