@@ -13,3 +13,4 @@ install-cloud-cli.sh
 install-essential-tools.sh
 assemble-file.sh
 create-secrets.sh
+tiktok-progress.sh
