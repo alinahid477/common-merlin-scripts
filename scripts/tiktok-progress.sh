@@ -9,6 +9,7 @@
 #    - parent_processid ($$ gives you current script's process id) 
 #    - max_number_of_secs the tiktok loop 
 #    - name_of_process to display
+#    - interval number of seconds passed before it does bigcount calculation.
 
 
 
@@ -19,13 +20,18 @@ tiktok() {
     local parentprocessid=$1
     local totalbigcount=$(($2 + 1))
     local processname=$3
+    local intervalcount=$(($4 + 0))
     if [[ -z $totalbigcount ]]
     then
         totalbigcount=7200 # default 2hrs
     fi
-    printf "\nStarting progress check for $processname. Total tolerance: $totalbigcount...\n"
+    if [[ -z $intervalcount || $intervalcount -eq 0 ]]
+    then
+        intervalcount=60 # default 60s
+    fi
+    printf "\nStarting progress check for $processname. Total tolerance: $totalbigcount, interval: $intervalcount...\n"
     while [[ $bigcount -lt $totalbigcount ]]; do
-        if [[ $count == 60 ]]
+        if [[ $count -eq $intervalcount ]]
         then
             local isexist=$(ps -ef | grep $parentprocessid | awk '{print $2}' | grep -w $parentprocessid)
             if [[ -z $isexist ]]
@@ -33,7 +39,7 @@ tiktok() {
                 return 1
             fi
             ((bigcount=bigcount+count))
-            printf "\nstill processing $processname. Please be patient...(tolerance: $bigcount of $totalbigcount, next check in 60s)...\n"
+            printf "\nstill processing $processname. Please be patient...(tolerance: $bigcount of $totalbigcount, next check in ${intervalcount}s)...\n"
             count=1
         fi
         printf "."
@@ -43,4 +49,4 @@ tiktok() {
     printf "\nprogress count exceeded tolerance\n"
 }
 
-tiktok $1 $2 $3
+tiktok $1 $2 $3 $4
