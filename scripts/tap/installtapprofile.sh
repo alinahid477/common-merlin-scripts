@@ -270,13 +270,13 @@ installTapProfile()
             fi
             printf "Available at IP: $lbip\n\n\n"          
             printf "\n"
-            printf "Checking presence of token GENERATEDLBIP in the TAP values file...\n"
-            isexist=$(cat $profilefilename | grep GENERATEDLBIP)
+            printf "Checking presence of token generatedlbip in the TAP values file...\n"
+            isexist=$(cat $profilefilename | grep generatedlbip)
             if [[ -n $isexist && -n $lbip ]]
             then
-                printf "${bluecolor}Found GENERATEDLBIP token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"
-                printf "replacing GENERATEDLBIP with $lbip...\n"
-                local replaceText='GENERATEDLBIP'
+                printf "${bluecolor}Found generatedlbip token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"
+                printf "replacing generatedlbip with $lbip...\n"
+                local replaceText='generatedlbip'
                 awk -v old=$replaceText -v new="$lbip" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $profilefilename > $profilefilename.tmp \
                     && sleep 1 \
                     && mv $profilefilename.tmp $profilefilename \
