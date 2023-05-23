@@ -155,8 +155,15 @@ installTanzuCLI () {
                     # This means the previously installed distribution was TAP tanzu cli
                     # the manifest file exist in the case of TAP distribution of TANZU CLI
                     printf "installing tanzu plugin from local..."
-                    tanzu plugin install --local cli all || returnOrexit || return 1
-                    tanzu plugin install apps --local ./cli
+                    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+                    then
+                        tanzu plugin install secret --local ./cli && sleep 1
+                        tanzu plugin install package --local ./cli && sleep 1
+                        tanzu plugin install external-secrets --local ./cli && sleep 1
+                    else
+                        tanzu plugin install --local cli all || returnOrexit || return 1
+                    fi                    
+                    tanzu plugin install apps --local ./cli && sleep 1
                     printf "\nCOMPLETE.\n"
                 else
                     # ENT Tanzu CLI install
