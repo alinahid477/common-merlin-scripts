@@ -345,9 +345,6 @@ createDevNS () {
     # fi
     
 
-    printf "\nReloading environment variables..."
-    export $(cat $HOME/.env | xargs)
-
     printf "\nGenerating RBAC, SA for associating TAP and registry using name: default..."
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
@@ -361,6 +358,8 @@ createDevNS () {
             esac
         done
     else
+        printf "\nReloading environment variables..."
+        export $(cat $HOME/.env | xargs)
         confirmed='y'
     fi
     if [[ $confirmed == 'y' ]]

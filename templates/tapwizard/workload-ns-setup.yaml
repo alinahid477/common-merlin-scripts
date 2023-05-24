@@ -16,11 +16,10 @@ secrets:
   - name: <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME>
   - name: <GITOPS-SECRET-NAME>
   - name: tap-registry
-  - name: dockerhubregcred
 imagePullSecrets:
   - name: <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME>
   - name: tap-registry
-  - name: dockerhubregcred
+# - name: dockerhubregcred
 ---
 # THIS IS NEW FOR TAP 1.3
 apiVersion: rbac.authorization.k8s.io/v1
