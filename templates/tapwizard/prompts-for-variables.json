@@ -129,7 +129,7 @@
         "hint": "This is the namespace where you want the ScanTemplates to be deployed to and scanning feature is going to run."
     },
     {
-        "name": "<PVT_PROJECT_REGISTRY_CREDENTIALS_SECRET_NAME>",
+        "name": "<PVT_PROJECT_REGISTRY_CREDENTIALS_NAME>",
         "hint": "This is the name of the secret that contains the credentials to pull an image from the registry for scanning.\nThis secret is created when creatin developer namespace.\nUse the value: registry-credentials here.",
         "isRecordAsEnvVar": true
     },
