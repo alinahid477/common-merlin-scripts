@@ -345,6 +345,8 @@ createDevNS () {
     # fi
     
 
+    printf "\nReloading environment variables..."
+    export $(cat $HOME/.env | xargs)
 
     printf "\nGenerating RBAC, SA for associating TAP and registry using name: default..."
     confirmed=''
