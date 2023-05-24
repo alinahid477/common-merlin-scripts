@@ -358,8 +358,11 @@ createDevNS () {
             esac
         done
     else
-        printf "\nReloading environment variables..."
-        export $(cat $HOME/.env | xargs)
+        if [[ -z $GITOPS_SECRET_NAME ]]
+        then
+            printf "\nReloading environment variables..."
+            export $(cat $HOME/.env | xargs)
+        fi
         confirmed='y'
     fi
     if [[ $confirmed == 'y' ]]

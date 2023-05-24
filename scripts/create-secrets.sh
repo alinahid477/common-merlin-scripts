@@ -193,6 +193,7 @@ function createGitSSHSecret () {
         else
             if [[ -z $GITOPS_SECRET_NAME ]]
             then
+                printf "\nDBG: setting GITOPS_SECRET_NAME='git-ssh'\n" && sleep 2
                 export GITOPS_SECRET_NAME='git-ssh'
             fi
             filename='git-ssh'
@@ -215,7 +216,7 @@ function createGitSSHSecret () {
         unset GIT_SSH_PRIVATE_KEY
         unset GIT_SSH_PUBLIC_KEY
         unset GIT_SERVER_HOST_FILE
-        unset GITOPS_SECRET_NAME
+        # unset GITOPS_SECRET_NAME
     fi
 }
 
