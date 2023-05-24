@@ -148,33 +148,47 @@ installTanzuCLI () {
             chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
             if [[ ! -d $HOME/.local/share/tanzu-cli/package ]]
             then
+                # UPDATE: 24/05/2023
+                # The below commented section is not required anymore as there's only 1 tanzu CLI now (product has consolidate tap tanzu cli and ent tanzu cli into 1 disti).
+
                 # This means tanzu cli plugins were not installed and we need plugins. Lets install it.
-                if [[ -f cli/manifest.yaml ]]
-                then
-                    # TAP Tanzu CLI install
-                    # This means the previously installed distribution was TAP tanzu cli
-                    # the manifest file exist in the case of TAP distribution of TANZU CLI
-                    printf "installing tanzu plugin from local..."
-                    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-                    then
-                        tanzu plugin install secret --local ./cli && sleep 1
-                        tanzu plugin install package --local ./cli && sleep 1
-                        tanzu plugin install external-secrets --local ./cli && sleep 1
-                    else
-                        tanzu plugin install --local cli all || returnOrexit || return 1
-                    fi                    
-                    tanzu plugin install apps --local ./cli && sleep 1
-                    printf "\nCOMPLETE.\n"
-                else
-                    # ENT Tanzu CLI install
-                    # This means the previously installed distribution was tanzu cli ENT
-                    printf "Removing existing plugins from any previous CLI installations..."
-                    tanzu plugin clean || returnOrexit
-                    printf "COMPLETE.\n"
-                    printf "Installing all the plugins for this release..."
-                    tanzu plugin sync || returnOrexit
-                    printf "COMPLETE.\n"
-                fi
+                # if [[ -f cli/manifest.yaml ]]
+                # then
+                #     # TAP Tanzu CLI install
+                #     # This means the previously installed distribution was TAP tanzu cli
+                #     # the manifest file exist in the case of TAP distribution of TANZU CLI
+                #     printf "installing tanzu plugin from local..."
+                #     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+                #     then
+                #         tanzu plugin install secret --local ./cli && sleep 1
+                #         tanzu plugin install package --local ./cli && sleep 1
+                #         tanzu plugin install external-secrets --local ./cli && sleep 1
+                #     else
+                #         tanzu plugin install --local cli all || returnOrexit || return 1
+                #     fi                    
+                #     tanzu plugin install apps --local ./cli && sleep 1
+                #     printf "\nCOMPLETE.\n"
+                # else
+                #     # ENT Tanzu CLI install
+                #     # This means the previously installed distribution was tanzu cli ENT
+                #     printf "Removing existing plugins from any previous CLI installations..."
+                #     tanzu plugin clean || returnOrexit
+                #     printf "COMPLETE.\n"
+                #     printf "Installing all the plugins for this release..."
+                #     tanzu plugin sync || returnOrexit
+                #     printf "COMPLETE.\n"
+                # fi
+                printf "installing tanzu plugin from local..."
+                # if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+                # then
+                #     tanzu plugin install secret --local ./cli && sleep 1
+                #     tanzu plugin install package --local ./cli && sleep 1
+                #     tanzu plugin install external-secrets --local ./cli && sleep 1
+                # else
+                #    tanzu plugin install --local cli all || returnOrexit || return 1
+                # fi
+                tanzu plugin install --local cli all || returnOrexit || return 1
+                tanzu plugin install apps --local ./cli && sleep 1
                 printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi
         fi

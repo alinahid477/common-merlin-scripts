@@ -309,34 +309,35 @@ createDevNS () {
         sleep 1
     fi
 
-    printf "\nAlso need to create a dockerhub secret called: dockerhubregcred for Dockerhub rate limiting issue. This credential is used for things like maven test tekton pipeline pulling maven base image etc\n"
-    confirmed=''
-    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
-    then
-        while true; do
-            read -p "Would you like to create docker hub secret called 'dockerhubregcred' now? [y/n] " yn
-            case $yn in
-                [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
-                [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
-                * ) echo "Please answer y or n.";
-            esac
-        done
-    else
-        confirmed='y'
-    fi
-    if [[ $confirmed == 'y' ]]
-    then
-        local tmpCmdFile=/tmp/devnamespacecmd.tmp
-        local cmdTemplate="kubectl create secret docker-registry dockerhubregcred --docker-server=https://index.docker.io/v2/ --docker-username=<DOCKERHUB_USERNAME> --docker-password=<DOCKERHUB_PASSWORD> --docker-email=your@email.com --namespace ${namespacename}"
+    # UPDATED: 24/05/2023 ---- NO NEED TO CREATE dockerhub regcred by default. If needed user will create it.
+    # printf "\nAlso need to create a dockerhub secret called: dockerhubregcred for Dockerhub rate limiting issue. This credential is used for things like maven test tekton pipeline pulling maven base image etc\n"
+    # confirmed=''
+    # if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    # then
+    #     while true; do
+    #         read -p "Would you like to create docker hub secret called 'dockerhubregcred' now? [y/n] " yn
+    #         case $yn in
+    #             [Yy]* ) printf "you confirmed yes\n"; confirmed='y'; break;;
+    #             [Nn]* ) printf "You confirmed no.\n"; confirmed='n'; break;;
+    #             * ) echo "Please answer y or n.";
+    #         esac
+    #     done
+    # else
+    #     confirmed='y'
+    # fi
+    # if [[ $confirmed == 'y' ]]
+    # then
+    #     local tmpCmdFile=/tmp/devnamespacecmd.tmp
+    #     local cmdTemplate="kubectl create secret docker-registry dockerhubregcred --docker-server=https://index.docker.io/v2/ --docker-username=<DOCKERHUB_USERNAME> --docker-password=<DOCKERHUB_PASSWORD> --docker-email=your@email.com --namespace ${namespacename}"
 
-        echo $cmdTemplate > $tmpCmdFile
-        extractVariableAndTakeInput $tmpCmdFile
-        cmdTemplate=$(cat $tmpCmdFile)
+    #     echo $cmdTemplate > $tmpCmdFile
+    #     extractVariableAndTakeInput $tmpCmdFile
+    #     cmdTemplate=$(cat $tmpCmdFile)
 
-        printf "\nCreating new secret with name: dockerhubregcred..."
-        $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
-        printf "\n"
-    fi
+    #     printf "\nCreating new secret with name: dockerhubregcred..."
+    #     $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
+    #     printf "\n"
+    # fi
     
 
 
