@@ -14,6 +14,9 @@ createDevNS () {
     local tapvaluesfile=$1
     local confirmed=''
 
+    printf "\nCreating Developer Namespace for TAP....\n\n"
+    sleep 7
+
     if [[ -z $tapvaluesfile ]]
     then
         if [[ -n $TAP_PROFILE_FILE_NAME ]] 
@@ -58,8 +61,6 @@ createDevNS () {
         returnOrexit || return 1
     fi
 
-    printf "\n*******Starting developer namespace wizard*******\n\n"
-
     local namespacename=''
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
@@ -79,11 +80,13 @@ createDevNS () {
 
     if [[ -z $namespacename ]]
     then
-        printf "empty or invalid Developer Namespace name is not allowed.\n"
+        printf "empty or invalid Developer Namespace name is not allowed. Setup will terminate...\n"
         returnOrexit || return 1
+    else
+        printf "Developer Namespace name: $namespacename\n"
     fi
 
-    printf "\nChecking namcespace in the cluster....\n"
+    printf "\nChecking if namcespace exists in the cluster....\n"
     local isexist=$(kubectl get ns | grep "^$namespacename")
 
     if [[ -n $isexist ]] 
@@ -123,6 +126,8 @@ createDevNS () {
                     # selected option
                     selectedSupplyChainType=${supplyChainTypes[$ret]}
                 fi
+            else
+                selectedSupplyChainType='gitops'
             fi
         fi
     fi
