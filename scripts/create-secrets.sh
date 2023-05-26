@@ -241,7 +241,7 @@ function createBasicAuthSecret () {
             fi
         done
     fi
-    if [[ -n $SILENTMODE && $SILENTMODE == 'YES']]
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
         if [[ -z $GITOPS_SECRET_NAME ]]
         then
@@ -267,7 +267,7 @@ function createBasicAuthSecret () {
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
 
     
-    if [[ -n $SILENTMODE && $SILENTMODE == 'YES']]
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
         if [[ -z $namespace ]]
         then
