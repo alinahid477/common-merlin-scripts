@@ -161,7 +161,7 @@ function createGitSSHSecret () {
             printf "${redcolot}empty git provider value not allowed.${normalcolor}\n"
             returnOrexit || return 1
         fi
-        printf "Checking $identityFileName-known_host file..."
+        printf "Checking $identityFileName-known_hosts file..."
         if [[ ! -f $HOME/.git-ops/$identityFileName-known_hosts ]]
         then
             printf "not found.\n"
@@ -216,13 +216,17 @@ function createGitSSHSecret () {
         unset GIT_SSH_PRIVATE_KEY
         unset GIT_SSH_PUBLIC_KEY
         unset GIT_SERVER_HOST_FILE
-        # unset GITOPS_SECRET_NAME
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            unset GITOPS_SECRET_NAME
+        fi
     fi
 }
 
 
-function cretaBasicAuthSecret () {
+function createBasicAuthSecret () {
     local filesaveDir=$1 # Optional
+    local namespace=$2 #optional
     local filename='nouserinput'
     if [[ -z $filesaveDir ]]
     then
@@ -237,24 +241,52 @@ function cretaBasicAuthSecret () {
             fi
         done
     fi
-    printf "Require user input to create k8s secret of type: kubernetes.io/basic-auth....\n"
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES']]
+    then
+        if [[ -z $GITOPS_SECRET_NAME ]]
+        then
+            printf "\nDBG: setting GITOPS_SECRET_NAME='git-secret'\n" && sleep 2
+            export GITOPS_SECRET_NAME='git-secret'
+        fi
+        export K8S_BASIC_SECRET_NAME=$GITOPS_SECRET_NAME
+        export K8S_BASIC_SECRET_GIT_SERVER=$GIT_PROVIDER_HOST_NAME
+        export K8S_BASIC_SECRET_USERNAME=$GIT_USERNAME
+        export K8S_BASIC_SECRET_PASSWORD=$GIT_PASSWORD
+        sleep 1
+        if [[ -z $K8S_BASIC_SECRET_NAME || -z $K8S_BASIC_SECRET_GIT_SERVER || -z $K8S_BASIC_SECRET_USERNAME || -z $K8S_BASIC_SECRET_PASSWORD ]]
+        then
+            printf "${redcolot}empty value found for one of the required fields (K8S_BASIC_SECRET_NAME, K8S_BASIC_SECRET_GIT_SERVER, K8S_BASIC_SECRET_USERNAME, K8S_BASIC_SECRET_PASSWORD).${normalcolor}\n"
+            printf "$GITOPS_SECRET_NAME Secret creation (in SILENMODE)...FAILED${normalcolor}\n"
+            returnOrexit || return 1
+        fi    
+    fi
+    printf "Require input to create k8s secret of type: kubernetes.io/basic-auth....\n"
     local secretTemplateName="k8s-basic-auth-git-secret"
     local secretFile=$filesaveDir/$secretTemplateName.$filename.tmp
     cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
 
-    local namespace=''
-    printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
-    printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
-    while [[ -z $namespace ]]; do
-        read -p "NAMESPACE: " namespace
+    
+    if [[ -n $SILENTMODE && $SILENTMODE == 'YES']]
+    then
         if [[ -z $namespace ]]
         then
-            namespace='default'
-            printf "${greencolor}accepted default value: default${normalcolor}\n"
+            printf "\nempty value for namespace not allowed. Secret creation (in SILENTMODE)..FAILED\n"
+            returnOrexit || return 1
         fi
-    done
-
+    else
+        printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
+        printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
+        while [[ -z $namespace ]]; do
+            read -p "NAMESPACE: " namespace
+            if [[ -z $namespace ]]
+            then
+                namespace='default'
+                printf "${greencolor}accepted default value: default${normalcolor}\n"
+            fi
+        done
+    fi
+    
     printf "Creating k8s secret of type kubernetes.io/basic-auth...."
     kubectl apply -f $secretFile -n $namespace && printf "CREATED\n" || printf "FAILED\n"
 

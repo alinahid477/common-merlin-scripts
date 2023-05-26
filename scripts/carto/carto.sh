@@ -475,7 +475,7 @@ function createCartoTemplates () {
             if [[ $confirmed == 'y' ]]
             then
                 export K8S_BASIC_SECRET_NAME=$CARTO_GIT_SECRET_NAME
-                cretaBasicAuthSecret $HOME/configs
+                createBasicAuthSecret $HOME/configs
                 unset K8S_BASIC_SECRET_NAME
             fi
         fi

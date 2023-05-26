@@ -265,8 +265,14 @@ createDevNS () {
                     # kubectl apply -f /tmp/tap-git-secret.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
                     # printf "\n\n\n"
                     # sleep 3
-
-                    createGitSSHSecret $namespacename
+                    if [[ -n $GIT_USERNAME && -n $GIT_PASSWORD ]]
+                    then
+                        createBasicAuthSecret $HOME/configs $namespacename
+                    else
+                        createGitSSHSecret $namespacename
+                    fi
+                    
+                    
 
                     # unset GIT_SERVER_HOST
                     # unset GIT_SSH_PRIVATE_KEY

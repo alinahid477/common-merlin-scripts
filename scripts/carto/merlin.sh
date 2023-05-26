@@ -158,7 +158,7 @@ function executeCommand () {
     if [[ $wizardUTILCreateBasicAuthSecret == 'y' ]]
     then
         unset wizardUTILCreateBasicAuthSecret
-        cretaBasicAuthSecret $HOME/configs
+        createBasicAuthSecret $HOME/configs
         returnOrexit || return 1
     fi
 
