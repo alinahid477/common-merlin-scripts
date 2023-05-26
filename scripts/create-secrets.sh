@@ -154,7 +154,15 @@ function createGitSSHSecret () {
                 fi
             done
         else
-            gitprovidername=$GIT_PROVIDER_HOST_NAME
+            if [[ $GIT_PROVIDER_HOST_NAME =~ ^"http://" ]]
+            then
+                gitprovidername=${GIT_PROVIDER_HOST_NAME#"http://"}
+            elif [[ $GIT_PROVIDER_HOST_NAME =~ ^"https://" ]]
+            then
+                gitprovidername=${GIT_PROVIDER_HOST_NAME#"https://"}
+            else
+                gitprovidername=$GIT_PROVIDER_HOST_NAME
+            fi
         fi
         if [[ -z $gitprovidername ]]
         then
@@ -249,7 +257,12 @@ function createBasicAuthSecret () {
             export GITOPS_SECRET_NAME='git-secret'
         fi
         export K8S_BASIC_SECRET_NAME=$GITOPS_SECRET_NAME
-        export K8S_BASIC_SECRET_GIT_SERVER=$GIT_PROVIDER_HOST_NAME
+        if [[ $GIT_PROVIDER_HOST_NAME =~ ^"http://" ||  $GIT_PROVIDER_HOST_NAME =~ ^"https://" ]]
+        then            
+            export K8S_BASIC_SECRET_GIT_SERVER=$GIT_PROVIDER_HOST_NAME
+        else            
+            export K8S_BASIC_SECRET_GIT_SERVER="https://$GIT_PROVIDER_HOST_NAME"
+        fi
         export K8S_BASIC_SECRET_USERNAME=$GIT_USERNAME
         export K8S_BASIC_SECRET_PASSWORD=$GIT_PASSWORD
         sleep 1

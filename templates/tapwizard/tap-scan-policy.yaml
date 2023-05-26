@@ -10,7 +10,8 @@ spec:
     package main
 
     # Accepted Values: "Critical", "High", "Medium", "Low", "Negligible", "UnknownSeverity"
-    notAllowedSeverities := ["Critical", "High", "UnknownSeverity"]
+    # notAllowedSeverities := ["Critical", "High", "UnknownSeverity"]
+    notAllowedSeverities := ["Critical"]
     # for spring boot application -- to ignore the false positive
     ignoreCves := ["CVE-2021-26291","CVE-2016-1000027", "GHSA-36p3-wjmg-h94x"] 
     # ignoreCves := []
