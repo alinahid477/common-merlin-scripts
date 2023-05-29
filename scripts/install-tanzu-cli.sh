@@ -144,8 +144,21 @@ installTanzuCLI () {
             cd $HOME/tanzu || returnOrexit || return 1
             
             # Link the tanzu binary. Cause that's needs to happen regardless of whether it was previously installed or not.
-            install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit || return 1
-            chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
+            if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
+                # if docker container is running as non root user
+                if [ ! -d "$HOME/.local/bin" ]; then
+                    mkdir -p "$HOME/.local/bin"
+                fi
+                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 $HOME/.local/bin/tanzu || returnOrexit || return 1
+                chmod +x $HOME/.local/bin/tanzu || returnOrexit || return 1
+            else
+                # if docker container is root user
+                echo "Installing tanzu to /usr/local/bin which is write protected"
+                echo "If you'd prefer to install tanzu without sudo permissions, add \$HOME/.local/bin to your \$PATH and rerun the installer"
+                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit || return 1
+                chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
+            fi
+                        
             if [[ ! -d $HOME/.local/share/tanzu-cli/package ]]
             then
                 # UPDATE: 24/05/2023
