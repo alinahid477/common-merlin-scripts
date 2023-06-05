@@ -1,7 +1,9 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
-
+if [[ -f $HOME/.env ]]
+then
+    export $(cat $HOME/.env | xargs)
+fi
 
 if [[ ! -f $HOME/binaries/scripts/download-common-scripts.sh ]]
 then
@@ -87,17 +89,19 @@ source $HOME/binaries/scripts/init-prechecks.sh
 #     installAWSCLI
 # fi
 
-printf "\n\n************Checking Tanzu CLI binaries**************\n\n"
-source $HOME/binaries/scripts/install-tanzu-cli.sh
-installTanzuCLI
-ret=$?
-if [[ $ret == 1 ]]
+if [[ -z $1 || $1 != "NOTANZUCLI" ]]
 then
-    printf "\nERROR: Tanzu CLI was not successfully installed. Merling will not function without Tanzu CLI. Please check if you have place right tar file in the binaries directory.\n"
-    exit 1
+    printf "\n\n************Checking Tanzu CLI binaries**************\n\n"
+    source $HOME/binaries/scripts/install-tanzu-cli.sh
+    installTanzuCLI
+    ret=$?
+    if [[ $ret == 1 ]]
+    then
+        printf "\nERROR: Tanzu CLI was not successfully installed. Merling will not function without Tanzu CLI. Please check if you have place right tar file in the binaries directory.\n"
+        exit 1
+    fi
+    printf "DONE\n\n\n"
 fi
-printf "DONE\n\n\n"
-
 
 # UPDATE: 18/11/2022: Commenting the the beloe if block
 # -----------------------
@@ -118,19 +122,21 @@ printf "DONE\n\n\n"
 #     printf "DONE\n\n\n"
 # fi
 
-
-printf "\n\n************Checking essential CLIs...**************\n\n"
-# do not want to prompt user. Hence, installing them anyways.
-# if you want to prompt user, then uncomment the below
-# the install-essential-tools.sh script takes care of the situation where any tool is previously install will not get installed again,
-# eg: kapp-cli will get installed as part to cluster-essential. so the install-essential-tools.sh will take care of that and will NOT install kapp agani.
-source $HOME/binaries/scripts/install-essential-tools.sh
-sleep 1
-if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+if [[ -z $2 || $2 != "NOESSENTIALTOOLS" ]]
 then
-    installEssentialTools
-else
-    installEssentialToolsLite
+    printf "\n\n************Checking essential CLIs...**************\n\n"
+    # do not want to prompt user. Hence, installing them anyways.
+    # if you want to prompt user, then uncomment the below
+    # the install-essential-tools.sh script takes care of the situation where any tool is previously install will not get installed again,
+    # eg: kapp-cli will get installed as part to cluster-essential. so the install-essential-tools.sh will take care of that and will NOT install kapp agani.
+    source $HOME/binaries/scripts/install-essential-tools.sh
+    sleep 1
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        installEssentialTools
+    else
+        installEssentialToolsLite
+    fi
 fi
 # if [ "$(ls -A $HOME/essential-clis)" ]
 # then
