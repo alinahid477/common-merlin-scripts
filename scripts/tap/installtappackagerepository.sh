@@ -75,8 +75,9 @@ installTapPackageRepository()
     fi
 
     printf "\nChecking PSP:vmware-system-privileged in the cluster..."
-    local isvmwarepsp=$(kubectl get psp | grep -w vmware-system-privileged)
-    local istmcpsp=$(kubectl get psp | grep -w vmware-system-tmc-privileged)
+    # FIX: 07/06/2023 --- the below threw error when run in minikube. weird. dont know why.
+    local isvmwarepsp=$(kubectl get psp | grep -w vmware-system-privileged || echo "")
+    local istmcpsp=$(kubectl get psp | grep -w vmware-system-tmc-privileged || echo "")
     if [[ -n $isvmwarepsp || -n $istmcpsp ]]
     then
         printf "FOUND\n"
