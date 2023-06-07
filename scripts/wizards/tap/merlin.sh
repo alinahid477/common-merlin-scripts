@@ -99,7 +99,13 @@ function executeCommand () {
     if [[ $tapDeveloperNamespaceCreate == 'y' ]]
     then
         unset tapDeveloperNamespaceCreate
-        createDevNS
+        if [[ -z $file ]]
+        then
+            createDevNS
+        else
+            createDevNS $file
+        fi
+        
         returnOrexit || return 1
     fi
 

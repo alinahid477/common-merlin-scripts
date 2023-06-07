@@ -278,7 +278,7 @@ createDevNS () {
     then
         cp $HOME/binaries/templates/workload-ns-setup.yaml /tmp/workload-ns-setup-$namespacename.yaml
         sleep 1
-        extractVariableAndTakeInput /tmp/workload-ns-setup-$namespacename.yaml
+        extractVariableAndTakeInput /tmp/workload-ns-setup-$namespacename.yaml && echo "completed" || true
         sleep 1
         printf "\n"
         printf "\nCreating RBAC, RoleBinding and associating SA:default with it along with registry and repo credentials..."
@@ -344,7 +344,7 @@ createDevNS () {
     else
         printf "NO.\nNo supply chain detected with testing functionlity."
     fi
-
+    echo $namespacename >> $HOME/configs/PROVISIONEDDEVNS || true
     printf "\n\n**** Developer namespace: $namespacename setup...COMPLETE\n\n\n"
     sleep 2
 }
