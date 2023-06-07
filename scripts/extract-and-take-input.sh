@@ -100,7 +100,7 @@ function extractVariableAndTakeInputPrivate () {
     printf "generating unique vars...."
     local i=0
     while [[ $i -lt ${#allVariables[*]} ]] ; do
-        containsElement "${allVariables[$i]}" "${uniqueVariables[@]}" || true
+        containsElement "${allVariables[$i]}" "${uniqueVariables[@]}"
         ret=$?
         if [[ $ret == 1 ]]
         then
