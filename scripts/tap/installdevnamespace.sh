@@ -232,19 +232,18 @@ createDevNS () {
     then
         printf "\ncreating k8s secret for registry, name: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...\n"
         sleep 1
-        local tmpCmdFile=/tmp/devnamespacecmd.tmp
+        local tmpCmdFile=/tmp/devnamespacecrscmd.tmp
         local cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
 
         echo $cmdTemplate > $tmpCmdFile
-        sleep 1
-        extractVariableAndTakeInput $tmpCmdFile
+        sleep 5
+        extractVariableAndTakeInput $tmpCmdFile || true
         sleep 1
         cmdTemplate=$(cat $tmpCmdFile)
-        printf "\nDBG: populated command for creating k8s secret\n"
         printf "\ncreating k8s secret..."
         sleep 1
         $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
-        printf "\n"
+        printf "OK\n"
         rm $tmpCmdFile || true
         sleep 1
         printf "\ncreated k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...COMPLETE\n"

@@ -74,6 +74,11 @@ function extractVariableAndTakeInputPrivate () {
     local variableFile=$2 # REQUIRED
     local defaultValuesFile=$3 #Optional
 
+    if [[ -z $defaultValuesFile ]]
+    then
+        defaultValuesFile=/tmp/invalidfilename
+    fi
+
     local templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
     
 
@@ -85,12 +90,14 @@ function extractVariableAndTakeInputPrivate () {
         return 1
     fi
     
-    printf "extracting variables for user input....\n"
+    printf "extracting variables for user input from $variableFile...."
     # extract variable from file (variable format is: <NAME-OF-THE-VARIABLE>)
     local allVariables=($(grep -o '<[A-Za-z0-9_\-]*>' $variableFile))
     local uniqueVariables=()
-
+    printf "complete.\n"
     # populate keys with unique values only (in the file there may be multiple occurances of same variables)
+    sleep 1
+    printf "generating unique vars...."
     local i=0
     while [[ $i -lt ${#allVariables[*]} ]] ; do
         containsElement "${allVariables[$i]}" "${uniqueVariables[@]}"
@@ -101,14 +108,15 @@ function extractVariableAndTakeInputPrivate () {
         fi
         ((i=$i+1))
     done
-
+    printf "complete.\n"
 
     local isinputneeded='n'
     local inputvar=''
 
+    printf "starting vars evaluation....\n"
     # iterate over each variable name that may need user input (if not exist as environment variable)
     for variableNameRaw in "${uniqueVariables[@]}"; do
-        printf "\n\n"
+        printf ".\n\n"
         # modifying the extracted variable name to valid variable name format 
         # eg: extracted variable name was: <NAME-OF-THE-VARIABLE>. So
         # 1. Modify to remove '<' and '>'
@@ -412,7 +420,8 @@ function extractVariableAndTakeInputPrivate () {
             
         fi
     done
-
+    printf "vars evaluation...complete\n"
+    sleep 4
     if [[ $isinputneeded == 'n' ]]
     then
         printf "\nAll needed values found in environment variable. No user input needed.\n"
@@ -428,7 +437,9 @@ function extractVariableAndTakeInput () {
     local variableFile=$1 # REQUIRED
     local defaultValuesFile=$2 # Optional
     
+    printf "\nDBG1: extractVariableAndTakeInput ()\n"
     extractVariableAndTakeInputPrivate $promptsForVariablesJSON $variableFile $defaultValuesFile 
+    printf "\nDBG2: extractVariableAndTakeInput ()\n"
 }
 
 function extractVariableAndTakeInputUsingCustomPromptsFile () {
