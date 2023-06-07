@@ -10,7 +10,7 @@ source $HOME/binaries/scripts/create-secrets.sh
 
 createDevNS () {
     export $(cat $HOME/.env | xargs)
-    
+
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
     local tapvaluesfile=$1
@@ -188,14 +188,14 @@ createDevNS () {
                     # sleep 3
                     if [[ -n $GIT_USERNAME && -n $GIT_PASSWORD ]]
                     then
-                        printf "\ncreating k8s secret for git of type BASIC...\n"
+                        printf "\ncreating k8s basic secret for git. name: $GITOPS_SECRET_NAME...\n"
                         createBasicAuthSecret $HOME/configs $namespacename
                     else
-                        printf "\ncreating k8s secret for git of type SSH...\n"
+                        printf "\ncreating k8s ssh secret for git. name: $GITOPS_SECRET_NAME...\n"
                         createGitSSHSecret $namespacename
                     fi
                     sleep 1
-                    printf "\ncreate k8s secret for git...COMPLETE\n"
+                    printf "\nSecret for Git...COMPLETE\n"
                     sleep 2
                     # unset GIT_SERVER_HOST
                     # unset GIT_SSH_PRIVATE_KEY
@@ -207,7 +207,7 @@ createDevNS () {
     fi
 
     
-    printf "\nCreating registry credential for pvt registry access...\n"
+    printf "\nCreating k8s secret for pvt registry access...\n"
     sleep 1
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
@@ -230,7 +230,7 @@ createDevNS () {
     fi
     if [[ $confirmed == 'y' ]]
     then
-        printf "\ncreating k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...\n"
+        printf "\ncreating k8s secret for registry, name: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...\n"
         sleep 1
         local tmpCmdFile=/tmp/devnamespacecmd.tmp
         local cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
@@ -240,22 +240,21 @@ createDevNS () {
         extractVariableAndTakeInput $tmpCmdFile
         sleep 1
         cmdTemplate=$(cat $tmpCmdFile)
-
-        printf "\nCreating new secret for private registry with name: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME..."
+        printf "\nDBG: populated command for creating k8s secret\n"
+        printf "\ncreating k8s secret..."
         sleep 1
         $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
-        sleep 1
         printf "\n"
-        rm $tmpCmdFile
+        rm $tmpCmdFile || true
         sleep 1
-        printf "\ncreate k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...COMPLETE\n"
+        printf "\ncreated k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...COMPLETE\n"
         sleep 1
     fi
 
     
     
 
-    printf "\nGenerating RBAC, SA for associating TAP and registry using name: default..."
+    printf "\nGenerating RBAC for TAP leveraging SA: default..."
     sleep 1
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]

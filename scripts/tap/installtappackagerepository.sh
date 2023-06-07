@@ -42,14 +42,16 @@ installTapPackageRepository()
     if [[ -z $INSTALL_TANZU_CLUSTER_ESSENTIAL || $INSTALL_TANZU_CLUSTER_ESSENTIAL != 'COMPLETED' ]]
     then
         source $HOME/binaries/scripts/install-cluster-essential.sh
-        installClusterEssential
+        installClusterEssential || true
         local ret=$?
+        sleep 5
         if [[ $ret == 1 ]]
         then
             printf "\nERROR: TANZU CLUSTER ESSENTIAL installation failed.\n"
             returnOrexit || return 1
         fi
-        sleep 2
+        printf "\ninstall cluster essential....COMPLETED ($ret)\n"
+        sleep 5
     fi
     
 
@@ -76,50 +78,60 @@ installTapPackageRepository()
 
     sleep 1
 
-    # FIX: 07/06/2023 --- check psp even before executing 2 psp command.
-    # for some reason the 2nd psp command (kubectl get psp | grep -w vmware-system-tmc-privileged) throwing error
-    #   only when cluster essential install. VERRRYYY WEIRD. I have no idea why.
-    printf "\nChecking if PSP exists..."
-    isexist=$(kubectl get psp || true)
-    sleep 1
-    if [[ -n $isexist ]]
+    printf "\nChecking K8S_VERSION..."
+    # FIX: 07/06/2023 --- psp check still returning error.
+    # I have no idea why. Adding this logic to avoid the check psp. SUPERRR WEIRD.
+    if [[ -n $K8S_VERSION && $K8S_VERSION < 1.24 ]]
     then
-        printf "PSP FOUND\n"
-        printf "\nChecking PSP: vmware-system-privileged and vmware-system-tmc-privileged in the cluster..."
+        # FIX: 07/06/2023 --- check psp even before executing 2 psp command.
+        # for some reason the 2nd psp command (kubectl get psp | grep -w vmware-system-tmc-privileged) throwing error
+        #   only when cluster essential install. VERRRYYY WEIRD. I have no idea why.
+        printf "\nChecking if PSP exists..."
+        isexist=$(kubectl get psp || true)
         sleep 1
-        # FIX: 07/06/2023 --- the below threw error when run in minikube. weird. dont know why.
-        local isvmwarepsp=$(kubectl get psp | grep -w vmware-system-privileged || true)
-        sleep 1
-        local istmcpsp=$(kubectl get psp | grep -w vmware-system-tmc-privileged || true)
-        sleep 1
-        if [[ -n $isvmwarepsp || -n $istmcpsp ]]
+        if [[ -n $isexist ]]
         then
-            printf "FOUND\n"
-            printf "\nChecking clusterrolebinding:default-tkg-admin-privileged-binding in the cluster..."
-            local isclusterroleexist=$(kubectl get clusterrolebinding -A | grep -w default-tkg-admin-privileged-binding)
-            if [[ -z $isclusterroleexist ]]
+            printf "PSP FOUND\n"
+            printf "\nChecking PSP: vmware-system-privileged and vmware-system-tmc-privileged in the cluster..."
+            sleep 1
+            # FIX: 07/06/2023 --- the below threw error when run in minikube. weird. dont know why.
+            local isvmwarepsp=$(kubectl get psp | grep -w vmware-system-privileged || true)
+            sleep 1
+            local istmcpsp=$(kubectl get psp | grep -w vmware-system-tmc-privileged || true)
+            sleep 1
+            if [[ -n $isvmwarepsp || -n $istmcpsp ]]
             then
-                
-                if [[ -n $isvmwarepsp ]]
+                printf "FOUND\n"
+                printf "\nChecking clusterrolebinding:default-tkg-admin-privileged-binding in the cluster..."
+                local isclusterroleexist=$(kubectl get clusterrolebinding -A | grep -w default-tkg-admin-privileged-binding)
+                if [[ -z $isclusterroleexist ]]
                 then
-                    printf "NOT FOUND. Creating for psp:vmware-system-privileged...."
-                    kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
-                    printf "clusterrolebinding:default-tkg-admin-privileged-binding....CREATED.\n"
+                    
+                    if [[ -n $isvmwarepsp ]]
+                    then
+                        printf "NOT FOUND. Creating for psp:vmware-system-privileged...."
+                        kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
+                        printf "clusterrolebinding:default-tkg-admin-privileged-binding....CREATED.\n"
+                    fi
+                    # if [[ -n $istmcpsp ]]
+                    # then
+                    #     printf "NOT FOUND. Creating for psp:vmware-system-privileged...."
+                    #     kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
+                    #     printf "clusterrolebinding:default-tkg-admin-privileged-binding....CREATED.\n"
+                    # fi
+                else
+                    printf "FOUND.\n"
                 fi
-                # if [[ -n $istmcpsp ]]
-                # then
-                #     printf "NOT FOUND. Creating for psp:vmware-system-privileged...."
-                #     kubectl create clusterrolebinding default-tkg-admin-privileged-binding --clusterrole=psp:vmware-system-privileged --group=system:authenticated
-                #     printf "clusterrolebinding:default-tkg-admin-privileged-binding....CREATED.\n"
-                # fi
-            else
-                printf "FOUND.\n"
             fi
+        else
+            printf "NO PSP\n"
         fi
+        printf "\nPSP: COMPLETE"
     else
-        printf "NO PSP\n"
+        printf "K8s_version > 1.25. PSP check not needed\n"
     fi
-    printf "\nPSP: COMPLETE"
+
+    
     sleep 1
     isexist=$(kubectl get ns | grep "^tap-install")
     if [[ -z $isexist ]]

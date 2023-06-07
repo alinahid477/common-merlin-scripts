@@ -138,7 +138,7 @@ installTapProfile()
         fi
 
 
-        printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install...\n"
+        printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install.\nThis may take few mins to complete....\n"
         #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
 
         $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tap.tanzu.vmware.com-install" & progressloop_pid=$!

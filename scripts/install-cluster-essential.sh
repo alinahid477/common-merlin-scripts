@@ -25,18 +25,20 @@ installClusterEssential () {
             sleep 2
         fi
         returnOrexit || return 2
+    else
+        printf "NOT FOUND.\n"
     fi
 
     if [[ -z $isKappControllerExist && -z $isSecretgenControllerExist ]]
     then
-        local isInstallClusterEssential='y'
+        isInstallClusterEssential='y'
     fi
 
     printf "\nChecking Tanzu cluster essential binary..."
     sleep 1
     local isinflatedCE='n'
     local DIR="$HOME/tanzu-cluster-essentials"
-    if [ -d "$DIR" ]
+    if [[ -d $DIR ]]
     then
         if [ "$(ls -A $DIR)" ]; then
             isinflatedCE='y'
@@ -201,5 +203,6 @@ installClusterEssential () {
     else
         printf "\nWARN: Kapp and cluster-essential could not be installed. Most likely $DIR missing.\n"
     fi 
-    
+
+    return 0
 }

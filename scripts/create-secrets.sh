@@ -1,4 +1,5 @@
 #!/bin/bash
+source $HOME/binaries/scripts/returnOrexit.sh
 
 function createGitSSHSecret () {
     export $(cat $HOME/.env | xargs)
@@ -233,6 +234,10 @@ function createGitSSHSecret () {
 
 
 function createBasicAuthSecret () {
+    export $(cat $HOME/.env | xargs)
+
+    sleep 1
+
     local filesaveDir=$1 # Optional
     local namespace=$2 #optional
     local filename='nouserinput'
@@ -249,6 +254,9 @@ function createBasicAuthSecret () {
             fi
         done
     fi
+    
+    printf "\nCreating K8s Secret: kubernetes.io/basic-auth in ns: $namespace\n"
+    sleep 2
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
         if [[ -z $GITOPS_SECRET_NAME ]]
@@ -271,13 +279,18 @@ function createBasicAuthSecret () {
             printf "${redcolot}empty value found for one of the required fields (K8S_BASIC_SECRET_NAME, K8S_BASIC_SECRET_GIT_SERVER, K8S_BASIC_SECRET_USERNAME, K8S_BASIC_SECRET_PASSWORD).${normalcolor}\n"
             printf "$GITOPS_SECRET_NAME Secret creation (in SILENMODE)...FAILED${normalcolor}\n"
             returnOrexit || return 1
-        fi    
+        fi 
+        printf "\nSecret details:\n\tname:$K8S_BASIC_SECRET_NAME\n\tserver:$K8S_BASIC_SECRET_GIT_SERVER\n\tusername:$K8S_BASIC_SECRET_USERNAME\n\n"
+    else
+        printf "Require input to create k8s secret of type: kubernetes.io/basic-auth....\n"
     fi
-    printf "Require input to create k8s secret of type: kubernetes.io/basic-auth....\n"
+    
     local secretTemplateName="k8s-basic-auth-git-secret"
     local secretFile=$filesaveDir/$secretTemplateName.$filename.tmp
     cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
+    sleep 1
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
+    printf "\nsecret yaml...complete\n"
 
     
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
@@ -302,7 +315,7 @@ function createBasicAuthSecret () {
     
     printf "Creating k8s secret of type kubernetes.io/basic-auth...."
     kubectl apply -f $secretFile -n $namespace && printf "CREATED\n" || printf "FAILED\n"
-
+    sleep 1
     if [[ $filesaveDir == '/tmp' ]]
     then
         rm $secretFile
