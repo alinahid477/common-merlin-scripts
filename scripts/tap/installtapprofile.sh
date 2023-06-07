@@ -271,11 +271,14 @@ installTapProfile()
                 echo "GENERATEDLBIP#$lbip" >> $HOME/configs/output
                 sleep 1
             fi
-            printf "Available at IP: $lbip\n\n\n"          
+            printf "Available at IP: $lbip\n\n\n"
+            sleep 5     
             printf "\n"
             printf "Checking presence of token generatedlbip in the TAP values file...\n"
-            isexist=$(cat $profilefilename | grep generatedlbip)
-            if [[ -n $isexist && -n $lbip ]]
+            sleep 5
+            local isgeneratedlbipexists=$(cat $profilefilename | grep generatedlbip)
+            sleep 4
+            if [[ -n $isgeneratedlbipexists && -n $lbip ]]
             then
                 printf "${bluecolor}Found generatedlbip token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"
                 printf "replacing generatedlbip with $lbip...\n"
