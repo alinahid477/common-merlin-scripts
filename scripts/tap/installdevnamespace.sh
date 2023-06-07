@@ -9,6 +9,8 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/create-secrets.sh
 
 createDevNS () {
+    export $(cat $HOME/.env | xargs)
+    
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
     local tapvaluesfile=$1
