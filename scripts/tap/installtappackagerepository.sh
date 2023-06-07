@@ -103,16 +103,18 @@ installTapPackageRepository()
         fi
     fi
     printf "\nPSP: COMPLETE"
-
+    sleep 2
     isexist=$(kubectl get ns | grep "^tap-install")
     if [[ -z $isexist ]]
     then
         printf "\nCreate namespace tap-install in k8s..."
         kubectl create ns tap-install
+        sleep 2
         printf "\n....COMPLETE\n\n"
     fi
     
     printf "\nPerforming docker login for pvt registry and tanzu-net...\n"
+    sleep 2
     # PATCH: Dockerhub is special case
     # This patch is so that 
     local myregistryserver=$PVT_INSTALL_REGISTRY_SERVER
