@@ -233,17 +233,20 @@ function createGitSSHSecret () {
 
 
 function createBasicAuthSecret () {
+    printf "\nDBG1:createBasicAuthSecret ()\n"
     export $(cat $HOME/.env | xargs)
 
     sleep 1
-
+    printf "\nDBG2:createBasicAuthSecret ()\n"
     local filesaveDir=$1 # Optional
     local namespace=$2 #optional
     local filename='nouserinput'
     if [[ -z $filesaveDir ]]
     then
         filesaveDir=/tmp
+        printf "\nDBG3:createBasicAuthSecret ()\n"
     else
+        printf "\nDBG4:createBasicAuthSecret ()\n"
         filename=''
         while [[ -z $filename ]]; do
             read -p "Provide a file name: " filename
