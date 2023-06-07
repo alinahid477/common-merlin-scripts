@@ -128,18 +128,22 @@ installTapPackageRepository()
         fi
         printf "\nPSP: COMPLETE"
     else
-        printf "K8s_version > 1.25. PSP check not needed\n"
+        printf " > 1.24. PSP check not needed\n"
     fi
 
-    
     sleep 1
-    isexist=$(kubectl get ns | grep "^tap-install")
-    if [[ -z $isexist ]]
+    printf "\nchecking k8s ns for tap-install..."
+    local istapinstallns=$(kubectl get ns | grep -w tap-install)
+    sleep 1
+    if [[ -z $istapinstallns ]]
     then
+        printf "NOT FOUND\n"
         printf "\nCreate namespace tap-install in k8s..."
         kubectl create ns tap-install
         sleep 2
-        printf "\n....COMPLETE\n\n"
+        printf "\ncreateNS: tap-install....COMPLETE\n\n"
+    else
+        printf "FOUND. Skipping creating NS: tap-install.\n"
     fi
     
     printf "\nPerforming docker login for pvt registry and tanzu-net...\n"
