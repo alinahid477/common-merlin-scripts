@@ -233,20 +233,42 @@ function createGitSSHSecret () {
 
 
 function createBasicAuthSecret () {
-    printf "\nDBG1:createBasicAuthSecret ()\n"
+    
     export $(cat $HOME/.env | xargs)
 
     sleep 1
-    printf "\nDBG2:createBasicAuthSecret ()\n"
+    
     local filesaveDir=$1 # Optional
     local namespace=$2 #optional
     local filename='nouserinput'
+    
     if [[ -z $filesaveDir ]]
     then
-        filesaveDir=/tmp
-        printf "\nDBG3:createBasicAuthSecret ()\n"
-    else
-        printf "\nDBG4:createBasicAuthSecret ()\n"
+        filesaveDir=/tmp        
+    fi
+
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
+        printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
+        printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
+        while [[ -z $namespace ]]; do
+            read -p "NAMESPACE: " namespace
+            if [[ -z $namespace ]]
+            then
+                namespace='default'
+                printf "${greencolor}accepted default value: default${normalcolor}\n"
+            fi
+        done        
+    fi
+
+    if [[ -z $namespace ]]
+    then
+        printf "\nempty value for namespace not allowed. Basic Auth Secret creation..FAILED\n"
+        returnOrexit || return 1
+    fi
+
+    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+    then
         filename=''
         while [[ -z $filename ]]; do
             read -p "Provide a file name: " filename
@@ -256,7 +278,7 @@ function createBasicAuthSecret () {
             fi
         done
     fi
-    
+
     printf "\nCreating K8s Secret: kubernetes.io/basic-auth in ns: $namespace\n"
     sleep 2
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
@@ -279,7 +301,7 @@ function createBasicAuthSecret () {
         if [[ -z $K8S_BASIC_SECRET_NAME || -z $K8S_BASIC_SECRET_GIT_SERVER || -z $K8S_BASIC_SECRET_USERNAME || -z $K8S_BASIC_SECRET_PASSWORD ]]
         then
             printf "${redcolot}empty value found for one of the required fields (K8S_BASIC_SECRET_NAME, K8S_BASIC_SECRET_GIT_SERVER, K8S_BASIC_SECRET_USERNAME, K8S_BASIC_SECRET_PASSWORD).${normalcolor}\n"
-            printf "$GITOPS_SECRET_NAME Secret creation (in SILENMODE)...FAILED${normalcolor}\n"
+            printf "$GITOPS_SECRET_NAME Secret creation (in SILENTMODE)...FAILED${normalcolor}\n"
             returnOrexit || return 1
         fi 
         printf "\nSecret details:\n\tname:$K8S_BASIC_SECRET_NAME\n\tserver:$K8S_BASIC_SECRET_GIT_SERVER\n\tusername:$K8S_BASIC_SECRET_USERNAME\n\n"
@@ -293,27 +315,6 @@ function createBasicAuthSecret () {
     sleep 1
     extractVariableAndTakeInput $secretFile || returnOrexit || return 1
     printf "\nsecret yaml...complete\n"
-
-    
-    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-    then
-        if [[ -z $namespace ]]
-        then
-            printf "\nempty value for namespace not allowed. Secret creation (in SILENTMODE)..FAILED\n"
-            returnOrexit || return 1
-        fi
-    else
-        printf "\nHint:${bluecolor}the name of the namespace where this secret will be created. eg: default${normalcolor}\n"
-        printf "${greencolor}Hit enter to accept default: default${normalcolor}\n"
-        while [[ -z $namespace ]]; do
-            read -p "NAMESPACE: " namespace
-            if [[ -z $namespace ]]
-            then
-                namespace='default'
-                printf "${greencolor}accepted default value: default${normalcolor}\n"
-            fi
-        done
-    fi
     
     printf "Creating k8s secret of type kubernetes.io/basic-auth...."
     kubectl apply -f $secretFile -n $namespace && printf "CREATED\n" || printf "FAILED\n"
