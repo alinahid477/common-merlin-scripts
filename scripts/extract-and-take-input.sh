@@ -438,9 +438,9 @@ function extractVariableAndTakeInput () {
     local variableFile=$1 # REQUIRED
     local defaultValuesFile=$2 # Optional
     
-    printf "\nDBG1: extractVariableAndTakeInput ()\n"
+    
     extractVariableAndTakeInputPrivate $promptsForVariablesJSON $variableFile $defaultValuesFile 
-    printf "\nDBG2: extractVariableAndTakeInput ()\n"
+    
 }
 
 function extractVariableAndTakeInputUsingCustomPromptsFile () {
