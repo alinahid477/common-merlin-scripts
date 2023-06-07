@@ -1,5 +1,4 @@
 #!/bin/bash
-source $HOME/binaries/scripts/returnOrexit.sh
 
 function createGitSSHSecret () {
     export $(cat $HOME/.env | xargs)
