@@ -89,9 +89,8 @@ createDevNS () {
     fi
 
     printf "\nChecking if namcespace exists in the cluster....\n"
-    local isexist=$(kubectl get ns | grep "^$namespacename")
-
-    if [[ -n $isexist ]] 
+    local isexistns=$(kubectl get ns | grep "^$namespacename")
+    if [[ -n $isexistns ]] 
     then
         printf "namespace: $namespacename already exists....Skipping Create New\n"
     else
@@ -99,8 +98,8 @@ createDevNS () {
         kubectl create ns $namespacename && printf "OK" || printf "FAILED"
         printf "\n"
 
-        isexist=$(kubectl get ns | grep "^$namespacename")
-        if [[ -z $isexist ]]
+        local isexistns2=$(kubectl get ns | grep "^$namespacename")
+        if [[ -z $isexistns2 ]]
         then
             printf "ERROR: Failed to create namespace: $namespacename\n"
             returnOrexit || return 1
@@ -113,8 +112,8 @@ createDevNS () {
     then
         printf "\nchecking for gitops presence..."
         sleep 1
-        isexist=$(cat $tapvaluesfile | grep -w 'gitops:$')
-        if [[ -n $isexist ]]
+        local isexistcat=$(cat $tapvaluesfile | grep -w 'gitops:$')
+        if [[ -n $isexistcat ]]
         then
             selectedSupplyChainType='gitops'
             printf "FOUND\n"
@@ -288,8 +287,8 @@ createDevNS () {
         printf "\n"
     fi
 
-    isexist=$(cat $tapvaluesfile | grep -w 'scanning:$')
-    if [[ -n $isexist ]]
+    local isexisttvf=$(cat $tapvaluesfile | grep -w 'scanning:$')
+    if [[ -n $isexisttvf ]]
     then
         confirmed='n'
         printf "\nDetected user input for scanning functionlity. A 'kind: ScanPolicy' needs to be present in the namespace.\n"
@@ -317,9 +316,9 @@ createDevNS () {
     fi
     
     printf "\nChecking whether it requires tekton pipeline for testing...."
-    isexist=$(cat $tapvaluesfile | grep -i 'supply_chain: testing')
+    local isexisttvf2=$(cat $tapvaluesfile | grep -i 'supply_chain: testing')
     sleep 1
-    if [[ -n $isexist ]]
+    if [[ -n $isexisttvf2 ]]
     then
         printf "Yes.\nSupply Chain detected with testing functionlity. Applying a maven test tekton pipeline based on file $HOME/binaries/templates/tap-maven-test-tekton-pipeline.yaml...\n"
         confirmed='n'

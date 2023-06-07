@@ -40,8 +40,8 @@ function doLogin () {
     fi
 
     printf "Checking credential validity..."
-    local isexist=$(aws sts get-caller-identity)
-    if [[ -z $isexist ]]
+    local isexistaws=$(aws sts get-caller-identity)
+    if [[ -z $isexistaws ]]
     then
         printf "\n${redcolor}ERROR: invalid aws access.${normalcolor}\n"
         returnOrexit || return 1
@@ -114,14 +114,14 @@ function createKeyPair () {
     fi
 
     printf "\nChecking Key pair validity with name $AWS_REGION-tkg-keypair in the region $AWS_REGION..."
-    local isexist=''
+    local isexistpair=''
     local kpName=$(aws ec2 describe-key-pairs --key-name $AWS_REGION-tkg-keypair --region $AWS_REGION --output text | awk '{print $3}')
     local kpFileName=$(ls -l $HOME/.ssh/$AWS_REGION-tkg-keypair.pem)
     printf "CHECKED\n"
     if [[ -n $kpName && -n $kpFileName ]]
     then
         printf "${greencolor}Key Pair already exists, no need to create a new one.${normalcolor}\n"
-        isexist=true
+        isexistpair=true
     else
         if [[ -n $kpName ]]
         then
@@ -136,27 +136,27 @@ function createKeyPair () {
             printf "Importing file://$HOME/.ssh/$AWS_REGION-tkg-keypair.pem to AWS Account for region $AWS_REGION with name: $AWS_REGION-tkg-keypair..."    
             aws ec2 import-key-pair --key-name  $AWS_REGION-tkg-keypair --public-key-material fileb://$HOME/.ssh/$AWS_REGION-tkg-keypair.pem || returnOrexit || return 1
             printf "IMPORTED.\n"
-            isexist=true
+            isexistpair=true
         fi
 
-        if [[ -z $isexist ]]
+        if [[ -z $isexistpair ]]
         then
             printf "${bluecolor}No key pair found in local or in aws region: $AWS_REGION.${normalcolor}\n"
             printf "Registering an SSH Public Key with Your AWS Account in region $AWS_REGION and creating localfile: $HOME/.ssh/$AWS_REGION-tkg-keypair.pem..."
             aws ec2 create-key-pair --key-name $AWS_REGION-tkg-keypair --output json --region $AWS_REGION | jq .KeyMaterial -r > $HOME/.ssh/$AWS_REGION-tkg-keypair.pem || returnOrexit || return 1
-            isexist=$(cat $HOME/.ssh/$AWS_REGION-tkg-keypair.pem)
-            if [[ -z $isexist ]]
+            local isexistcat=$(cat $HOME/.ssh/$AWS_REGION-tkg-keypair.pem)
+            if [[ -z $isexistcat ]]
             then
                 printf "${redcolor}ERROR: empty pem file${normalcolor}\n"
                 rm $HOME/.ssh/$AWS_REGION-tkg-keypair.pem
                 returnOrexit || return 1
             fi
             printf "REGISTERED.\n"
-            isexist=true
+            isexistpair=true
         fi      
     fi
 
-    if [[ $isexist == true ]]
+    if [[ $isexistpair == true ]]
     then
         printf "${greencolor}Key-Pair created. To review visit https://$AWS_REGION.console.aws.amazon.com/ec2/v2/home?region=$AWS_REGION#KeyPairs:${normalcolor}\n"
         while true; do

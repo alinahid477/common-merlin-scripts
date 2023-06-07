@@ -11,7 +11,7 @@ installTap()
     printf "\n\n************Checking if TAP is already installed on k8s cluster**********\n"
     # This logic is flawd. Need to change to something solid
     sleep 1
-    local isexist='y'
+    local isexistit='y'
     if [[ -z $INSTALL_TAP_PROFILE || $INSTALL_TAP_PROFILE != 'COMPLETED' ]]
     then
         printf "Checking tap-install in k8s...\n"
@@ -27,7 +27,7 @@ installTap()
             printf "TAP is not found in the k8s cluster (ns: tap-install is missing or empty).\n\n"
             if [[ -z $COMPLETE || $COMPLETE == 'NO' ]]
             then
-                isexist="n"    
+                isexistit="n"    
             fi
         fi
     fi   
@@ -49,7 +49,7 @@ installTap()
     printf "\n\n----------Finished Checking---------\n\n\n"
     sleep 2
 
-    if [[ $isexist == 'y' || $COMPLETE == 'YES' ]]
+    if [[ $isexistit == 'y' || $COMPLETE == 'YES' ]]
     then
         printf "${yellowcolor}This installer has detected that TAP is marked as COMPLETED in the .env file.${normalcolor}\n"
         printf "Performing tanzu package installed get tap -n tap-install...\n"
@@ -60,8 +60,8 @@ installTap()
             while true; do
                 read -p "Would you like to re-deploy tap? [y/n]: " yn
                 case $yn in
-                    [Yy]* ) isexist='n'; printf "you confirmed yes.\n"; break;;
-                    [Nn]* ) isexist='y'; printf "You said no.\n"; break;;
+                    [Yy]* ) isexistit='n'; printf "you confirmed yes.\n"; break;;
+                    [Nn]* ) isexistit='y'; printf "You said no.\n"; break;;
                     * ) echo "Please answer y or n.";;
                 esac
             done
@@ -70,7 +70,7 @@ installTap()
     sleep 2
     local doinstall=''
 
-    if [[ $isexist == "n" && $INSTALL_TAP_PACKAGE_REPOSITORY != 'COMPLETED' ]]
+    if [[ $isexistit == "n" && $INSTALL_TAP_PACKAGE_REPOSITORY != 'COMPLETED' ]]
     then
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then

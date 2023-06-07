@@ -26,14 +26,14 @@ installTapPackageRepository()
     #     printf "\nERROR: Access information to container registry is missing.\n"
     # fi
     
-    local isexist=$(which kapp)
-    if [[ -z $isexist ]]
+    local isexistkapp=$(which kapp)
+    if [[ -z $isexistkapp ]]
     then
         printf "\nERROR: kapp not found, meaning cluster essential has not been installed.\n"
         returnOrexit || return 1
     fi
-    isexist=$(which tanzu)
-    if [[ -z $isexist ]]
+    local isexisttanzu=$(which tanzu)
+    if [[ -z $isexisttanzu ]]
     then
         printf "\nERROR: tanzu cli not found, meaning it has not been installed.\n"
         returnOrexit || return 1
@@ -87,9 +87,9 @@ installTapPackageRepository()
         # for some reason the 2nd psp command (kubectl get psp | grep -w vmware-system-tmc-privileged) throwing error
         #   only when cluster essential install. VERRRYYY WEIRD. I have no idea why.
         printf "\nChecking if PSP exists..."
-        isexist=$(kubectl get psp || true)
+        local isexistpsp=$(kubectl get psp || true)
         sleep 1
-        if [[ -n $isexist ]]
+        if [[ -n $isexistpsp ]]
         then
             printf "PSP FOUND\n"
             printf "\nChecking PSP: vmware-system-privileged and vmware-system-tmc-privileged in the cluster..."
@@ -201,8 +201,8 @@ installTapPackageRepository()
     if [[ $confirmed == 'y' ]]
     then
         printf "\nChecking imgpkg..."
-        isexist=$(imgpkg version)
-        if [[ -z $isexist ]]
+        local isexistimgpkg=$(imgpkg version)
+        if [[ -z $isexistimgpkg ]]
         then
             printf "\nERROR: imgpgk is missing. This tool is required for image relocation.\n"
             returnOrexit || return 1

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 function installAZCLI () {
-    local isexists=$(which az)
-    if [[ -z $isexists ]]
+    local isexistsaz=$(which az)
+    if [[ -z $isexistsaz ]]
     then
         printf "\naz cli not found. Installing...\n"
         curl -sL https://aka.ms/InstallAzureCLIDeb | bash
@@ -11,8 +11,8 @@ function installAZCLI () {
         return 0
     fi
 
-    isexists=$(which az)
-    if [[ -z $isexists ]]
+    local isexistsaz1=$(which az)
+    if [[ -z $isexistsaz1 ]]
     then
         printf "\naz cli STILL not found. Exiting...\n"
         returnOrexit || return 1
@@ -21,8 +21,8 @@ function installAZCLI () {
 }
 
 function installAWSCLI () {
-    local isexists=$(which aws)
-    if [[ -z $isexists ]]
+    local isexistsaws=$(which aws)
+    if [[ -z $isexistsaws ]]
     then
         printf "\naws cli not found. Installing...\n"
         if [[ ! -d $HOME/awscli ]]
@@ -52,8 +52,8 @@ function installAWSCLI () {
         return 0
     fi
 
-    isexists=$(which aws)
-    if [[ -z $isexists ]]
+    local isexistsaws1=$(which aws)
+    if [[ -z $isexistsaws1 ]]
     then
         printf "\naws cli STILL not found. Exiting...\n"
         returnOrexit || return 1

@@ -116,8 +116,8 @@ installClusterEssential () {
     
     if [[ -d $DIR ]]
     then
-        local isexist=$(kapp version)
-        if [[ -z $isexist ]]
+        local isexistkapp=$(kapp version)
+        if [[ -z $isexistkapp ]]
         then
             printf "\nLinking kapp.....\n"
             cp $HOME/tanzu-cluster-essentials/kapp /usr/local/bin/kapp || returnOrexit

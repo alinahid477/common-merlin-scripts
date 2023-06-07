@@ -33,8 +33,8 @@ tiktok() {
     while [[ $bigcount -lt $totalbigcount ]]; do
         if [[ $count -eq $intervalcount ]]
         then
-            local isexist=$(ps -ef | grep $parentprocessid | awk '{print $2}' | grep -w $parentprocessid)
-            if [[ -z $isexist ]]
+            local isexistps=$(ps -ef | grep $parentprocessid | awk '{print $2}' | grep -w $parentprocessid)
+            if [[ -z $isexistps ]]
             then
                 return 1
             fi

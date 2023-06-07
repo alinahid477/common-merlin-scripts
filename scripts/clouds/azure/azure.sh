@@ -367,8 +367,8 @@ function createAKSCluster () {
         exit 1
     fi
 
-    isexists=$(az group show --name ${AZ_GROUP_NAME} | jq -r '.id')
-    if [[ -z $isexists ]]
+    local isexistsaz=$(az group show --name ${AZ_GROUP_NAME} | jq -r '.id')
+    if [[ -z $isexistsaz ]]
     then
         printf "\nResource group not found with name: ${AZ_GROUP_NAME} in location: ${AZ_LOCATION}. Creating new...\n"
         az group create -l ${AZ_LOCATION} -n ${AZ_GROUP_NAME}

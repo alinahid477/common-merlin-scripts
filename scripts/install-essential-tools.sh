@@ -36,8 +36,8 @@ function installEssentialTools() {
 
     # incase the tools are installed with carvel tools or some other means during docker build, I need to check if it already exist. 
     # If not then download and install.
-    local isexist=$(which kp)
-    if [[ -z $isexist ]]
+    local isexistkp=$(which kp)
+    if [[ -z $isexistkp ]]
     then
         printf "installing kpack...\n"
         if [[ ! -f $HOME/essential-clis/kp && ! -f /usr/local/bin/kp ]]
@@ -51,8 +51,8 @@ function installEssentialTools() {
         fi
     fi
 
-    isexist=$(which kapp)
-    if [[ -z $isexist ]]
+    local isexistkapp=$(which kapp)
+    if [[ -z $isexistkapp ]]
     then
         printf "installing kapp...\n"
         if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
@@ -66,8 +66,8 @@ function installEssentialTools() {
         fi
     fi
 
-    isexist=$(which ytt)
-    if [[ -z $isexist ]]
+    local isexistytt=$(which ytt)
+    if [[ -z $isexistytt ]]
     then
         printf "installing ytt...\n"
         if [[ ! -f $HOME/essential-clis/ytt && ! -f /usr/local/bin/ytt ]]
@@ -81,8 +81,8 @@ function installEssentialTools() {
         fi
     fi
 
-    isexist=$(which yq)
-    if [[ -z $isexist ]]
+    local isexistyq=$(which yq)
+    if [[ -z $isexistyq ]]
     then
         printf "installing yq...\n"
         if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]
@@ -96,8 +96,8 @@ function installEssentialTools() {
         fi
     fi
 
-    isexist=$(kubectl tree --help)
-    if [[ -z $isexist ]]
+    local isexisttree=$(kubectl tree --help)
+    if [[ -z $isexisttree ]]
     then
         printf "installing tree (via krew)...\n"
         if [[ ! -f $HOME/essential-clis/kubectl-krew && ! -f /usr/local/bin/kubectl-krew ]]
@@ -126,8 +126,8 @@ function installEssentialToolsLite() {
 
     # incase the tools are installed with carvel tools or some other means during docker build, I need to check if it already exist. 
     # If not then download and install.
-    isexist=$(which kapp)
-    if [[ -z $isexist ]]
+    local isexistkapp=$(which kapp)
+    if [[ -z $isexistkapp ]]
     then
         printf "installing kapp...\n"
         if [[ ! -f $HOME/essential-clis/kapp && ! -f /usr/local/bin/kapp ]]
@@ -142,8 +142,8 @@ function installEssentialToolsLite() {
     fi
 
 
-    isexist=$(which yq)
-    if [[ -z $isexist ]]
+    local isexistyq=$(which yq)
+    if [[ -z $isexistyq ]]
     then
         printf "installing yq...\n"
         if [[ ! -f $HOME/essential-clis/yq && ! -f /usr/local/bin/yq ]]

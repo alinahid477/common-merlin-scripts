@@ -11,8 +11,6 @@ installTapProfile()
     local normalcolor=$(tput sgr0)
     local profilefilename=$1
 
-    local isexist=""
-
     # PATCH: Dockerhub is special case
     # This patch is so that 
     #   tanzu secret registry add registry-credentials --server PVT-REGISTRY-SERVER requires dockerhub to be: https://index.docker.io/v1/
@@ -216,8 +214,8 @@ installTapProfile()
         # hence only do manual SA creattion and token add if it is version 1.3.x or older.
         if [[ $tapPackageVersion < 1.4.0 ]]
         then
-            isexist=$(cat $profilefilename | grep -w 'scanning:$')
-            if [[ -n $isexist ]]
+            local isexistcat=$(cat $profilefilename | grep -w 'scanning:$')
+            if [[ -n $isexistcat ]]
             then
                 printf "\nDetected user input for scanning functionlity. Metadata store needs to be wired with TAP-GUI in order for scan result to get displayed in the GUI supply chain."
                 printf "\nCreating readonly service account name 'metadata-store-read-client' and rolebindings for it...\n"

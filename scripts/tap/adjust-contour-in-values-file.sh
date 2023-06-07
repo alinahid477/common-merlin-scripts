@@ -12,8 +12,8 @@ addContourBlockAccordinglyInProfileFile()
     if [[ -f $profilefilename ]]
     then
         
-        local isexist=$(cat $profilefilename | grep -w 'contour:$')
-        if [[ -z $isexist ]]
+        local isexistpn=$(cat $profilefilename | grep -w 'contour:$')
+        if [[ -z $isexistpn ]]
         then
             local isUseAWSNLB=''
             if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]

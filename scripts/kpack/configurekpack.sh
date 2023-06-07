@@ -75,8 +75,8 @@ function createKpackClusterStore () {
     if [[ -n $KPACK_CLUSTERSTORE_NAME ]]
     then
         printf "Checking if $KPACK_CLUSTERSTORE_NAME already exists...."
-        local isexist=$(kubectl describe clusterstore $KPACK_CLUSTERSTORE_NAME)
-        if [[ -n $isexist ]]
+        local isexistk=$(kubectl describe clusterstore $KPACK_CLUSTERSTORE_NAME)
+        if [[ -n $isexistk ]]
         then
             printf "FOUND\n"
             printf "${redcolor}ERROR: Error creating new ClusterStore.\nKpack ClusterStore with name: $KPACK_CLUSTERSTORE_NAME already exists.${normalcolor}\n"
@@ -130,8 +130,8 @@ function createKpackClusterStack () {
     if [[ -n $KPACK_CLUSTERSTACK_NAME ]]
     then
         printf "Checking if $KPACK_CLUSTERSTACK_NAME already exists...."
-        local isexist=$(kubectl describe clusterstack $KPACK_CLUSTERSTACK_NAME)
-        if [[ -n $isexist ]]
+        local isexistk=$(kubectl describe clusterstack $KPACK_CLUSTERSTACK_NAME)
+        if [[ -n $isexistk ]]
         then
             printf "FOUND\n"
             printf "${redcolor}ERROR: Error creating new ClusterStack.\nKpack ClusterStack with name: $KPACK_CLUSTERSTACK_NAME already exists.${normalcolor}\n"
@@ -198,8 +198,8 @@ function createKpackBuilder () {
     if [[ -n ${!dynamicVariableNameForBuilderName} ]]
     then
         printf "Checking if -n ${!dynamicVariableNameForBuilderName} already exists...."
-        local isexist=$(kubectl describe $buildertype ${!dynamicVariableNameForBuilderName} -n $namespace)
-        if [[ -n $isexist ]]
+        local isexistk=$(kubectl describe $buildertype ${!dynamicVariableNameForBuilderName} -n $namespace)
+        if [[ -n $isexistk ]]
         then
             printf "FOUND\n"
             printf "${redcolor}ERROR: Error creating new $buildertype.\nKpack $buildertype with name: ${!dynamicVariableNameForBuilderName} already exists.${normalcolor}\n"
@@ -248,7 +248,7 @@ function configureK8sSecretAndServiceAccount () {
     local configureType=$1
 
     printf "**** Configure K8s registry secrets, basic secrets (if needed for pvt git repo) and service account for Kpack ******\n"
-    local isexist=''
+    
 
     local namespace=''
     if [[ $configureType == 'default' ]]
@@ -269,8 +269,8 @@ function configureK8sSecretAndServiceAccount () {
     if [[ -n $namespace ]]
     then
         printf "Checking namespace $namespace..."
-        isexist=$(kubectl describe ns $namespace)
-        if [[ -z $isexist ]]
+        local isexistk=$(kubectl describe ns $namespace)
+        if [[ -z $isexistk ]]
         then
             printf "Namespace: $namespace ... NOT FOUND\n"
             kubectl create ns $namespace
@@ -293,8 +293,8 @@ function configureK8sSecretAndServiceAccount () {
         elif [[ $dockersecretname != 'new' ]]
         then
             printf "Checking secret: $dockersecretname in $namespace..."
-            isexist=$(kubectl describe secret $dockersecretname -n $namespace)
-            if [[ -z $isexist ]]
+            local isexistk2=$(kubectl describe secret $dockersecretname -n $namespace)
+            if [[ -z $isexistk2 ]]
             then
                 dockersecretname=''
                 printf "${yellowcolor}Secret: $dockersecretname not found in namespace: $namespace ${normalcolor}\n"
@@ -341,8 +341,8 @@ function configureK8sSecretAndServiceAccount () {
             elif [[ $gitsecretname != 'new' ]]
             then
                 printf "Checking secret: $gitsecretname in $namespace..."
-                isexist=$(kubectl describe secret $gitsecretname -n $namespace)
-                if [[ -z $isexist ]]
+                local isexistk3=$(kubectl describe secret $gitsecretname -n $namespace)
+                if [[ -z $isexistk3 ]]
                 then
                     gitsecretname=''
                     printf "${yellowcolor}Secret: $gitsecretname not found in namespace: $namespace ${normalcolor}\n"
@@ -378,8 +378,8 @@ function configureK8sSecretAndServiceAccount () {
         sleep 1
         printf "Setting sa name: $saname\n"
         printf "Checking sa: $saname in $namespace..."
-        isexist=$(kubectl describe sa $saname -n $namespace)
-        if [[ -z $isexist ]]
+        local isexistk4=$(kubectl describe sa $saname -n $namespace)
+        if [[ -z $isexistk4 ]]
         then
             saname='new'
             printf "NOT FOUND\n"
@@ -395,8 +395,8 @@ function configureK8sSecretAndServiceAccount () {
         elif [[ $saname != 'new' ]]
         then
             printf "Checking sa: $saname in $namespace..."
-            isexist=$(kubectl describe sa $saname -n $namespace)
-            if [[ -z $isexist ]]
+            local isexistk5=$(kubectl describe sa $saname -n $namespace)
+            if [[ -z $isexistk5 ]]
             then
                 saname=''
                 printf "${yellowcolor}Secret: $saname not found in namespace: $namespace ${normalcolor}\n"

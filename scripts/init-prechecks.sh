@@ -2,8 +2,8 @@
 
 if [[ -n $BASTION_HOST ]]
 then
-    isexists=$(ls -l $HOME/.ssh/id_rsa)
-    if [[ -n $isexists ]]
+    isidrsaexists=$(ls -l $HOME/.ssh/id_rsa)
+    if [[ -n $isidrsaexists ]]
     then
         chmod 600 $HOME/.ssh/id_rsa 
         isrsacommented=$(cat $HOME/Dockerfile | grep '#\s*COPY .ssh/id_rsa $HOME/.ssh/')

@@ -67,8 +67,8 @@ function tanzu_connect () {
             kubeconfigfile=$HOME/.kube-tkg/config
             printf "NO AUTH_ENDPOINT given.\nLooking for kubeconfig in $kubeconfigfile...\n"
             sleep 1
-            isexist=$(ls $kubeconfigfile)
-            if [[ -z $isexist ]]
+            local isexistkc=$(ls $kubeconfigfile)
+            if [[ -z $isexistkc ]]
             then
                 printf "\n${redcolor}ERROR: kubeconfig not found in $kubeconfigfile ${normalcolor}\nExiting...\n"
                 returnOrexit || return 1

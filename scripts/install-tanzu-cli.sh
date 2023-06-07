@@ -93,8 +93,8 @@ installTanzuCLI () {
     fi
     sleep 1
     cd ~
-    local isexist=$(which tanzu)
-    if [[ -d $DIR && -z $isexist ]]
+    local isexisttanzu=$(which tanzu)
+    if [[ -d $DIR && -z $isexisttanzu ]]
     then
         # default check tce
         local tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
