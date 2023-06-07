@@ -104,13 +104,13 @@ createDevNS () {
             returnOrexit || return 1
         fi
     fi
-    sleep 2
+    
     printf "\nTAP Values file: $tapvaluesfile\n"
     local selectedSupplyChainType=''
     if [[ -n $tapvaluesfile ]]
     then
         printf "\nchecking for gitops presence..."
-        sleep 2
+        sleep 1
         isexist=$(cat $tapvaluesfile | grep -w 'gitops:$')
         if [[ -n $isexist ]]
         then
@@ -149,7 +149,7 @@ createDevNS () {
         if [[ $confirmed == 'y' ]]
         then
             printf "\nconfirmed...\n"
-            sleep 2
+            sleep 1
             if [[ $selectedSupplyChainType == 'gitops' || $selectedSupplyChainType == 'local_iteration_with_code_from_git' ]]
             then
                 # export GIT_SERVER_HOST=$gitprovidername
@@ -177,9 +177,9 @@ createDevNS () {
                     # cp $HOME/binaries/templates/tap-git-secret.yaml /tmp/tap-git-secret.yaml
                     # extractVariableAndTakeInput /tmp/tap-git-secret.yaml
                     printf "\ncreating k8s secret for git...\n"
-                    sleep 2
+                    
                     export $(cat $HOME/.env | xargs)
-
+                    sleep 1
                     # printf "\nApplying kubectl for new secret for private git repository access..."
                     # kubectl apply -f /tmp/tap-git-secret.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
                     # printf "\n\n\n"
@@ -192,9 +192,9 @@ createDevNS () {
                         printf "\ncreating k8s secret for git of type SSH...\n"
                         createGitSSHSecret $namespacename
                     fi
-                    
+                    sleep 1
                     printf "\ncreate k8s secret for git...COMPLETE\n"
-
+                    sleep 2
                     # unset GIT_SERVER_HOST
                     # unset GIT_SSH_PRIVATE_KEY
                     # unset GIT_SSH_PUBLIC_KEY
@@ -206,7 +206,7 @@ createDevNS () {
 
     
     printf "\nCreating registry credential for pvt registry access...\n"
-    sleep 2
+    sleep 1
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
     then
@@ -229,29 +229,32 @@ createDevNS () {
     if [[ $confirmed == 'y' ]]
     then
         printf "\ncreating k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...\n"
-        sleep 2
+        sleep 1
         local tmpCmdFile=/tmp/devnamespacecmd.tmp
         local cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
 
         echo $cmdTemplate > $tmpCmdFile
+        sleep 1
         extractVariableAndTakeInput $tmpCmdFile
+        sleep 1
         cmdTemplate=$(cat $tmpCmdFile)
 
         printf "\nCreating new secret for private registry with name: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME..."
-        sleep 2
+        sleep 1
         $(echo $cmdTemplate) && printf "OK" || printf "FAILED"
+        sleep 1
         printf "\n"
         rm $tmpCmdFile
         sleep 1
         printf "\ncreate k8s secret: $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ...COMPLETE\n"
-        sleep 2
+        sleep 1
     fi
 
     
     
 
     printf "\nGenerating RBAC, SA for associating TAP and registry using name: default..."
-    sleep 2
+    sleep 1
     confirmed=''
     if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
     then
@@ -267,7 +270,6 @@ createDevNS () {
         if [[ -z $GITOPS_SECRET_NAME ]]
         then
             printf "\nReloading environment variables..."
-            sleep 2
             export $(cat $HOME/.env | xargs)
             sleep 2
         fi
@@ -276,12 +278,11 @@ createDevNS () {
     if [[ $confirmed == 'y' ]]
     then
         cp $HOME/binaries/templates/workload-ns-setup.yaml /tmp/workload-ns-setup-$namespacename.yaml
-        sleep 2
+        sleep 1
         extractVariableAndTakeInput /tmp/workload-ns-setup-$namespacename.yaml
-
+        sleep 1
         printf "\n"
         printf "\nCreating RBAC, RoleBinding and associating SA:default with it along with registry and repo credentials..."
-        sleep 2
         kubectl apply -n $namespacename -f /tmp/workload-ns-setup-$namespacename.yaml && printf "OK" || printf "FAILED"
         sleep 2
         printf "\n"
@@ -292,7 +293,7 @@ createDevNS () {
     then
         confirmed='n'
         printf "\nDetected user input for scanning functionlity. A 'kind: ScanPolicy' needs to be present in the namespace.\n"
-        sleep 2
+        sleep 1
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
             while true; do
@@ -317,11 +318,10 @@ createDevNS () {
     
     printf "\nChecking whether it requires tekton pipeline for testing...."
     isexist=$(cat $tapvaluesfile | grep -i 'supply_chain: testing')
-    sleep 2
+    sleep 1
     if [[ -n $isexist ]]
     then
         printf "Yes.\nSupply Chain detected with testing functionlity. Applying a maven test tekton pipeline based on file $HOME/binaries/templates/tap-maven-test-tekton-pipeline.yaml...\n"
-        sleep 2
         confirmed='n'
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
