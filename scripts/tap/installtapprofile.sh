@@ -149,8 +149,8 @@ installTapProfile()
             printf "\nError performing tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install\n"
             returnOrexit || return 1
         fi
-        printf "\nwait 2m...\n"
-        sleep 2m
+        printf "\nwait 1m...\n"
+        sleep 1m
 
         printf "\nCheck installation status....\n"
         # printf "DEBUG: tanzu package installed get tap -n tap-install"
@@ -179,12 +179,12 @@ installTapProfile()
                 printf "Received status: $reconcileStatus\n."
                 break
             fi
-            printf "wait 2m before checking again ($count out of $maxCount max)...."
+            printf "wait 1m before checking again ($count out of $maxCount max)...."
             ((count=$count+1))
-            sleep 2m
+            sleep 1m
         done
-        printf "\nWait 1m before listing the packages installed....\n"
-        sleep 1m
+        printf "\nWait 20s before listing the packages installed....\n"
+        sleep 20
         printf "\nList packages status....\n"
         sleep 1
         tanzu package installed list -A
@@ -287,8 +287,8 @@ installTapProfile()
                     && sleep 1 \
                     && printf "${bluecolor}Replace complete.${normalcolor}\nExecuting tanzu package update...\n" \
                     && tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install \
-                    && printf "\nwait 2m...\n" \
-                    && sleep 2m \
+                    && printf "\nwait 1m...\n" \
+                    && sleep 1m \
                     && printf "${bluecolor}Update complete.${normalcolor}\n"
             else
                 printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free xip.$lbip.io or nip.$lbip.io in which case you will need to update profile with it.${normalcolor}\n"

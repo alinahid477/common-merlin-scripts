@@ -252,8 +252,8 @@ installTapPackageRepository()
         tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     fi
 
-    printf "\nWaiting 3m before checking...\n"
-    sleep 3m
+    printf "\nWaiting 2m before checking...\n"
+    sleep 2m
     printf "\nChecking tanzu-tap-repository status...\n"
     tanzu package repository get tanzu-tap-repository --namespace tap-install
     printf "\nDONE\n\n"
