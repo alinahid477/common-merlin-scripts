@@ -40,7 +40,7 @@ installTanzuCLI () {
             printf "\nERROR: tanzu CLI is a required binary for installation.\nYou must place this binary under binaries directory.\n"
             returnOrexit || return 1
         else
-            numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
+            local numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
                 printf "\nERROR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
