@@ -34,6 +34,7 @@ installTapProfile()
         generateProfile
         if [ -f "$notifyfile" ]; then
             profilefilename=$(cat $notifyfile)
+            test -f $profilefilename && $HOME/binaries/scripts/tap/adjust-contour-in-values-file.sh $profilefilename || (echo "ERROR: Failed to locate values file" && exit 1)
         fi
     fi
     
