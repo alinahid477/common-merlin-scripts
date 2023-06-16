@@ -31,6 +31,10 @@ then
     sleep 1
     $HOME/binaries/scripts/download-common-scripts.sh tapwizard scripts/tap
     sleep 1
+    $HOME/binaries/scripts/download-common-scripts.sh carto scripts/carto
+    sleep 1
+    $HOME/binaries/scripts/download-common-scripts.sh kpack scripts/kpack
+    sleep 1
     if [[ -n $BASTION_HOST ]]
     then
         $HOME/binaries/scripts/download-common-scripts.sh bastion scripts/bastion
@@ -57,6 +61,8 @@ fi
 printf "\n\nsetting executable permssion to all binaries sh\n\n"
 ls -l $HOME/binaries/scripts/*.sh | awk '{print $9}' | xargs chmod +x
 ls -l $HOME/binaries/scripts/tap/*.sh | awk '{print $9}' | xargs chmod +x
+ls -l $HOME/binaries/scripts/carto/*.sh | awk '{print $9}' | xargs chmod +x
+ls -l $HOME/binaries/scripts/kpack/*.sh | awk '{print $9}' | xargs chmod +x
 sleep 1
 printf "\n\nsetting r+w permssion to all templates and files\n\n"
 ls -l $HOME/binaries/templates/* | awk '{print $9}' | xargs chmod +rw
