@@ -142,7 +142,7 @@ installTapProfile()
 
         $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tap.tanzu.vmware.com-install" & progressloop_pid=$!
         local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install)
-        printf "\n...tap.tanzu.vmware.com install complete...\n"
+        printf "\nStatus from tap.tanzu.vmware.com install...RETRIEVED.\n"
         kill "$progressloop_pid" > /dev/null 2>&1 || true
 
         if [[ -z $isSuccess ]]
@@ -170,17 +170,18 @@ installTapProfile()
         while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
             printf "\nVerify that TAP is installed....\n"
             reconcileStatus=$(tanzu package installed list -A -o json | jq -r '.[] | select(.name == "tap") | .status')
-            if [[ $reconcileStatus == *@("failed")* ]]
+            if [[ $reconcileStatus == *@("failed")* || $reconcileStatus == *@("reconciling")* ]]
             then
                 printf "Did not get a Reconcile successful. Received status: $reconcileStatus\n."
                 reconcileStatus=''
+                printf "wait 1m before checking again ($count out of $maxCount max)...."
             fi
             if [[ $reconcileStatus == *@("succeeded")* ]]
             then
                 printf "Received status: $reconcileStatus\n."
                 break
             fi
-            printf "wait 1m before checking again ($count out of $maxCount max)...."
+            printf "\n.\n"
             ((count=$count+1))
             sleep 1m
         done
@@ -206,10 +207,11 @@ installTapProfile()
             if [[ $reconcileStatus == *@("succeeded")* ]]
             then
                 confirmed='y'
+                printf "\ntap.tanzu.vmware.com install COMPLETE\n"
             fi            
         fi
 
-        printf "tap.tanzu.vmware.com install COMPLETE\n\n"
+        printf "\ntap.tanzu.vmware.com package deployment process...finished.\n\n"
         
         # from TAP 1.4.0 the metadatastore is auto. eg: metadataStoreAutoconfiguration: true # Create a service account, the Kubernetes control plane token and the requisite app_config block to enable communications between Tanzu Application Platform GUI and SCST - Store.
         # hence only do manual SA creattion and token add if it is version 1.3.x or older.
@@ -302,6 +304,8 @@ installTapProfile()
             printf "\nINSTALL_TAP_PROFILE=COMPLETED\n" >> $HOME/.env
             printf "\n\n********TAP profile deployment....COMPLETE**********\n\n\n" 
             sleep 3
+        else
+           printf "\n\nERROR: tap.tanzu.vmware.com deployment status: $reconcileStatus\n\n"
         fi
     fi
 }
