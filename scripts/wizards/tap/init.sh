@@ -61,10 +61,16 @@ sleep 1
 printf "\n\nsetting r+w permssion to all templates and files\n\n"
 ls -l $HOME/binaries/templates/* | awk '{print $9}' | xargs chmod +rw
 sleep 1
-## housekeeping
-rm /tmp/checkedConnectedK8s > /dev/null 2>&1
-rm $HOME/configs/output > /dev/null 2>&1
 
+if [[ -z $3 || $3 != "NOCLEANUP" ]]
+then
+    # NOCLEANUP is passed when called this from TAP-Jumpstart UI to restore from FILE.
+    #    At this phase we only want tanzu cli install and possibily some essential tools.
+    #    eg: the call /usr/local/init.sh INSTALLTANZUCLI INSTALLESSENTIALTOOLS NOCLEANUP
+    ## housekeeping
+    rm /tmp/checkedConnectedK8s > /dev/null 2>&1
+    rm $HOME/configs/output > /dev/null 2>&1
+fi
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/color-file.sh
 source $HOME/binaries/scripts/init-prechecks.sh
