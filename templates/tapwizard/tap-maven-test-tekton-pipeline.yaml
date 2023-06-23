@@ -33,7 +33,11 @@ spec:
 
               curl -SL $(params.source-url) | tar xvzf -
               if [ ! -z "$(params.testing-sub-path)" ]; then
-                echo "navigating to repo subpath $(params.testing-sub-path)"
-                cd $(params.testing-sub-path)
+                if [ -d "$(params.testing-sub-path)" ]; then
+                  echo "navigating to repo subpath $(params.testing-sub-path)"
+                  cd $(params.testing-sub-path)
+                else
+                  echo "repo subpath $(params.testing-sub-path) does not exists. skipping subpath..."
+                fi
               fi
               mvn test
