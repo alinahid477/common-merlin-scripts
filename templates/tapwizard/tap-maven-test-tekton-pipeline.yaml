@@ -9,6 +9,8 @@ spec:
   params:
     - name: source-url                       # (!) required
     - name: source-revision                  # (!) required
+    - name: testing-sub-path
+      default: ""
   tasks:
     - name: test
       params:
@@ -16,10 +18,13 @@ spec:
           value: $(params.source-url)
         - name: source-revision
           value: $(params.source-revision)
+        - name: testing-sub-path
+          value: $(params.testing-sub-path)
       taskSpec:
         params:
           - name: source-url
           - name: source-revision
+          - name: testing-sub-path
         steps:
           - name: test
             image: maven:3.8.5-openjdk-18-slim
@@ -27,4 +32,8 @@ spec:
               cd `mktemp -d`
 
               curl -SL $(params.source-url) | tar xvzf -
+              if [ ! -z "$(params.testing-sub-path)" ]; then
+                echo "navigating to repo subpath $(params.testing-sub-path)"
+                cd $(params.testing-sub-path)
+              fi
               mvn test
