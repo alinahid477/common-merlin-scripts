@@ -345,6 +345,10 @@ createDevNS () {
         printf "NO.\nNo supply chain detected with testing functionlity."
     fi
     echo $namespacename >> $HOME/configs/PROVISIONEDDEVNS || true
+    export PROVISIONED_DEV_NS=$namespacename
+    sed -i '/PROVISIONED_DEV_NS/d' $HOME/.env
+    printf "\nPROVISIONED_DEV_NS=$namespacename\n" >> $HOME/.env
+    sleep 1
     printf "\n\n**** Developer namespace: $namespacename setup...COMPLETE\n\n\n"
     sleep 2
 }

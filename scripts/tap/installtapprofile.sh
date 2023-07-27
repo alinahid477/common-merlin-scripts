@@ -136,19 +136,51 @@ installTapProfile()
             tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
         fi
 
-
-        printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install.\nThis may take few mins to complete....\n"
-        #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
-
-        $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tap.tanzu.vmware.com-install" & progressloop_pid=$!
-        local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install)
-        printf "\nStatus from tap.tanzu.vmware.com install...RETRIEVED.\n"
-        kill "$progressloop_pid" > /dev/null 2>&1 || true
-
-        if [[ -z $isSuccess ]]
+        local checkReconcileStatus=''
+        if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
         then
-            printf "\nError performing tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install\n"
-            returnOrexit || return 1
+
+            printf "\nChecking if tap package already installed in successfull state..."
+            checkReconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status' || true)
+            if [[ -n $checkReconcileStatus ]]
+            then
+                checkReconcileStatus=$(echo "$checkReconcileStatus" | awk '{print tolower($0)}')
+                printf "$checkReconcileStatus\n"
+                if [[ $checkReconcileStatus == *@("failed")* ]]
+                then
+                    printf "Did not get a Reconcile successful. Received status: $checkReconcileStatus\n."
+                    printf "Performing update using values-file $profilefilename....\n"
+                    tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install
+                fi
+                if [[ || $reconcileStatus == *@("reconciling")* ]]
+                then
+                    printf "Did not get a Reconcile successful. Received status: $checkReconcileStatus\n."
+                    printf "You must wait for the reconcile to finish. OR manually perform tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install"
+                fi
+                if [[ $checkReconcileStatus == *@("succeeded")* ]]
+                then
+                    printf "Received status: $checkReconcileStatus\n."
+                fi
+            else
+                printf "NOT FOUND.\n"
+            fi
+        fi
+
+        if [[ -z $checkReconcileStatus ]]
+        then
+            printf "\ninstalling tap.tanzu.vmware.com in namespace tap-install.\nThis may take few mins to complete....\n"
+            #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
+
+            $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tap.tanzu.vmware.com-install" & progressloop_pid=$!
+            local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install)
+            printf "\nStatus from tap.tanzu.vmware.com install...RETRIEVED.\n"
+            kill "$progressloop_pid" > /dev/null 2>&1 || true
+
+            if [[ -z $isSuccess ]]
+            then
+                printf "\nError performing tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install\n"
+                returnOrexit || return 1
+            fi
         fi
         printf "\nwait 1m...\n"
         sleep 1m
@@ -162,34 +194,46 @@ installTapProfile()
         local count=1
         local reconcileStatus=''
         local ingressReconcileStatus=''
-        local maxCount=5
-        if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-        then
-            maxCount=10
-        fi
+        local maxCount=30
         while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
-            printf "\nVerify that TAP is installed....\n"
-            reconcileStatus=$(tanzu package installed list -A -o json | jq -r '.[] | select(.name == "tap") | .status')
-            if [[ $reconcileStatus == *@("failed")* || $reconcileStatus == *@("reconciling")* ]]
+            printf "\nVerify that TAP deployment status...."
+            reconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status')
+            reconcileStatus=$(echo "$reconcileStatus" | awk '{print tolower($0)}')
+            printf "$reconcileStatus\n"
+            if [[ $reconcileStatus == *@("reconciling")* ]]
             then
                 printf "Did not get a Reconcile successful. Received status: $reconcileStatus\n."
                 reconcileStatus=''
                 printf "wait 1m before checking again ($count out of $maxCount max)...."
-            fi
-            if [[ $reconcileStatus == *@("succeeded")* ]]
+                printf "\n.\n"
+                ((count=$count+1))
+                sleep 1m
+            elif [[ $reconcileStatus == *@("failed")* ]]
+            then
+                printf "Did not get a Reconcile successful. Received status: $reconcileStatus\n."
+                reconcileStatus=''
+                printf "wait 1m before checking again ($count out of $maxCount max)...."
+                printf "\n.\n"
+                ((count=$count+6))
+                sleep 1m
+            elif [[ $reconcileStatus == *@("succeeded")* ]]
             then
                 printf "Received status: $reconcileStatus\n."
                 break
-            fi
-            printf "\n.\n"
-            ((count=$count+1))
-            sleep 1m
+            else
+                printf "Received status: $reconcileStatus\n."
+                reconcileStatus=''
+                printf "wait 1m before checking again ($count out of $maxCount max)...."
+                printf "\n.\n"
+                ((count=$count+1))
+                sleep 1m
+            fi            
         done
         printf "\nWait 20s before listing the packages installed....\n"
         sleep 20
         printf "\nList packages status....\n"
         sleep 1
-        tanzu package installed list -A
+        tanzu package installed list -n tap-install
 
         confirmed='n'
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]

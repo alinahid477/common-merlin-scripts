@@ -17,12 +17,13 @@ installTanzuCLI () {
         fi
     fi
     sleep 1
+    local tanzuclibinary=''
     if [[ $isinflatedTZ == 'n' ]]
     then
         printf "\nFinding tanzu cli binaries...."
         # default look for: tanzu tap cli
         local tarfilenamingpattern="tanzu-framework-linux-amd64*"
-        local tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+        tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
         if [[ -z $tanzuclibinary ]]
         then
             # fallback look for: tanzu ent
@@ -211,6 +212,8 @@ installTanzuCLI () {
         printf "\n\n"
         tanzu plugin list --local tanzu/ || returnOrexit || return 1
         printf "Tanzu CLI...COMPLETED\n\n"
+    else
+        tanzu version
     fi
     cd ~
     return 0
