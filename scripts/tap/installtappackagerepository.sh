@@ -81,7 +81,7 @@ installTapPackageRepository()
     printf "\nChecking K8S_VERSION..."
     # FIX: 07/06/2023 --- psp check still returning error.
     # I have no idea why. Adding this logic to avoid the check psp. SUPERRR WEIRD.
-    if [[ -n $K8S_VERSION && $K8S_VERSION < 1.24 ]]
+    if [[ -n $K8S_VERSION && $K8S_VERSION < 1.25 ]]
     then
         # FIX: 07/06/2023 --- check psp even before executing 2 psp command.
         # for some reason the 2nd psp command (kubectl get psp | grep -w vmware-system-tmc-privileged) throwing error
