@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export $(cat $HOME/.env | xargs)
-
+test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 installTap()
 {

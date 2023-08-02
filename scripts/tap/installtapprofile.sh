@@ -1,6 +1,7 @@
 #!/bin/bash
 
 export $(cat $HOME/.env | xargs)
+test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/tap/generate-profile-file.sh
@@ -152,7 +153,7 @@ installTapProfile()
                     printf "Performing update using values-file $profilefilename....\n"
                     tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install
                 fi
-                if [[ || $reconcileStatus == *@("reconciling")* ]]
+                if [[ $reconcileStatus == *@("reconciling")* ]]
                 then
                     printf "Did not get a Reconcile successful. Received status: $checkReconcileStatus\n."
                     printf "You must wait for the reconcile to finish. OR manually perform tanzu package installed update tap -p tap.tanzu.vmware.com -v $TAP_VERSION --values-file $profilefilename -n tap-install"

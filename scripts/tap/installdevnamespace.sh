@@ -2,6 +2,7 @@
 
 
 export $(cat $HOME/.env | xargs)
+test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh

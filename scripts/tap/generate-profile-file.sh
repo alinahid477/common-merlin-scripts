@@ -1,5 +1,6 @@
 #!/bin/bash
 export $(cat /root/.env | xargs)
+test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/contains-element.sh
 source $HOME/binaries/scripts/tap/build-profile-file.sh

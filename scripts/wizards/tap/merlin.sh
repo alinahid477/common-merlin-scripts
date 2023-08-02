@@ -54,6 +54,9 @@ function doCheckK8sOnlyOnce()
 
 function executeCommand () {
     
+    test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true 
+
+
     local file=$1
     local skipK8sTest=$2
 

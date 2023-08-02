@@ -1,4 +1,5 @@
 #!/bin/bash
+test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 addContourBlockAccordinglyInProfileFile()
 {
