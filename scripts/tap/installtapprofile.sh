@@ -195,7 +195,7 @@ installTapProfile()
         local count=1
         local reconcileStatus=''
         local ingressReconcileStatus=''
-        local maxCount=30
+        local maxCount=120
         while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
             printf "\nVerify that TAP deployment status...."
             reconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status')
@@ -205,18 +205,18 @@ installTapProfile()
             then
                 printf "Did not get a Reconcile successful. Received status: $reconcileStatus\n."
                 reconcileStatus=''
-                printf "wait 1m before checking again ($count out of $maxCount max)...."
+                printf "wait 2m before checking again ($count out of $maxCount max)...."
                 printf "\n.\n"
-                ((count=$count+1))
-                sleep 1m
+                ((count=$count+2))
+                sleep 2m
             elif [[ $reconcileStatus == *@("failed")* ]]
             then
                 printf "Did not get a Reconcile successful. Received status: $reconcileStatus\n."
                 reconcileStatus=''
-                printf "wait 1m before checking again ($count out of $maxCount max)...."
+                printf "wait 2m before checking again ($count out of $maxCount max)...."
                 printf "\n.\n"
-                ((count=$count+6))
-                sleep 1m
+                ((count=$count+2))
+                sleep 2m
             elif [[ $reconcileStatus == *@("succeeded")* ]]
             then
                 printf "Received status: $reconcileStatus\n."
@@ -224,10 +224,10 @@ installTapProfile()
             else
                 printf "Received status: $reconcileStatus\n."
                 reconcileStatus=''
-                printf "wait 1m before checking again ($count out of $maxCount max)...."
+                printf "wait 2m before checking again ($count out of $maxCount max)...."
                 printf "\n.\n"
-                ((count=$count+1))
-                sleep 1m
+                ((count=$count+2))
+                sleep 2m
             fi            
         done
         printf "\nWait 20s before listing the packages installed....\n"
