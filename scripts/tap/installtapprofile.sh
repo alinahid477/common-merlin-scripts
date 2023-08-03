@@ -198,7 +198,7 @@ installTapProfile()
         local maxCount=120
         while [[ -z $reconcileStatus && $count -lt $maxCount ]]; do
             printf "\nVerify that TAP deployment status...."
-            reconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status')
+            reconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status' || echo error)
             reconcileStatus=$(echo "$reconcileStatus" | awk '{print tolower($0)}')
             printf "$reconcileStatus\n"
             if [[ $reconcileStatus == *@("reconciling")* ]]
