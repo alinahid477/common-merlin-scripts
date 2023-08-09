@@ -1,0 +1,5 @@
+init.sh
+merlin.sh
+launch-octant.sh
+merge-into-kubeconfig.sh
+remove-from-kubeconfig.sh
