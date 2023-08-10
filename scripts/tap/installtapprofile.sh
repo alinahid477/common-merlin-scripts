@@ -92,13 +92,15 @@ installTapProfile()
                         esac
                     done
                 else
-                    printf "\n${yellowcolor}WARN: continuing install profile using version: $tapPackageVersion.${normalcolor}\n"
+                    printf "\n${yellowcolor}WARN: Retrieved package version $TAP_PACKAGE_VERSION did not match with provided package version: $tapPackageVersion.${normalcolor}\n"
+                    printf "\n${yellowcolor}WARN: continuing install tap-values using provided package version: $TAP_PACKAGE_VERSION.${normalcolor}\n"
+                    tapPackageVersion=$TAP_PACKAGE_VERSION
                     confirmed='y'
                 fi
             else
                 if [[ -n $tapPackageVersion && -n $SILENTMODE && $SILENTMODE == 'YES' ]]
                 then
-                    printf "\n${yellowcolor}continuing install using found version: $tapPackageVersion.${normalcolor}\n"
+                    printf "\n${yellowcolor}Installing using version: $tapPackageVersion.${normalcolor}\n"
                     confirmed='y'
                 else 
                     printf "\n${redcolor}Error: Failed to retrieve Tap Package Version from package repository.\nWill attept to continue from TAP_PACKAGE_VERSION=$TAP_PACKAGE_VERSION${normalcolor}\n"
@@ -119,7 +121,7 @@ installTapProfile()
         # This opens up the possibility to create the secret (eg: registry-credential) and refer it in the tap values file by default
         # with the usage of namespace provisioner this secret will also be available in the developer-namespace.
         # hence I can create registry-credential in tap-install namespace now and make it available to all other developer-namespace.
-        if [[ $tapPackageVersion > 1.4.0 ]]
+        if [[ $tapPackageVersion < 1.5.0 ]]
         then
             if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
             then
@@ -138,7 +140,7 @@ installTapProfile()
         fi
 
         local checkReconcileStatus=''
-        if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
+        if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' || $INSTALL_TAP_PROFILE == 'TIMEOUT' ]]
         then
 
             printf "\nChecking if tap package already installed in successfull state..."
@@ -350,7 +352,11 @@ installTapProfile()
             printf "\n\n********TAP profile deployment....COMPLETE**********\n\n\n" 
             sleep 3
         else
-           printf "\n\nERROR: tap.tanzu.vmware.com deployment status: $reconcileStatus\n\n"
+            export INSTALL_TAP_PROFILE='TIMEOUT'
+            sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
+            printf "\nINSTALL_TAP_PROFILE=TIMEOUT\n" >> $HOME/.env
+            printf "\n\n********TAP profile deployment....TIMEOUT**********\n" 
+            printf "\n\nERROR: tap.tanzu.vmware.com deployment status: $reconcileStatus\nTry re-installing again later.\n"
         fi
     fi
 }

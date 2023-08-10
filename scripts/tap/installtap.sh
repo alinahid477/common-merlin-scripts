@@ -36,7 +36,7 @@ installTap()
     #     fi
     # fi   
 
-    if [[ -n $INSTALL_TAP_PROFILE && $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
+    if [[ -n $INSTALL_TAP_PROFILE && ($INSTALL_TAP_PROFILE == 'COMPLETED' || $INSTALL_TAP_PROFILE == 'TIMEOUT') ]]
     then
         printf "\n\nINSTALL_TAP_PROFILE is marked as $INSTALL_TAP_PROFILE.\n"
         printf "This will attempt to update with TAP value file if Reconciliation Status is Succeeded.\n"
@@ -136,6 +136,7 @@ installTap()
 
         if [[ $performinstall == 'y' ]]
         then
+            printf "\nAdding TAP package repository.......\n"
             source $HOME/binaries/scripts/tap/installtappackagerepository.sh
             installTapPackageRepository
             printf "\n\n********TAP packages repository add....COMPLETE**********\n\n\n"
@@ -168,6 +169,12 @@ installTap()
         
         if [[ $performinstall == 'y' ]]
         then
+            if [[ -n $tapValueFile ]]
+            then
+                printf "\nApplying TAP values file: $tapValueFile.......\n"
+            else
+                printf "\nApplying TAP values file.......\n"
+            fi
             source $HOME/binaries/scripts/tap/installtapprofile.sh
             installTapProfile $tapValueFile
         fi
@@ -191,6 +198,7 @@ installTap()
             fi
             if [[ $performinstall == 'y' ]]
             then
+                printf "\nSetting up developer NS.......\n"
                 source $HOME/binaries/scripts/tap/installdevnamespace.sh
                 createDevNS $tapValueFile
                 printf "\nDeveloper Namespace setup complete...\n"
