@@ -1,8 +1,9 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+
 
 
 installClusterEssential () {
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     printf "\nChecking kapp-controller and secretgen-controller presence in the cluster..."
     local isInstallClusterEssential=''

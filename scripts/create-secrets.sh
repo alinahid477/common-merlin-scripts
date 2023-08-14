@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function createGitSSHSecret () {
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     printf "\n${yellowcolor}Creating Git SSH secret..${normalcolor}\n"
     local confirmed=''
@@ -209,7 +209,7 @@ function createGitSSHSecret () {
         cp $HOME/binaries/templates/gitops-secret.yaml /tmp/gitops-secret-$filename.yaml
         extractVariableAndTakeInput /tmp/gitops-secret-$filename.yaml
 
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
         printf "\nCreating git ssh secret..."
         kubectl apply -f /tmp/gitops-secret-$filename.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
@@ -234,7 +234,7 @@ function createGitSSHSecret () {
 
 function createBasicAuthSecret () {
     
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     sleep 1
     

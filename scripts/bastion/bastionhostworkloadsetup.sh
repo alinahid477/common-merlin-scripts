@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 remoteDIR="$HOME/merlin/merlin-tkg"
 remoteDockerName="merlin-tkg-remote"

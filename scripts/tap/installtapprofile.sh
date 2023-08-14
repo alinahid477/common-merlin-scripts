@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
@@ -10,7 +10,7 @@ source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/create-secrets.sh
 
 createDevNS () {
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
@@ -180,7 +180,7 @@ createDevNS () {
                     # extractVariableAndTakeInput /tmp/tap-git-secret.yaml
                     printf "\ncreating k8s secret for git...\n"
                     
-                    export $(cat $HOME/.env | xargs)
+                    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
                     sleep 1
                     # printf "\nApplying kubectl for new secret for private git repository access..."
                     # kubectl apply -f /tmp/tap-git-secret.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
@@ -270,7 +270,7 @@ createDevNS () {
         if [[ -z $GITOPS_SECRET_NAME ]]
         then
             printf "\nReloading environment variables..."
-            export $(cat $HOME/.env | xargs)
+            test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
             sleep 2
         fi
         confirmed='y'

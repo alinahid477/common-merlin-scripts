@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/color-file.sh

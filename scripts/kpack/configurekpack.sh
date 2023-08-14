@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/select-from-available-options.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh
@@ -63,7 +63,7 @@ function createKpackClusterStore () {
     extractVariableAndTakeInput $clusterstoreFile || returnOrexit || return 1
 
     printf "processing file...\n"
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     sleep 1
 
     
@@ -118,7 +118,7 @@ function createKpackClusterStack () {
     extractVariableAndTakeInput $clusterstackFile || returnOrexit || return 1
 
     printf "processing file...\n"
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     sleep 1
 
     
@@ -170,7 +170,7 @@ function createKpackBuilder () {
 
     printf "\n\n**** Creating Builder ($builderType$configureType) *****\n\n"
     
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     sleep 1
     export KPACK_CLUSTERBUILDER_SERVICE_ACCOUNT_NAME=$K8S_SERVICE_ACCOUNT_NAME
     
@@ -185,7 +185,7 @@ function createKpackBuilder () {
     extractVariableAndTakeInput $builderFile || returnOrexit || return 1
 
     printf "processing file...\n"
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     sleep 1
 
     
@@ -405,7 +405,7 @@ function configureK8sSecretAndServiceAccount () {
     done
     if [[ $saname == 'new' ]]
     then
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         sleep 1
         printf "User input k8s service account....\n"
         local saTemplateName="k8s-service-account"

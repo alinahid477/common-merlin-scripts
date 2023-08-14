@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/extract-and-take-input.sh
 

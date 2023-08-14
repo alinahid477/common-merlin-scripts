@@ -1,9 +1,6 @@
 #!/bin/bash
 
-if [[ -f $HOME/.env ]]
-then
-    export $(cat $HOME/.env | xargs)
-fi
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 if [[ ! -f $HOME/binaries/scripts/download-common-scripts.sh ]]
 then

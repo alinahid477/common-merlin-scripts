@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/color-file.sh
@@ -434,7 +434,7 @@ function createCartoTemplates () {
         printf "Cleanup .env...COMPLETE"
 
         printf "Reloading env variable to check for secret requirements...\n"
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         sleep 1
         if [[ -n $CARTO_TRIVY_REGISTRY_SECRET_NAME ]]
         then
@@ -459,7 +459,7 @@ function createCartoTemplates () {
     if [[ $isCreateGitSecret == 'y' ]]
     then
         printf "Reloading env variable to check for Git secrets...\n"
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         sleep 1
         if [[ -n $CARTO_GIT_SECRET_NAME ]]
         then
@@ -484,7 +484,7 @@ function createCartoTemplates () {
     if [[ $isKPackServiceAccountCheck == 'y' ]]
     then
         printf "Reloading env variable to check for Kpack Service Account...\n"
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         sleep 1
         confirmed=''
         while true; do

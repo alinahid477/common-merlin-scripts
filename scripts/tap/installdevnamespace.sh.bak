@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
 source $HOME/binaries/scripts/extract-and-take-input.sh
@@ -259,7 +259,7 @@ createDevNS () {
                     # cp $HOME/binaries/templates/tap-git-secret.yaml /tmp/tap-git-secret.yaml
                     # extractVariableAndTakeInput /tmp/tap-git-secret.yaml
 
-                    export $(cat $HOME/.env | xargs)
+                    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
                     # printf "\nApplying kubectl for new secret for private git repository access..."
                     # kubectl apply -f /tmp/tap-git-secret.yaml --namespace $namespacename && printf "OK" || printf "FAILED"
@@ -367,7 +367,7 @@ createDevNS () {
         if [[ -z $GITOPS_SECRET_NAME ]]
         then
             printf "\nReloading environment variables..."
-            export $(cat $HOME/.env | xargs)
+            test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         fi
         confirmed='y'
     fi

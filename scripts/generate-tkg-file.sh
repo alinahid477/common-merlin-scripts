@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 templateFilesDIR=$(echo "$HOME/binaries/templates" | xargs)
 

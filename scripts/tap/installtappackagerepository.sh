@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/returnOrexit.sh
@@ -9,7 +9,7 @@ source $HOME/binaries/scripts/returnOrexit.sh
 
 installTapPackageRepository()
 {
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     printf "\n\n\n********* Checking pre-requisites *************\n\n\n"
     sleep 1

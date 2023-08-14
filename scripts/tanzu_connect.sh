@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/bastion_host_util.sh
 

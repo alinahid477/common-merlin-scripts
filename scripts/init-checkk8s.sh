@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 printf "\n\n\n***********Checking kubeconfig...*************\n"
 sleep 1

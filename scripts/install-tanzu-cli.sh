@@ -1,9 +1,9 @@
 #!/bin/bash
 
 
-export $(cat $HOME/.env | xargs)
-
 installTanzuCLI () {
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
+    
     printf "\nChecking Tanzu CLI binary..."
     sleep 1
     local isinflatedTZ='n'

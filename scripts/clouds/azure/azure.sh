@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 source $HOME/binaries/scripts/install-cloud-cli.sh
 # this is used for both management and tkc
 function prepareEnvironment () {
@@ -10,7 +10,7 @@ function prepareEnvironment () {
 }
 
 function doLogin () {
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     if [[ ((-z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET || -z $AZ_TENANT_ID)) && -d "$HOME/.azure" ]]
     then
@@ -81,7 +81,7 @@ function doLogin () {
         fi
     fi
 
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     return 0
 }
@@ -92,7 +92,7 @@ function doLogin () {
 function acceptBaseImageLicense () {
     local baseImageName=$1
 
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     printf "\n\n"
 
     if [[ -z $AZ_SUBSCRIPTION_ID ]]
@@ -258,7 +258,7 @@ function prepareAccount () {
     prepareEnvironment || returnOrexit || return 1
 
     while true; do
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         printf "\n${bluecolor}Checking azure client app (Service Principle) in environment variable called AZ_APP_ID and AZ_APP_CLIENT_SECRET...${normalcolor}\n"
         sleep 1
         if [[ -z $AZ_APP_ID || -z $AZ_APP_CLIENT_SECRET ]]
@@ -335,7 +335,7 @@ function createAKSCluster () {
         printf "\n\nNo AZ config found.\nGoing to collect from user and save it in .env for future use....\n\n"
         cp $HOME/binaries/templates/az-aks-variables.template /tmp/az-aks-variables.env.tmp || exit 1
         extractVariableAndTakeInput /tmp/az-aks-variables.env.tmp || exit 1
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     fi
 
 

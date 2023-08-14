@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export $(cat $HOME/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
 source $HOME/binaries/scripts/install-cloud-cli.sh
 
@@ -16,7 +16,7 @@ function doLogin () {
 
     printf "\nCheking access to AWS account for region...\n"
 
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     if [[ -z $AWS_REGION ]]
     then
@@ -32,7 +32,7 @@ function doLogin () {
         done
     fi
     
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     if [[ -z $AWS_REGION ]]
     then
@@ -88,7 +88,7 @@ function doAWSConfigure () {
 
 
 function getKeyPairName () {
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     if [[ -z $AWS_REGION ]]
     then
@@ -105,7 +105,7 @@ function createKeyPair () {
     printf "\nCreating key pair for TKG in AWS region...\n"
     sleep 2
 
-    export $(cat $HOME/.env | xargs)
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 
     if [[ -z $AWS_REGION ]]
     then
@@ -185,7 +185,7 @@ function prepareAccountForTKG () {
     prepareEnvironment || returnOrexit || return 1
 
     while true; do
-        export $(cat $HOME/.env | xargs)
+        test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
         printf "\n${bluecolor}Checking aws access informartion for TKG in environment variable called AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY...${normalcolor}\n"
         sleep 1
         if [[ -z $AWS_ACCESS_KEY_ID || -z $AWS_SECRET_ACCESS_KEY ]]
