@@ -5,3 +5,4 @@ installdevnamespace.sh
 generate-profile-file.sh
 build-profile-file.sh
 adjust-contour-in-values-file.sh
+intalltapguiviewer.sh

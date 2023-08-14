@@ -8,7 +8,7 @@ source $HOME/binaries/scripts/tap/installtap.sh
 source $HOME/binaries/scripts/tap/installtappackagerepository.sh
 source $HOME/binaries/scripts/tap/installtapprofile.sh
 source $HOME/binaries/scripts/tap/installdevnamespace.sh
-
+source $HOME/binaries/scripts/tap/installtapguiviewer.sh
 
 
 function helpFunction()
@@ -19,6 +19,7 @@ function helpFunction()
     echo -e "\t-r | --install-tap-package-repository no paramater needed. Signals the wizard to start the process for installing package repository for TAP."
     echo -e "\t-p | --install-tap-profile Signals the wizard to launch the UI for user input to take necessary inputs and deploy TAP based on profile curated from user input. Optionally pass profile file using -f or --file flag."
     echo -e "\t-n | --create-developer-namespace signals the wizard create developer namespace."
+    echo -e "\t-g | --install-gui-viewer signals the wizard to deploy sa: tap-gui-viewer and its secret,roles and RBAC in a tap-gui namespace to connect with TAP GUI in a Multi-Cluster TAP. No parameter needed."
     echo -e "\t-v | --create-service-account signals the wizard start creating service account."
     echo -e "\t-x | --create-docker-registry-secret signals the wizard start creating docker registry secret."
     echo -e "\t-y | --create-basic-auth-secret signals the wizard start creating basic auth secret."
@@ -32,6 +33,7 @@ unset tapInstall
 unset tapPackageRepositoryInstall
 unset tapProfileInstall
 unset tapDeveloperNamespaceCreate
+unset tapGuiViewerInstall
 unset wizardUTILCreateServiceAccount
 unset wizardUTILCreateDockerSecret
 unset wizardUTILCreateBasicAuthSecret
@@ -145,6 +147,12 @@ function executeCommand () {
         returnOrexit || return 1
     fi
 
+    if [[ $tapGuiViewerInstall == 'y' ]]
+    then
+        unset tapGuiViewerInstall
+        installTAPGuiViewer  
+        returnOrexit || return 1
+    fi
 
     # if [[ $adjustContourForValuesFile == 'y' ]]
     # then
@@ -173,7 +181,7 @@ output=""
 
 
 # read the options
-TEMP=`getopt -o tarpnkf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,configure-kpack,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
+TEMP=`getopt -o tarpngf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -198,6 +206,11 @@ while true ; do
             case "$2" in
                 "" ) tapProfileInstall='y'; shift 2 ;;
                 * ) tapProfileInstall='y' ; shift 1 ;;
+            esac ;;
+        -g | --install-gui-viewer )
+            case "$2" in
+                "" ) tapGuiViewerInstall='y'; shift 2 ;;
+                * ) tapGuiViewerInstall='y' ; shift 1 ;;
             esac ;;
         -v | --create-service-account )
             case "$2" in

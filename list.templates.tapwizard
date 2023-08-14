@@ -33,3 +33,4 @@ tap-tapgui.template
 tap-contour-block-aws.template
 tap-contour-block-generic.template
 workload-ns-setup.yaml
+tap-gui-viewer-service-account-rbac.yaml
