@@ -66,6 +66,16 @@ installTapProfile()
             returnOrexit || return 1
         fi
 
+
+        # check if kustomize is already installed by TMC or not. If it is installed exclude package: fluxcd.source.controller.tanzu.vmware.com
+        
+        
+        local isExistTMCGitOps=$(kubectl get sa -n tanzu-fluxcd-packageinstalls --ignore-not-found=true | grep -i kustomize || true)
+        if [[ -n $isExistTMCGitOps ]]
+        then
+            $HOME/binaries/scripts/tap/adjust-excluded-packages-in-values-file.sh $profilefilename "fluxcd.source.controller.tanzu.vmware.com"
+        fi
+
         confirmed='n'
         printf "\n\nChecking installed tap package version....."
         local tapPackageVersion=$(tanzu package available list tap.tanzu.vmware.com --namespace tap-install -o json | jq -r '[ .[] | {version: .version, released: .["released-at"]|split(" ")[0]} ] | sort_by(.released) | reverse[0] | .version')
