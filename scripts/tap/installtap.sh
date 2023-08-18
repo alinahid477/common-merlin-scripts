@@ -182,20 +182,35 @@ installTap()
 
         performinstall='n'
         if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' ]]
-        then   
-            if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
-            then         
-                while true; do
-                    read -p "Would you like to configure developer workspace now? [y/n] " yn
-                    case $yn in
-                        [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
-                        [Nn]* ) printf "You confirmed no.\n"; break;;
-                        * ) echo "Please answer y or n.";
-                    esac
-                done
-            else
-                performinstall='y'
+        then
+
+            # UPDATE: 18/08/2023
+            # BUG FIX: in silent mode need to check profile type as we do not need to do developer namespace for run and view cluster.
+            test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
+            local profiletype='full'
+            if [[ -f $TAP_PROFILE_FILE_NAME ]]
+            then
+                profiletype=$(cat $TAP_PROFILE_FILE_NAME | grep -w  'profile:')
+                profiletype=$(echo "$profiletype" | awk '{print tolower($0)}')
             fi
+            
+            if [[ $profiletype == *@("full")* || $profiletype == *@("iterate")* || $profiletype == *@("build")* ]]   
+            then
+                if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+                then         
+                    while true; do
+                        read -p "Would you like to configure developer workspace now? [y/n] " yn
+                        case $yn in
+                            [Yy]* ) printf "you confirmed yes\n"; performinstall='y'; break;;
+                            [Nn]* ) printf "You confirmed no.\n"; break;;
+                            * ) echo "Please answer y or n.";
+                        esac
+                    done
+                else
+                    performinstall='y'
+                fi
+            fi
+            
             if [[ $performinstall == 'y' ]]
             then
                 printf "\nSetting up developer NS.......\n"
