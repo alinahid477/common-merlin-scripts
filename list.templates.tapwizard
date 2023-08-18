@@ -34,3 +34,4 @@ tap-contour-block-aws.template
 tap-contour-block-generic.template
 workload-ns-setup.yaml
 tap-gui-viewer-service-account-rbac.yaml
+tap-gui-viewer-service-account-secret.yaml
