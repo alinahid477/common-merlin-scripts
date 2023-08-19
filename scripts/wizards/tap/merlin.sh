@@ -16,6 +16,7 @@ function helpFunction()
     printf "\n"
     echo "Usage:"
     echo -e "\t-t | --install-tap no paramater needed. Signals the wizard to start the process for installing TAP for Tanzu Enterprise. Optionally pass values file using -f or --file flag."
+    echo -e "\t-d | --delete-tap no paramater needed. Signals the wizard to start the process for uninstalling TAP for Tanzu Enterprise."
     echo -e "\t-r | --install-tap-package-repository no paramater needed. Signals the wizard to start the process for installing package repository for TAP."
     echo -e "\t-p | --install-tap-profile Signals the wizard to launch the UI for user input to take necessary inputs and deploy TAP based on profile curated from user input. Optionally pass profile file using -f or --file flag."
     echo -e "\t-n | --create-developer-namespace signals the wizard create developer namespace."
@@ -30,6 +31,7 @@ function helpFunction()
 
 
 unset tapInstall
+unset tapDelete
 unset tapPackageRepositoryInstall
 unset tapProfileInstall
 unset tapDeveloperNamespaceCreate
@@ -79,6 +81,13 @@ function executeCommand () {
             printf "\nDBG: Argument file: $file\n"
             installTap $file
         fi
+        returnOrexit || return 1
+    fi
+
+    if [[ $tapDelete == 'y' ]]
+    then
+        unset tapDelete
+        source $HOME/binaries/scripts/tap/removetap.sh
         returnOrexit || return 1
     fi
 
@@ -181,7 +190,7 @@ output=""
 
 
 # read the options
-TEMP=`getopt -o tarpngf:i:bvxyzh --long install-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
+TEMP=`getopt -o tdarpngf:i:bvxyzh --long install-tap,delete-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -191,6 +200,11 @@ while true ; do
             case "$2" in
                 "" ) tapInstall='y';  shift 2 ;;
                 * ) tapInstall='y' ;  shift 1 ;;
+            esac ;;
+        -d | --delete-tap )
+            case "$2" in
+                "" ) tapDelete='y';  shift 2 ;;
+                * ) tapDelete='y' ;  shift 1 ;;
             esac ;;
         -n | --create-developer-namespace )
             case "$2" in
