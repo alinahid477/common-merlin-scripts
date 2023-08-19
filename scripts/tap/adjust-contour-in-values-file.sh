@@ -16,33 +16,41 @@ addContourBlockAccordinglyInProfileFile()
         local isexistpn=$(cat $profilefilename | grep -w 'contour:$')
         if [[ -z $isexistpn ]]
         then
-            local isUseAWSNLB=''
-            if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
+
+            if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]
             then
-                isUseAWSNLB=$USE_AWS_NLB
+                cat $HOME/binaries/templates/tap-contour-block-clusterip.template >> $profilefilename
             else
-                local CONTEXT=$(kubectl config current-context)
-                if [[ -n $CONTEXT ]]
+                local isUseAWSNLB=''
+                if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
                 then
-                    local CLUSTER=$(kubectl config view -o json | jq -r --arg context "$CONTEXT" '.contexts[] | select(.name == $context) | .context.cluster')
-                    if [[ -n $CLUSTER ]]
+                    isUseAWSNLB=$USE_AWS_NLB
+                else
+                    local CONTEXT=$(kubectl config current-context)
+                    if [[ -n $CONTEXT ]]
                     then
-                        local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "$CLUSTER" '.clusters[] | select(.name == $cluster) | .cluster.server' | grep 'amazonaws.')
-                        if [[ -n $isAWSEndPoint ]]
+                        local CLUSTER=$(kubectl config view -o json | jq -r --arg context "$CONTEXT" '.contexts[] | select(.name == $context) | .context.cluster')
+                        if [[ -n $CLUSTER ]]
                         then
-                            isUseAWSNLB="YES"
+                            local isAWSEndPoint=$(kubectl config view -o json | jq -r --arg cluster "$CLUSTER" '.clusters[] | select(.name == $cluster) | .cluster.server' | grep 'amazonaws.')
+                            if [[ -n $isAWSEndPoint ]]
+                            then
+                                isUseAWSNLB="YES"
+                            fi
                         fi
                     fi
                 fi
+
+                echo "" >> $profilefilename
+                if [[ -n $isUseAWSNLB && $isUseAWSNLB == "YES" ]]
+                then
+                    cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
+                else
+                    cat $HOME/binaries/templates/tap-contour-block-generic.template >> $profilefilename
+                fi
             fi
 
-            echo "" >> $profilefilename
-            if [[ -n $isUseAWSNLB && $isUseAWSNLB == "YES" ]]
-            then
-                cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
-            else
-                cat $HOME/binaries/templates/tap-contour-block-generic.template >> $profilefilename
-            fi
+            
         fi
     fi    
 }
