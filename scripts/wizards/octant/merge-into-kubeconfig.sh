@@ -16,5 +16,7 @@ then
     exit 1
 fi
 
-rm $HOME/.kube/config.bak
-cp $HOME/.kube/config $HOME/.kube/config.bak && KUBECONFIG=$HOME/.kube/config:$newkubeconfig kubectl config view --flatten > /tmp/kubeconfig && mv /tmp/kubeconfig $HOME/.kube/config && rm $newkubeconfig
+printf "\nkubeconfig merging..."
+test -f $HOME/.kube/config-merlin-merge.bak && rm $HOME/.kube/config-merlin-merge.bak
+cp $HOME/.kube/config $HOME/.kube/config-merlin-merge.bak && KUBECONFIG=$HOME/.kube/config:$newkubeconfig kubectl config view --flatten > /tmp/kubeconfig && mv /tmp/kubeconfig $HOME/.kube/config
+printf "COMPLETE\n"
