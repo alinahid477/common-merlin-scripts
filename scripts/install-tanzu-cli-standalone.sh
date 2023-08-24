@@ -10,4 +10,5 @@ curl -L https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main
 printf "\ndownloading merlin tanzucli list...\n"
 /tmp/download-common-scripts.sh tanzucli scripts /tmp/ && chmod +x /tmp/install-tanzu-cli.sh
 printf "\nexecuting /tmp/install-tanzu-cli.sh /tmp...\n"
-/tmp/install-tanzu-cli.sh /tmp
+source /tmp/install-tanzu-cli.sh 
+installTanzuCLI /tmp
