@@ -1,8 +1,40 @@
 #!/bin/bash
 
+installTanzuCLIPlugins () {
+    printf "\nInstalling Tanzu Cli Plugins...\nAccepting EULA...\n"
+    tanzu config eula accept
+    printf "installing tanzu plugins: package, secret, apps, accelerator...\n"
+    tanzu plugin install package
+    tanzu plugin install secret --target k8s
+    tanzu plugin install apps --target k8s
+    tanzu plugin install accelerator --target k8s
+    printf "\n\nTanzu Plugin Install....COMPLETE.\n"
+}
 
 installTanzuCLI () {
+
+    local tanzuclitarfiledir=$HOME/binaries
+    if [[ -n $1 ]]
+    then
+        tanzuclitarfiledir=$1
+    fi
+
+    local isTanzuCLIInstalled=$(which tanzu)
+    if [[ -n $isTanzuCLIInstalled ]]
+    then
+        printf "\n\nTanzu CLI already installed. No need to install again.\n"
+        local totaltanzuplugins=$(tanzu plugin list -o json | jq length)
+        if [[ -z $totaltanzuplugins || $totaltanzuplugins < 4 ]]
+        then
+            installTanzuCLIPlugins
+        fi
+        tanzu plugin list
+        return 0
+    fi
+
     test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
+
+
     
     printf "\nChecking Tanzu CLI binary..."
     sleep 1
@@ -23,29 +55,29 @@ installTanzuCLI () {
         printf "\nFinding tanzu cli binaries...."
         # default look for: tanzu tap cli
         local tarfilenamingpattern="tanzu-framework-linux-amd64*"
-        tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+        tanzuclibinary=$(ls $tanzuclitarfiledir/$tarfilenamingpattern)
         if [[ -z $tanzuclibinary ]]
         then
             # fallback look for: tanzu ent
-            tarfilenamingpattern="tanzu-cli-*.tar.*"
-            tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+            tarfilenamingpattern="tanzu-cli-linux-*.tar.*"
+            tanzuclibinary=$(ls $tanzuclitarfiledir/$tarfilenamingpattern)
         fi
         if [[ -z $tanzuclibinary ]]
         then
             # fallback look for: tanzu tce
             tarfilenamingpattern="tce-*.tar.*"
-            tanzuclibinary=$(ls $HOME/binaries/$tarfilenamingpattern)
+            tanzuclibinary=$(ls $tanzuclitarfiledir/$tarfilenamingpattern)
         fi
         if [[ -z $tanzuclibinary ]]
         then
             printf "\nERROR: tanzu CLI is a required binary for installation.\nYou must place this binary under binaries directory.\n"
-            returnOrexit || return 1
+            return 1
         else
-            local numberoftarfound=$(find $HOME/binaries/$tarfilenamingpattern -type f -printf "." | wc -c)
+            local numberoftarfound=$(find $tanzuclitarfiledir/$tarfilenamingpattern -type f -printf "." | wc -c)
             if [[ $numberoftarfound -gt 1 ]]
             then
-                printf "\nERROR: More than 1 tanzu-framework-linux-amd64.tar found in the binaries directory.\nOnly 1 is allowed.\n"
-                returnOrexit || return 1
+                printf "\nERROR: More than 1 tanzu-cli tar file found in the binaries directory.\nOnly 1 is allowed.\n"
+                return 1
             else
                 printf "found: $tanzuclibinary\n"
             fi
@@ -81,15 +113,15 @@ installTanzuCLI () {
         if [[ $doinflate == 'n' ]]
         then
             # user is saying no inflate here. so nothing to do here.
-            returnOrexit || return 2;
+            return 2;
         fi
         if [ ! -d "$DIR" ]
         then
-            printf "\n$DIR does not exist. Not proceed further...\n"
-            returnOrexit || return 1
+            printf "\nERROR: $DIR does not exist. Exiting...\n"
+            return 1
         fi
         printf "Extracting $tanzuclibinary in $DIR....\n"
-        tar -xvf $tanzuclibinary -C $HOME/tanzu/ || returnOrexit || return 1
+        tar -xvf $tanzuclibinary -C $HOME/tanzu/ || return 1
         printf "$tanzuclibinary extracted in $DIR......COMPLETED.\n\n"
     fi
     sleep 1
@@ -98,28 +130,25 @@ installTanzuCLI () {
     if [[ -d $DIR && -z $isexisttanzu ]]
     then
         # default check tce
-        local tcedirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
-        if [[ -n $tcedirname ]]
+        local extracteddirname=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+        if [[ -n $extracteddirname ]]
         then
             # this mean we are dealing with tce tanzu cli.
-            printf "\nLinking tanzu cli ($tcedirname)...\n"
+            printf "\nDetermining tanzu cli in $extracteddirname...\n"
             
-            cd $HOME/tanzu/$tcedirname || returnOrexit || return 1
-            if [[ -f $HOME/.local/share/tanzu-cli/tanzu-plugin-management-cluster || -d $HOME/.local/share/tanzu-cli/management-cluster ]]
-            then
-                # This means it was previously installed and all file system exists.
-                # just need to link the tanzu binary.
-                printf "linking (tce) tanzu..."
-                if [[ -f bin/tanzu ]]
-                then
-                    install bin/tanzu /usr/local/bin/tanzu || returnOrexit || return 1
-                fi
-                if [[ -f tanzu ]]
-                then
-                    install tanzu /usr/local/bin/tanzu || returnOrexit || return 1
-                fi
-                chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
-                printf "COMPLETE.\n"
+            cd $HOME/tanzu/$extracteddirname || return 1
+
+            # UPDATED: 24/08/2023
+            # TANZU CLI has changed to different one. TANZU CORE CLI.
+            local tanzucliinstallbinaryname=$(ls | head -1 | grep tanzu-cli)
+            if [[ -f $tanzucliinstallbinaryname ]]
+            then                
+                printf "installing $tanzucliinstallbinaryname...\n\n"
+                install $tanzucliinstallbinaryname /usr/local/bin/tanzu || return 1
+                chmod +x /usr/local/bin/tanzu || return 1
+                printf "installed /usr/local/bin/tanzu.\n"
+                installTanzuCLIPlugins
+                printf "Tanzu Install...COMPLETE.\n"
             else
                 # TCE Tanzu CLI install
                 # This means previously not installed.
@@ -139,10 +168,10 @@ installTanzuCLI () {
             if [[ -z $tanzuframworkVersion ]]
             then
                 printf "\nERROR: could not found version dir in the $HOME/tanzu/cli/core for tanzu cli.\n"
-                returnOrexit || return 1;
+                return 1;
             fi
             printf "\nLinking tanzu cli ($tanzuframworkVersion)...\n"
-            cd $HOME/tanzu || returnOrexit || return 1
+            cd $HOME/tanzu || return 1
             
             # Link the tanzu binary. Cause that's needs to happen regardless of whether it was previously installed or not.
             if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
@@ -150,14 +179,14 @@ installTanzuCLI () {
                 if [ ! -d "$HOME/.local/bin" ]; then
                     mkdir -p "$HOME/.local/bin"
                 fi
-                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 $HOME/.local/bin/tanzu || returnOrexit || return 1
-                chmod +x $HOME/.local/bin/tanzu || returnOrexit || return 1
+                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 $HOME/.local/bin/tanzu || return 1
+                chmod +x $HOME/.local/bin/tanzu || return 1
             else
                 # if docker container is root user
                 echo "Installing tanzu to /usr/local/bin which is write protected"
                 echo "If you'd prefer to install tanzu without sudo permissions, add \$HOME/.local/bin to your \$PATH and rerun the installer"
-                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || returnOrexit || return 1
-                chmod +x /usr/local/bin/tanzu || returnOrexit || return 1
+                install cli/core/$tanzuframworkVersion/tanzu-core-linux_amd64 /usr/local/bin/tanzu || return 1
+                chmod +x /usr/local/bin/tanzu || return 1
             fi
                         
             if [[ ! -d $HOME/.local/share/tanzu-cli/package ]]
@@ -201,16 +230,16 @@ installTanzuCLI () {
                 # else
                 #    tanzu plugin install --local cli all || returnOrexit || return 1
                 # fi
-                tanzu plugin install --local cli all || returnOrexit || return 1
+                tanzu plugin install --local cli all || return 1
                 tanzu plugin install apps --local ./cli && sleep 1
                 printf "\nTanzu CLI installation...COMPLETE.\n\n"
             fi
         fi
         
         sleep 2
-        tanzu version || returnOrexit || return 1
+        tanzu version || return 1
         printf "\n\n"
-        tanzu plugin list --local tanzu/ || returnOrexit || return 1
+        tanzu plugin list --local tanzu/ || return 1
         printf "Tanzu CLI...COMPLETED\n\n"
     else
         tanzu version

@@ -1,0 +1,4 @@
+init-prechecks.sh
+color-file.sh
+returnOrexit.sh
+install-tanzu-cli.sh
