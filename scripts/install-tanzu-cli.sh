@@ -121,7 +121,6 @@ installTanzuCLI () {
             return 1
         fi
         printf "Extracting $tanzuclibinary in $DIR....\n"
-        file $tanzuclibinary
         tar -xvf $tanzuclibinary -C $HOME/tanzu/ || return 1
         printf "$tanzuclibinary extracted in $DIR......COMPLETED.\n\n"
     fi
