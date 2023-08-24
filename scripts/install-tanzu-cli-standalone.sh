@@ -8,6 +8,6 @@ curl -o /tmp/$filename -L $downloadlink && chmod 766 /tmp/$filename
 printf "\ndownloading merlin downloader...\n"
 curl -L https://raw.githubusercontent.com/alinahid477/common-merlin-scripts/main/scripts/download-common-scripts.sh -o /tmp/download-common-scripts.sh && chmod +x /tmp/download-common-scripts.sh
 printf "\ndownloading merlin tanzucli list...\n"
-/tmp/download-common-scripts.sh tanzucli /tmp/ /\* && chmod +x /tmp/install-tanzu-cli.sh
+/tmp/download-common-scripts.sh tanzucli scripts /tmp/ && chmod +x /tmp/install-tanzu-cli.sh
 printf "\nexecuting /tmp/install-tanzu-cli.sh /tmp...\n"
 /tmp/install-tanzu-cli.sh /tmp
