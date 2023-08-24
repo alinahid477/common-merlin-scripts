@@ -239,7 +239,13 @@ installTanzuCLI () {
         sleep 2
         tanzu version || return 1
         printf "\n\n"
-        tanzu plugin list --local tanzu/ || return 1
+        if [[ -n $extracteddirname ]]
+        then
+            tanzu plugin list || return 1
+        else
+            tanzu plugin list --local tanzu/ || return 1
+        fi
+        
         printf "Tanzu CLI...COMPLETED\n\n"
     else
         tanzu version
