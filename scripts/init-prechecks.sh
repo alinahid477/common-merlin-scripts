@@ -55,5 +55,7 @@ then
             printf "\n\nPlease build this docker container again and run.\nor ./start.sh merlin-tap forcebuild\n"
             exit 1
         fi
+    else
+        printf "TMC CLI Found.\n\n WARN: Deprication warning: TMC CLI will soon be deprecated."
     fi
 fi
