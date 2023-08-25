@@ -117,6 +117,7 @@ function createGitSSHSecret () {
     else
         local gitopsPublicIdentity=$(cat $HOME/.git-ops/$identityFileName.pub)
         local gitopsPrivateIdentity=$(cat $HOME/.git-ops/$identityFileName)
+        echo "" >> $HOME/configs/output
         echo "GITOPS_PUBLIC_KEY#$gitopsPublicIdentity" >> $HOME/configs/output
         echo "GITOPS_PRIVATE_KEY#$gitopsPrivateIdentity" >> $HOME/configs/output
         sleep 1

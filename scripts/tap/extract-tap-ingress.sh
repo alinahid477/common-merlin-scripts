@@ -5,7 +5,7 @@ extractTAPIngress () {
     test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
     printf "\nExtracting ip for accessing the tap....\n"
-    
+    echo "" >> $HOME/configs/output
     local lbip='';
     local nodeport='';
     if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]

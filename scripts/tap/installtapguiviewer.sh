@@ -55,6 +55,7 @@ installTAPGuiViewer() {
     printf "\n- ClusterURL: $clusterUrl\n- ClusterTOKEN: $clusterToken...\n"
     
     printf "\n\nSaving in output file...."
+    echo "" >> $HOME/configs/output
     echo CLUSTER_URL#$clusterUrl >> $HOME/configs/output
     echo CLUSTER_TOKEN#$clusterToken >> $HOME/configs/output
     
