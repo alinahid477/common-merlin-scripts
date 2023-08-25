@@ -1,5 +1,5 @@
 #!/bin/bash
-export $(cat /root/.env | xargs)
+test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
 test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 source $HOME/binaries/scripts/contains-element.sh
