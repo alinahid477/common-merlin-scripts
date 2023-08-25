@@ -19,7 +19,7 @@ addContourBlockAccordinglyInProfileFile()
 
             if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]
             then
-                cat $HOME/binaries/templates/tap-contour-block-clusterip.template >> $profilefilename
+                cat $HOME/binaries/templates/tap-contour-block-nodeport.template >> $profilefilename
             else
                 local isUseAWSNLB=''
                 if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
@@ -46,7 +46,7 @@ addContourBlockAccordinglyInProfileFile()
                 then
                     cat $HOME/binaries/templates/tap-contour-block-aws.template >> $profilefilename
                 else
-                    cat $HOME/binaries/templates/tap-contour-block-generic.template >> $profilefilename
+                    cat $HOME/binaries/templates/tap-contour-block-loadbalancer.template >> $profilefilename
                 fi
             fi
 

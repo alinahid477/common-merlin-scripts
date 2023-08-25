@@ -1,3 +1,4 @@
 tap-contour-block-aws.template
-tap-contour-block-generic.template
+tap-contour-block-loadbalancer.template
+tap-contour-block-nodeport.template
 

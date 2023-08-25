@@ -8,7 +8,7 @@ installTAPGuiViewer() {
     local k8sversion=0
     if [[ -z $K8S_VERSION ]]
     then
-        k8sversion=$(kubectl version --short --output=json 2>&1 | grep -i -v "Warn" | grep -i -v "Deprecat" | jq -rj '.serverVersion | [.major, .minor] | join(".")' | sed -e 's/[+-]//')        
+        k8sversion=$(kubectl version --client=false --output=json 2>&1 | grep -i -v "Warn" | grep -i -v "Deprecat" | jq -rj '.serverVersion | [.major, .minor] | join(".")' | sed -e 's/[+-]//')        
     else
         k8sversion=$K8S_VERSION
     fi

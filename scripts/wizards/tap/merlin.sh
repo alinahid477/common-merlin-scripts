@@ -25,6 +25,7 @@ function helpFunction()
     echo -e "\t-x | --create-docker-registry-secret signals the wizard start creating docker registry secret."
     echo -e "\t-y | --create-basic-auth-secret signals the wizard start creating basic auth secret."
     echo -e "\t-z | --create-git-ssh-secret signals the wizard start creating git ssh secret."
+    echo -e "\t-c | --install-tanzu-cli signals the wizard to install tanzu cli."
     echo -e "\t-h | --help"
     printf "\n"
 }
@@ -40,6 +41,7 @@ unset wizardUTILCreateServiceAccount
 unset wizardUTILCreateDockerSecret
 unset wizardUTILCreateBasicAuthSecret
 unset wizardUTILCreateGitSSHSecret
+unset wizardInstallTanzuCLI
 unset argFile
 unset ishelp
 unset isSkipK8sCheck
@@ -69,7 +71,13 @@ function executeCommand () {
         doCheckK8sOnlyOnce
     fi
 
-    
+    if [[ $wizardInstallTanzuCLI == 'y' ]]
+    then
+        unset wizardInstallTanzuCLI
+        source $HOME/binaries/scripts/install-tanzu-cli.sh
+        installTanzuCLI
+        returnOrexit || return 1
+    fi
 
     if [[ $tapInstall == 'y' ]]
     then
@@ -190,7 +198,7 @@ output=""
 
 
 # read the options
-TEMP=`getopt -o tdarpngf:i:bvxyzh --long install-tap,delete-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,help -n $0 -- "$@"`
+TEMP=`getopt -o tdarpngf:i:bvxyzch --long install-tap,delete-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,install-tanzu-cli,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -262,6 +270,11 @@ while true ; do
                 "" ) isSkipK8sCheck='y'; shift 2 ;;
                 * ) isSkipK8sCheck='y';  shift 1 ;;
             esac ;;
+        -c | --install-tanzu-cli )
+            case "$2" in
+                "" ) wizardInstallTanzuCLI='y'; shift 2 ;;
+                * ) wizardInstallTanzuCLI='y' ; shift 1 ;;
+            esac ;;
         -h | --help ) ishelp='y'; helpFunction; break;; 
         -- ) shift; break;; 
         * ) break;;
@@ -270,7 +283,18 @@ done
 
 if [[ $ishelp != 'y' ]]
 then
-    executeCommand $argFile $isSkipK8sCheck
+    doskipk8scheck='n'
+    if [[ -n $isSkipK8sCheck && $isSkipK8sCheck == 'y' ]]
+    then
+        doskipk8scheck='y'
+    fi
+    if [[ -n $argFile ]]
+    then
+        executeCommand $argFile $doskipk8scheck
+    else
+        executeCommand "" $doskipk8scheck
+    fi
+    
     unset argFile
     unset isSkipK8sCheck
 fi

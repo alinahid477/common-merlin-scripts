@@ -12,6 +12,11 @@ installTapProfile()
     local normalcolor=$(tput sgr0)
     local profilefilename=$1
 
+    # UPDATE: 25/08/2023
+    # Below line is utilised in the Jumpstart to show UNINSTALL TAP option as long as it reaches install profile stage.
+    # It is also the initiation of output file.
+    echo "OUTPUT#OK" > $HOME/configs/output
+
     # PATCH: Dockerhub is special case
     # This patch is so that 
     #   tanzu secret registry add registry-credentials --server PVT-REGISTRY-SERVER requires dockerhub to be: https://index.docker.io/v1/
@@ -309,8 +314,20 @@ installTapProfile()
 
         if [[ $confirmed == 'y' ]]
         then
-            printf "\nExtracting ip of the load balancer...."
-            local lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].ip')
+            printf "\nExtracting ip for accessing the tap....\n"
+            local lbip='';
+            if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]
+            then
+                lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "NodePort" and .metadata.name == "envoy") | .spec.clusterIP + ":" + (.spec.ports[0].nodePort|tostring)')
+                if [[ -z $lbip || $lbip == null ]]
+                then
+                    printf "\nUSE_LOAD_BALANCER=false BUT failed to retrieve clusterIP for envoy NodePort service.\n"
+                    lbip="errored_extracting"
+                fi
+            else
+                lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].ip')
+            fi
+            
             if [[ -z $lbip || $lbip == null ]]
             then
                 local lbhostname=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].hostname')
@@ -321,7 +338,10 @@ installTapProfile()
                     sleep 1
                 fi
                 # lbip=$(dig $lbhostname +short)
-                lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
+                if [[ -n $lbhostname  ]]
+                then
+                    lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
+                fi
                 sleep 1               
             fi  
             if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
@@ -351,7 +371,7 @@ installTapProfile()
                     && sleep 1m \
                     && printf "${bluecolor}Update complete.${normalcolor}\n"
             else
-                printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free xip.$lbip.io or nip.$lbip.io in which case you will need to update profile with it.${normalcolor}\n"
+                printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free $lbip.nip.io in which case you will need to update profile with it.${normalcolor}\n"
                 printf "${bluecolor}To update run the below command: ${normalcolor}\n"
                 printf "${bluecolor}tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install${normalcolor}\n"
             fi

@@ -1,4 +1,4 @@
 contour:
   envoy:
     service:
-      type: ClusterIP
+      type: NodePort

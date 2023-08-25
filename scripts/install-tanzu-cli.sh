@@ -23,12 +23,20 @@ installTanzuCLI () {
     if [[ -n $isTanzuCLIInstalled ]]
     then
         printf "\n\nTanzu CLI already installed. No need to install again.\n"
-        local totaltanzuplugins=$(tanzu plugin list -o json | jq length)
-        if [[ -z $totaltanzuplugins || $totaltanzuplugins < 4 ]]
+        local iscorecli=$(ls $HOME/tanzu/ | grep "v[0-9\.]*$")
+        if [[ -n $iscorecli ]]
         then
-            installTanzuCLIPlugins
+            local totaltanzuplugins=$(tanzu plugin list -o json | jq length)
+            if [[ -z $totaltanzuplugins || $totaltanzuplugins < 4 ]]
+            then
+                installTanzuCLIPlugins
+            fi
+            tanzu plugin list
+        else
+            tanzu plugin list --local $HOME/tanzu/
         fi
-        tanzu plugin list
+
+        
         return 0
     fi
 

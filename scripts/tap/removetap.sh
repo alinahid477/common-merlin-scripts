@@ -2,7 +2,7 @@
 
 printf "\n\nStarting remove TAP...\n\n"
 printf "\nRemoving tap from tap-install...\n"
-tanzu package installed delete tap --namespace tap-install || (echo "ERROR: Failed to delete install tap from ns: tap-install" && exit 1)
+tanzu package installed delete tap --namespace tap-install || (echo "ERROR: Failed to delete installed tap from ns: tap-install" && true)
 
 
 printf "\nRemoving package repository...\n"
