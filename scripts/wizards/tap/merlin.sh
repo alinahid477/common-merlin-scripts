@@ -10,7 +10,6 @@ source $HOME/binaries/scripts/tap/installtapprofile.sh
 source $HOME/binaries/scripts/tap/installdevnamespace.sh
 source $HOME/binaries/scripts/tap/installtapguiviewer.sh
 
-
 function helpFunction()
 {
     printf "\n"
@@ -26,6 +25,7 @@ function helpFunction()
     echo -e "\t-y | --create-basic-auth-secret signals the wizard start creating basic auth secret."
     echo -e "\t-z | --create-git-ssh-secret signals the wizard start creating git ssh secret."
     echo -e "\t-c | --install-tanzu-cli signals the wizard to install tanzu cli."
+    echo -e "\t-e | --extract-tap-ingress signals the wizard to extract TAP ingress info from the existing cluster."
     echo -e "\t-h | --help"
     printf "\n"
 }
@@ -37,6 +37,7 @@ unset tapPackageRepositoryInstall
 unset tapProfileInstall
 unset tapDeveloperNamespaceCreate
 unset tapGuiViewerInstall
+unset tapExtractIngress
 unset wizardUTILCreateServiceAccount
 unset wizardUTILCreateDockerSecret
 unset wizardUTILCreateBasicAuthSecret
@@ -171,6 +172,14 @@ function executeCommand () {
         returnOrexit || return 1
     fi
 
+    if [[ $tapExtractIngress == 'y' ]]
+    then
+        unset tapExtractIngress
+        source $HOME/binaries/scripts/tap/extract-tap-ingress.sh
+        extractTAPIngress
+        returnOrexit || return 1
+    fi
+
     # if [[ $adjustContourForValuesFile == 'y' ]]
     # then
     #     unset adjustContourForValuesFile
@@ -198,7 +207,7 @@ output=""
 
 
 # read the options
-TEMP=`getopt -o tdarpngf:i:bvxyzch --long install-tap,delete-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,install-tanzu-cli,help -n $0 -- "$@"`
+TEMP=`getopt -o tdarpngf:i:bvxyzceh --long install-tap,delete-tap,install-tap-package-repository,install-tap-profile,create-developer-namespace,install-gui-viewer,file:,input:,skip-k8s-check,create-service-account,create-docker-registry-secret,create-basic-auth-secret,create-git-ssh-secret,install-tanzu-cli,extract-tap-ingress,help -n $0 -- "$@"`
 eval set -- "$TEMP"
 # echo $TEMP;
 while true ; do
@@ -274,6 +283,11 @@ while true ; do
             case "$2" in
                 "" ) wizardInstallTanzuCLI='y'; shift 2 ;;
                 * ) wizardInstallTanzuCLI='y' ; shift 1 ;;
+            esac ;;
+        -e | --extract-tap-ingress )
+            case "$2" in
+                "" ) tapExtractIngress='y'; shift 2 ;;
+                * ) tapExtractIngress='y' ; shift 1 ;;
             esac ;;
         -h | --help ) ishelp='y'; helpFunction; break;; 
         -- ) shift; break;; 

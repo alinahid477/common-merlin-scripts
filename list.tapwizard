@@ -8,3 +8,4 @@ adjust-contour-in-values-file.sh
 installtapguiviewer.sh
 adjust-excluded-packages-in-values-file.sh
 removetap.sh
+extract-tap-ingress.sh

@@ -314,68 +314,12 @@ installTapProfile()
 
         if [[ $confirmed == 'y' ]]
         then
-            printf "\nExtracting ip for accessing the tap....\n"
-            local lbip='';
-            if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]
-            then
-                lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "NodePort" and .metadata.name == "envoy") | .spec.clusterIP + ":" + (.spec.ports[0].nodePort|tostring)')
-                if [[ -z $lbip || $lbip == null ]]
-                then
-                    printf "\nUSE_LOAD_BALANCER=false BUT failed to retrieve clusterIP for envoy NodePort service.\n"
-                    lbip="errored_extracting"
-                fi
-            else
-                lbip=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].ip')
-            fi
             
-            if [[ -z $lbip || $lbip == null ]]
-            then
-                local lbhostname=$(kubectl get svc -n tanzu-system-ingress -o json | jq -r '.items[] | select(.spec.type == "LoadBalancer" and .metadata.name == "envoy") | .status.loadBalancer.ingress[0].hostname')
-                printf "Available at Hostname: $lbhostname\n\n"
-                if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-                then
-                    echo "LB_HOSTNAME#$lbhostname" >> $HOME/configs/output
-                    sleep 1
-                fi
-                # lbip=$(dig $lbhostname +short)
-                if [[ -n $lbhostname  ]]
-                then
-                    lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
-                fi
-                sleep 1               
-            fi  
-            if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
-            then
-                echo "GENERATEDLBIP#$lbip" >> $HOME/configs/output
-                sleep 1
-            fi
-            printf "Available at IP: $lbip\n\n\n"
-            sleep 5     
-            printf "\n"
-            printf "Checking presence of token generatedlbip in the TAP values file...\n"
-            sleep 5
-            local isgeneratedlbipexists=$(cat $profilefilename | grep generatedlbip)
-            sleep 4
-            if [[ -n $isgeneratedlbipexists && -n $lbip ]]
-            then
-                printf "${bluecolor}Found generatedlbip token present in the tap values file. This indicates the users intention to use nip.io or xip.io ${normalcolor}\n"
-                printf "replacing generatedlbip with $lbip...\n"
-                local replaceText='generatedlbip'
-                awk -v old=$replaceText -v new="$lbip" 's=index($0,old){$0=substr($0,1,s-1) new substr($0,s+length(old))} 1' $profilefilename > $profilefilename.tmp \
-                    && sleep 1 \
-                    && mv $profilefilename.tmp $profilefilename \
-                    && sleep 1 \
-                    && printf "${bluecolor}Replace complete.${normalcolor}\nExecuting tanzu package update...\n" \
-                    && tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install \
-                    && printf "\nwait 1m...\n" \
-                    && sleep 1m \
-                    && printf "${bluecolor}Update complete.${normalcolor}\n"
-            else
-                printf "${bluecolor}use this ip to create A record in the DNS zone. Alternatively, if you do not have a deligated domain you can also use free $lbip.nip.io in which case you will need to update profile with it.${normalcolor}\n"
-                printf "${bluecolor}To update run the below command: ${normalcolor}\n"
-                printf "${bluecolor}tanzu package installed update tap -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install${normalcolor}\n"
-            fi
-            
+            source $HOME/binaries/scripts/tap/extract-tap-ingress.sh
+            extractTAPIngress
+            updateWithNIPIO $profilefilename $TAP_PACKAGE_VERSION
+
+
             export INSTALL_TAP_PROFILE='COMPLETED'
             sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
             printf "\nINSTALL_TAP_PROFILE=COMPLETED\n" >> $HOME/.env
