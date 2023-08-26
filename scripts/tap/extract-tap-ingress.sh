@@ -34,12 +34,15 @@ extractTAPIngress () {
             printf "Retrieving IP against hostname...\n"
             lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
             sleep 1
-            printf "IP for Hostname: $lbip\n\n"
-            if [[ -z $lbip || $lbip == null ]]
+            if [[ -n $lbip ]]
             then
+                printf "IP for Hostname: $lbip\n\n"
                 echo "GENERATEDLBIP#$lbip" >> $HOME/configs/output
                 sleep 1
-            fi            
+            else
+                printf "WARN: IP for Hostname: $lbhostname....could not be retrieved.\n\n"
+                sleep 5
+            fi
         fi
     else
         printf "Available at IP: $lbip\n\n"
