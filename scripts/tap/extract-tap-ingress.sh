@@ -31,14 +31,23 @@ extractTAPIngress () {
             echo "LB_HOSTNAME#$lbhostname" >> $HOME/configs/output
             sleep 1
             # lbip=$(dig $lbhostname +short)
+            printf "Retrieving IP against hostname...\n"
             lbip=$(perl  -MSocket -MData::Dumper -wle'my @addresses = gethostbyname($ARGV[0]); my @ips = map { inet_ntoa($_) } @addresses[4 .. $#addresses]; print $ips[0]' -- "$lbhostname" | perl -pe 'chomp')
             sleep 1
+            printf "IP for Hostname: $lbip\n\n"
+            if [[ -z $lbip || $lbip == null ]]
+            then
+                echo "GENERATEDLBIP#$lbip" >> $HOME/configs/output
+                sleep 1
+            fi            
         fi
     else
+        printf "Available at IP: $lbip\n\n"
         echo "GENERATEDLBIP#$lbip" >> $HOME/configs/output
         sleep 1
         if [[ -n $nodeport ]]
         then
+            printf "NodePort for IP: $nodeport\n\n"
             echo "GENERATEDNODEPORT#$nodeport" >> $HOME/configs/output
             sleep 1
             printf "\nTAP Ingress IP/NodePort: $lbip:$nodeport\n\n\n"
