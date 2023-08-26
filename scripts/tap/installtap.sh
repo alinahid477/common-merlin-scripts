@@ -194,7 +194,7 @@ installTap()
                 profiletype=$(echo "$profiletype" | awk '{print tolower($0)}')
             fi
             
-            if [[ $profiletype == *@("full")* || $profiletype == *@("iterate")* || $profiletype == *@("build")* ]]   
+            if [[ $profiletype == *@("full")* || $profiletype == *@("iterate")* || $profiletype == *@("build")* || $profiletype == *@("run")* ]]   
             then
                 if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
                 then         

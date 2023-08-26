@@ -90,7 +90,7 @@ createDevNS () {
     fi
 
     printf "\nChecking if namcespace exists in the cluster....\n"
-    local isexistns=$(kubectl get ns | grep "^$namespacename")
+    local isexistns=$(kubectl get ns | grep -w "^$namespacename")
     if [[ -n $isexistns ]] 
     then
         printf "namespace: $namespacename already exists....Skipping Create New\n"
@@ -99,7 +99,7 @@ createDevNS () {
         kubectl create ns $namespacename && printf "OK" || printf "FAILED"
         printf "\n"
 
-        local isexistns2=$(kubectl get ns | grep "^$namespacename")
+        local isexistns2=$(kubectl get ns | grep -w "^$namespacename")
         if [[ -z $isexistns2 ]]
         then
             printf "ERROR: Failed to create namespace: $namespacename\n"
