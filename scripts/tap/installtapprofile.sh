@@ -136,22 +136,70 @@ installTapProfile()
         # This opens up the possibility to create the secret (eg: registry-credential) and refer it in the tap values file by default
         # with the usage of namespace provisioner this secret will also be available in the developer-namespace.
         # hence I can create registry-credential in tap-install namespace now and make it available to all other developer-namespace.
-        if [[ $tapPackageVersion < 1.5.0 ]]
+
+        # UPDATE: 01/09/2023
+        #    NOT SURE WHY I CREATED THE BELOW CODE BLOCK. AND WHY IT WORKED IN THE PAST.
+        # if [[ $tapPackageVersion < 1.5.0 ]]
+        # then
+        #     if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+        #     then
+        #         export PVT_PROJECT_REGISTRY_CREDENTIALS_NAME="registry-credentials"
+        #     fi
+        #     local myregistryserver=$PVT_PROJECT_REGISTRY_SERVER
+        #     if [[ -n $PVT_PROJECT_REGISTRY_SERVER && $PVT_PROJECT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+        #     then
+        #         myregistryserver="index.docker.io"
+        #     fi
+        #     if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE ]]
+        #     then
+        #         export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
+        #     fi
+        #     tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+        # fi
+
+        # UPDATE: 01/09/2023
+        #   THE below should be, ie: registry-credentials should be always created regardless of TAP version.
+        if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
         then
-            if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+            export PVT_PROJECT_REGISTRY_CREDENTIALS_NAME="registry-credentials"
+        fi
+        local myregistryserver=$PVT_PROJECT_REGISTRY_SERVER
+        if [[ -n $PVT_PROJECT_REGISTRY_SERVER && $PVT_PROJECT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+        then
+            myregistryserver="index.docker.io"
+        fi
+        if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE ]]
+        then
+            export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
+        fi
+        printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: ${PVT_INSTALL_REGISTRY_SERVER}...\n"
+        tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+        printf "\n...DONE\n\n"
+        sleep 5
+        if [[ -z $KP_REGISTRY_SERVER || $KP_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER ]]
+        then
+            if [[ -z $BUILD_SERVICE_REPO && -n $KP_DEFAULT_REPO ]]
             then
-                export PVT_PROJECT_REGISTRY_CREDENTIALS_NAME="registry-credentials"
+                export BUILD_SERVICE_REPO=$KP_DEFAULT_REPO
             fi
-            local myregistryserver=$PVT_PROJECT_REGISTRY_SERVER
-            if [[ -n $PVT_PROJECT_REGISTRY_SERVER && $PVT_PROJECT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+            printf "\n\nIMPORTANT: Same container registry server is used for both Build Service and Workload images.\n"
+            printf "    Build Service Repository: $myregistryserver/$BUILD_SERVICE_REPO\n"
+            printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
+            printf "    If a separate registry for Build Service is required please update the tap values files accordingly and create the an appropriate secret in the K8s cluster accordingly.\n\n\n"
+            sleep 3
+        elif [[ -n $KP_REGISTRY_SERVER && -n $KP_DEFAULT_REPO && -n $KP_REGISTRY_SECRET_NAME && -n $KP_REGISTRY_SECRET_NAMESPACE && -n $KP_DEFAULT_REPO_USERNAME && -n $KP_DEFAULT_REPO_PASSWORD ]]
+        then
+            local mykpregistryserver=$KP_REGISTRY_SERVER
+            if [[ $KP_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
             then
-                myregistryserver="index.docker.io"
+                mykpregistryserver="index.docker.io"
             fi
-            if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE ]]
-            then
-                export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
-            fi
-            tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+            printf "\nCreate a registry secret ($KP_REGISTRY_SECRET_NAME) for accessing build service registry: ${mykpregistryserver}...\n"
+            tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
+            printf "\n...DONE\n\n"
+        else
+            printf "\nERROR: Failed to create BuildService credentials.\n"
+            sleep 5
         fi
 
         local checkReconcileStatus=''

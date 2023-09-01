@@ -1,6 +1,8 @@
 buildservice:
-  kp_default_repository: "<KP-DEFAULT-REPO>"
-  kp_default_repository_username: "<KP-DEFAULT-REPO-USERNAME>"
-  kp_default_repository_password: "<KP-DEFAULT-REPO-PASSWORD>"
-  include_legacy_bom: false
-  exclude_dependencies: true
+  kp_default_repository: "<KP-REGISTRY-SERVER>/<KP-DEFAULT-REPO>"
+  # kp_default_repository_username: "<KP-DEFAULT-REPO-USERNAME>"
+  # kp_default_repository_password: "<KP-DEFAULT-REPO-PASSWORD>"
+  kp_default_repository_secret:
+    name: <KP-REGISTRY-SECRET-NAME> #registry-credentials
+    namespace: <KP-REGISTRY-SECRET-NAMESPACE> # tap-install
+  # exclude_dependencies: true # To configure full dependencies, add the key-value pair exclude_dependencies: true
