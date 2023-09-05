@@ -71,10 +71,14 @@ installTapProfile()
             returnOrexit || return 1
         fi
 
+        # UPDATE: 5/9/2023
+        # Need profiletype to figure out whether to create few k8s secret or not. Used below. 
+        local profiletype='full'
+        profiletype=$(cat $profilefilename | grep -w  'profile:')
+        profiletype=$(echo "$profiletype" | awk '{print tolower($0)}')
 
+        
         # check if kustomize is already installed by TMC or not. If it is installed exclude package: fluxcd.source.controller.tanzu.vmware.com
-        
-        
         local isExistTMCGitOps=$(kubectl get pods -n tanzu-source-controller --no-headers=true --ignore-not-found=true || true)
         if [[ -n $isExistTMCGitOps ]]
         then
@@ -139,6 +143,7 @@ installTapProfile()
 
         # UPDATE: 01/09/2023
         #    NOT SURE WHY I CREATED THE BELOW CODE BLOCK. AND WHY IT WORKED IN THE PAST.
+        #    As registry-credentials needs to be created regardless.
         # if [[ $tapPackageVersion < 1.5.0 ]]
         # then
         #     if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
@@ -172,35 +177,87 @@ installTapProfile()
         then
             export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
         fi
-        printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: ${PVT_INSTALL_REGISTRY_SERVER}...\n"
+        printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO...\n"
         tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
         printf "\n...DONE\n\n"
         sleep 5
-        if [[ -z $KP_REGISTRY_SERVER || $KP_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER ]]
+        
+        # UPDATE: 5/9/2023
+        # K8s secret for KP and Local Proxy only needs to be created for full, iterate and build profile.
+        if [[ $profiletype == *@("full")* || $profiletype == *@("iterate")* || $profiletype == *@("build")* ]]   
         then
-            if [[ -z $BUILD_SERVICE_REPO && -n $KP_DEFAULT_REPO ]]
+            if [[ -z $KP_REGISTRY_SERVER || $KP_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER ]]
             then
-                export BUILD_SERVICE_REPO=$KP_DEFAULT_REPO
-            fi
-            printf "\n\nIMPORTANT: Same container registry server is used for both Build Service and Workload images.\n"
-            printf "    Build Service Repository: $myregistryserver/$BUILD_SERVICE_REPO\n"
-            printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
-            printf "    If a separate registry for Build Service is required please update the tap values files accordingly and create the an appropriate secret in the K8s cluster accordingly.\n\n\n"
-            sleep 3
-        elif [[ -n $KP_REGISTRY_SERVER && -n $KP_DEFAULT_REPO && -n $KP_REGISTRY_SECRET_NAME && -n $KP_REGISTRY_SECRET_NAMESPACE && -n $KP_DEFAULT_REPO_USERNAME && -n $KP_DEFAULT_REPO_PASSWORD ]]
-        then
-            local mykpregistryserver=$KP_REGISTRY_SERVER
-            if [[ $KP_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                if [[ -z $BUILD_SERVICE_REPO && -n $KP_DEFAULT_REPO ]]
+                then
+                    export BUILD_SERVICE_REPO=$KP_DEFAULT_REPO
+                fi
+                printf "\n\nIMPORTANT: Same container registry server is used for both Build Service and Workload images. (This is normal)\n"
+                printf "    Build Service Repository: $myregistryserver/$BUILD_SERVICE_REPO\n"
+                printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
+                printf "    If a separate registry for Build Service is required please update the tap values files accordingly and create the an appropriate secret in the K8s cluster accordingly.\n\n\n"
+                sleep 3
+            elif [[ -n $KP_REGISTRY_SERVER && -n $KP_DEFAULT_REPO && -n $KP_REGISTRY_SECRET_NAME && -n $KP_REGISTRY_SECRET_NAMESPACE && -n $KP_DEFAULT_REPO_USERNAME && -n $KP_DEFAULT_REPO_PASSWORD ]]
             then
-                mykpregistryserver="index.docker.io"
+                local mykpregistryserver=$KP_REGISTRY_SERVER
+                if [[ $KP_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                then
+                    mykpregistryserver="index.docker.io"
+                fi
+                printf "\nCreate a registry secret ($KP_REGISTRY_SECRET_NAME) for accessing build service registry: $mykpregistryserver/$KP_DEFAULT_REPO...\n"
+                tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
+                printf "\n...DONE\n\n"
+            else
+                printf "\nERROR: Failed to create BuildService credentials.\n"
+                sleep 5
             fi
-            printf "\nCreate a registry secret ($KP_REGISTRY_SECRET_NAME) for accessing build service registry: ${mykpregistryserver}...\n"
-            tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
-            printf "\n...DONE\n\n"
-        else
-            printf "\nERROR: Failed to create BuildService credentials.\n"
-            sleep 5
+
+
+            # UPDATE: 5/09/2023
+            # LOCAL SOURCE PROXY
+            if [[ $tapPackageVersion < 1.6.0 ]]
+            then
+                printf "\n\nNOTE: TAP Package version is $tapPackageVersion. Local Source Proxy is not supported. Local Source Proxy is only support from 1.6 and above.\n\n"
+            else
+                if [[ (-z $LOCAL_PROXY_REGISTRY_SERVER || $LOCAL_PROXY_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER) && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+                then
+                    if [[ -z $LOCAL_PROXY_REGISTRY_REPO && -n $PVT_PROJECT_REGISTRY_REPO ]]
+                    then
+                        export LOCAL_PROXY_REGISTRY_REPO=$PVT_PROJECT_REGISTRY_REPO
+                    fi
+                    printf "\n\nIMPORTANT: Same container registry server is used for both Workload and Local Source Proxy (This is normal for non-prod environment).\n"
+                    printf "    Local Source Proxy Registry: $myregistryserver/$LOCAL_PROXY_REGISTRY_REPO\n"
+                    printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
+                    printf "    If a separate registry for Local Source Proxy is required please update the tap values files accordingly and create the appropriate secret in the K8s cluster accordingly.\n\n\n"
+                    
+                    local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
+                    if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                    then
+                        mylpregistryserver="index.docker.io"
+                    fi
+                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver/$LOCAL_PROXY_REGISTRY_REPO...\n"
+                    tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
+                    printf "\n...DONE\n\n"
+                    sleep 3
+                elif [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_REPO && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+                then
+                    local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
+                    if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                    then
+                        mylpregistryserver="index.docker.io"
+                    fi
+                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver/$LOCAL_PROXY_REGISTRY_REPO...\n"
+                    tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
+                    printf "\n...DONE\n\n"
+                else
+                    printf "\nERROR: Failed to create Local Source Proxy registry credentials.\n    Cause: missing required parameters for creating K8s secret OR clashing credential name.\n"
+                    sleep 5
+                fi
+            fi
+            
         fi
+
+
 
         local checkReconcileStatus=''
         if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' || $INSTALL_TAP_PROFILE == 'TIMEOUT' ]]
