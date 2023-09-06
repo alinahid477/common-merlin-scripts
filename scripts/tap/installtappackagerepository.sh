@@ -240,7 +240,7 @@ installTapPackageRepository()
         if [[ $myregistryserver == "index.docker.io" ]]
         then
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
-            imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
             printf "\n...IMG RELOCATION FINISHED...\n"
             kill "$progressloop_pid" > /dev/null 2>&1 || true
         else
@@ -248,9 +248,9 @@ installTapPackageRepository()
             # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
             if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
             then
-                imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
             else
-                imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
             fi            
             printf "\n....IMG RELOCATION FINISHED...\n"
             kill "$progressloop_pid" > /dev/null 2>&1 || true
