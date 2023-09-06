@@ -156,20 +156,38 @@ installTapPackageRepository()
     then
         myregistryserver="index.docker.io"
     fi
+
+    # UPDATE: 6/9/2023
+    # Hard coding the below. AS I don't know if having a different name will work or not.
+    export PVT_INSTALL_REGISTRY_REPO=tap-packages
+
     if [[ $INSTALL_FROM_TANZUNET == true || -z $PVT_INSTALL_REGISTRY_SERVER || $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
     then
         export PVT_INSTALL_REGISTRY_SERVER=$INSTALL_REGISTRY_HOSTNAME
         myregistryserver=$INSTALL_REGISTRY_HOSTNAME
         export PVT_INSTALL_REGISTRY_USERNAME=$INSTALL_REGISTRY_USERNAME
         export PVT_INSTALL_REGISTRY_PASSWORD=$INSTALL_REGISTRY_PASSWORD
-        export PVT_INSTALL_REGISTRY_REPO=$INSTALL_REGISTRY_REPO
-    else
-        printf "\ndocker login to registry.tanzu.vmware.com...\n"
+        
+        # UPDATE: 6/9/2023
+        # modified the env file to reflect INSTALL_REGISTRY_REPO=tap-packages 
+        # it shouldn't be INSTALL_REGISTRY_REPO=tanzu-application-platform --> This is wrong. BECAUSE tanzu-application-platform is the projectid in tanzunet harbor
+        # hence, the PVT_INSTALL_REGISTRY_REPO=$INSTALL_REGISTRY_REPO means PVT_INSTALL_REGISTRY_REPO=tap-packages ---> which is the repository, NOT projectid.
+        # export PVT_INSTALL_REGISTRY_REPO=$INSTALL_REGISTRY_REPO --> I have now hardcoded this value above.
+        # If there exist PVT_INSTALL_REGISTRY_PROJECT then we MUST keep it intact (because that's the user input projectid).
+        #   and tap-packages repo should go under the projectid.
+    else        
+        printf "\ndocker login to TanzuNet: $INSTALL_REGISTRY_HOSTNAME...\n"
         docker login ${INSTALL_REGISTRY_HOSTNAME} -u ${INSTALL_REGISTRY_USERNAME} -p ${INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
         sleep 1
     fi
     
-    printf "\ndocker login to ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
+    if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+    then
+        printf "\ndocker login to ${myregistryserver}/$PVT_INSTALL_REGISTRY_PROJECT/${PVT_INSTALL_REGISTRY_REPO}...\n"
+    else 
+        printf "\ndocker login to ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
+    fi
+    
     docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     sleep 2
 
@@ -182,8 +200,14 @@ installTapPackageRepository()
     else
         if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
         then
+            local confirmdialog="Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: "
+            if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+            then
+                confirmdialog="Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/$PVT_INSTALL_REGISTRY_PROJECT/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: "
+            fi
             while true; do
-                read -p "Confirm to relocate tap-packages to your own pvt registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}? [y/n]: " yn
+                printf "$confirmdialog"
+                read yn
                 case $yn in
                     [Yy]* ) confirmed='y'; printf "you confirmed yes\n"; break;;
                     [Nn]* ) confirmed='n'; printf "You said no.\n\nExiting...\n\n"; break;;
@@ -222,7 +246,12 @@ installTapPackageRepository()
         else
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
             # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
-            imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+            then
+                imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            else
+                imgpkg copy --concurrency 1 -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+            fi            
             printf "\n....IMG RELOCATION FINISHED...\n"
             kill "$progressloop_pid" > /dev/null 2>&1 || true
         fi
@@ -248,7 +277,7 @@ installTapPackageRepository()
     printf "\nCreate tanzu-tap-repository...\n"
     if [[ $myregistryserver == "index.docker.io" ]]
     then
-        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     else
         tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     fi

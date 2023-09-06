@@ -177,7 +177,7 @@ installTapProfile()
         then
             export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
         fi
-        printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO...\n"
+        printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: $PVT_PROJECT_REGISTRY_SERVER...\n"
         tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
         printf "\n...DONE\n\n"
         sleep 5
@@ -194,7 +194,7 @@ installTapProfile()
                 fi
                 printf "\n\nIMPORTANT: Same container registry server is used for both Build Service and Workload images. (This is normal)\n"
                 printf "    Build Service Repository: $myregistryserver/$BUILD_SERVICE_REPO\n"
-                printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
+                printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER.\n"
                 printf "    If a separate registry for Build Service is required please update the tap values files accordingly and create the an appropriate secret in the K8s cluster accordingly.\n\n\n"
                 sleep 3
             elif [[ -n $KP_REGISTRY_SERVER && -n $KP_DEFAULT_REPO && -n $KP_REGISTRY_SECRET_NAME && -n $KP_REGISTRY_SECRET_NAMESPACE && -n $KP_DEFAULT_REPO_USERNAME && -n $KP_DEFAULT_REPO_PASSWORD ]]
@@ -219,15 +219,11 @@ installTapProfile()
             then
                 printf "\n\nNOTE: TAP Package version is $tapPackageVersion. Local Source Proxy is not supported. Local Source Proxy is only support from 1.6 and above.\n\n"
             else
-                if [[ (-z $LOCAL_PROXY_REGISTRY_SERVER || $LOCAL_PROXY_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER) && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+                if [[ (-z $LOCAL_PROXY_REGISTRY_SERVER || $LOCAL_PROXY_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER) && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
-                    if [[ -z $LOCAL_PROXY_REGISTRY_REPO && -n $PVT_PROJECT_REGISTRY_REPO ]]
-                    then
-                        export LOCAL_PROXY_REGISTRY_REPO=$PVT_PROJECT_REGISTRY_REPO
-                    fi
                     printf "\n\nIMPORTANT: Same container registry server is used for both Workload and Local Source Proxy (This is normal for non-prod environment).\n"
-                    printf "    Local Source Proxy Registry: $myregistryserver/$LOCAL_PROXY_REGISTRY_REPO\n"
-                    printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER/$PVT_PROJECT_REGISTRY_REPO.\n"
+                    printf "    Local Source Proxy Registry: $myregistryserver\n"
+                    printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER\n"
                     printf "    If a separate registry for Local Source Proxy is required please update the tap values files accordingly and create the appropriate secret in the K8s cluster accordingly.\n\n\n"
                     
                     local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
@@ -235,20 +231,21 @@ installTapProfile()
                     then
                         mylpregistryserver="index.docker.io"
                     fi
-                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver/$LOCAL_PROXY_REGISTRY_REPO...\n"
+                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
                     tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
                     printf "\n...DONE\n\n"
                     sleep 3
-                elif [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_REPO && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+                elif [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
                     local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
                     if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
                     then
                         mylpregistryserver="index.docker.io"
                     fi
-                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver/$LOCAL_PROXY_REGISTRY_REPO...\n"
+                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
                     tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
                     printf "\n...DONE\n\n"
+                    sleep 3
                 else
                     printf "\nERROR: Failed to create Local Source Proxy registry credentials.\n    Cause: missing required parameters for creating K8s secret OR clashing credential name.\n"
                     sleep 5
@@ -262,7 +259,6 @@ installTapProfile()
         local checkReconcileStatus=''
         if [[ $INSTALL_TAP_PROFILE == 'COMPLETED' || $INSTALL_TAP_PROFILE == 'TIMEOUT' ]]
         then
-
             printf "\nChecking if tap package already installed in successfull state..."
             checkReconcileStatus=$(tanzu package installed get tap -n tap-install -o json | jq -r '.[] | select(.name == "tap") | .status' || true)
             if [[ -n $checkReconcileStatus ]]
