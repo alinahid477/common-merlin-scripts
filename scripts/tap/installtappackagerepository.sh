@@ -170,7 +170,7 @@ installTapPackageRepository()
         myregistryserver=$INSTALL_REGISTRY_HOSTNAME
         export PVT_INSTALL_REGISTRY_USERNAME=$INSTALL_REGISTRY_USERNAME
         export PVT_INSTALL_REGISTRY_PASSWORD=$INSTALL_REGISTRY_PASSWORD
-        
+        export PVT_INSTALL_REGISTRY_PROJECT=$INSTALL_REGISTRY_PROJECT
         # UPDATE: 6/9/2023
         # modified the env file to reflect INSTALL_REGISTRY_REPO=tap-packages 
         # it shouldn't be INSTALL_REGISTRY_REPO=tanzu-application-platform --> This is wrong. BECAUSE tanzu-application-platform is the projectid in tanzunet harbor
@@ -308,7 +308,7 @@ installTapPackageRepository()
         printf "$checkReconcileStatusForTapRepository\n"
         if [[ $checkReconcileStatusForTapRepository == *@("reconciling")* ]]
         then
-            printf "ERROR! Received FAILED status: $checkReconcileStatusForTapRepository\n."
+            printf "Did not get a Reconcile successful status: $checkReconcileStatusForTapRepository\n."
             checkReconcileStatusForTapRepository=''
             printf "wait 2m before checking again ($count out of $maxCount max)...."
             printf "\n.\n"
@@ -316,7 +316,7 @@ installTapPackageRepository()
             sleep 2m
         elif [[ $checkReconcileStatusForTapRepository == *@("failed")* ]]
         then
-            printf "Did not get a Reconcile successful. Received status: $checkReconcileStatusForTapRepository\n."
+            printf "ERROR! Received FAILED. Received status: $checkReconcileStatusForTapRepository\n."
             checkReconcileStatusForTapRepository=''
             printf "wait 2m before checking again ($count out of $maxCount max)...."
             printf "\n.\n"
