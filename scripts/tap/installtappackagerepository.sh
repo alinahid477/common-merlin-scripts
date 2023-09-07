@@ -163,6 +163,9 @@ installTapPackageRepository()
 
     if [[ $INSTALL_FROM_TANZUNET == true || -z $PVT_INSTALL_REGISTRY_SERVER || $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
     then
+        printf "\nDetected user input to install directly from TanzuNet: $myregistryserver.\n"
+        sleep 2
+
         export PVT_INSTALL_REGISTRY_SERVER=$INSTALL_REGISTRY_HOSTNAME
         myregistryserver=$INSTALL_REGISTRY_HOSTNAME
         export PVT_INSTALL_REGISTRY_USERNAME=$INSTALL_REGISTRY_USERNAME
@@ -181,11 +184,16 @@ installTapPackageRepository()
         sleep 1
     fi
     
-    if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+    if [[ $myregistryserver == $INSTALL_REGISTRY_HOSTNAME ]]
     then
-        printf "\ndocker login to ${myregistryserver}/$PVT_INSTALL_REGISTRY_PROJECT/${PVT_INSTALL_REGISTRY_REPO}...\n"
-    else 
-        printf "\ndocker login to ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
+        printf "\ndocker login to TanzuNet registry: $myregistryserver...\n"
+    else
+        if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+        then
+            printf "\ndocker login to private install registry ${myregistryserver}/$PVT_INSTALL_REGISTRY_PROJECT/${PVT_INSTALL_REGISTRY_REPO}...\n"
+        else 
+            printf "\ndocker login to private install registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
+        fi
     fi
     
     docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
@@ -277,16 +285,68 @@ installTapPackageRepository()
     printf "\nCreate tanzu-tap-repository...\n"
     if [[ $myregistryserver == "index.docker.io" ]]
     then
-        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
+        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/${PVT_INSTALL_REGISTRY_REPO}:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
     else
-        tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
+        if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+        then
+            tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO}:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
+        else
+            tanzu package repository add tanzu-tap-repository --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}:${TAP_VERSION} --namespace tap-install ${appendForSilentMode}
+        fi        
     fi
+    printf "\nwait 10s before checking tanzu-tap-repository status....\n"
+    sleep 10
 
-    printf "\nWaiting 2m before checking...\n"
-    sleep 2m
-    printf "\nChecking tanzu-tap-repository status...\n"
+    
+    local count=1
+    local checkReconcileStatusForTapRepository=''
+    local maxCount=15
+    while [[ -z $checkReconcileStatusForTapRepository && $count -lt $maxCount ]]; do
+        printf "\nChecking tanzu-tap-repository status...\n"
+        checkReconcileStatusForTapRepository=$(tanzu package repository get tanzu-tap-repository --namespace tap-install -o json | jq -r '.[] | .status' || echo error)
+        checkReconcileStatusForTapRepository=$(echo "$checkReconcileStatusForTapRepository" | awk '{print tolower($0)}')
+        printf "$checkReconcileStatusForTapRepository\n"
+        if [[ $checkReconcileStatusForTapRepository == *@("reconciling")* ]]
+        then
+            printf "ERROR! Received FAILED status: $checkReconcileStatusForTapRepository\n."
+            checkReconcileStatusForTapRepository=''
+            printf "wait 2m before checking again ($count out of $maxCount max)...."
+            printf "\n.\n"
+            ((count=$count+2))
+            sleep 2m
+        elif [[ $checkReconcileStatusForTapRepository == *@("failed")* ]]
+        then
+            printf "Did not get a Reconcile successful. Received status: $checkReconcileStatusForTapRepository\n."
+            checkReconcileStatusForTapRepository=''
+            printf "wait 2m before checking again ($count out of $maxCount max)...."
+            printf "\n.\n"
+            ((count=$count+2))
+            sleep 2m
+        elif [[ $checkReconcileStatusForTapRepository == *@("succeeded")* ]]
+        then
+            printf "SUCCESS!! Received status: $checkReconcileStatusForTapRepository\n."
+            break
+        else
+            printf "WARNING!! Received status: $checkReconcileStatusForTapRepository\n."
+            checkReconcileStatusForTapRepository=''
+            printf "wait 2m before checking again ($count out of $maxCount max)...."
+            printf "\n.\n"
+            ((count=$count+2))
+            sleep 2m
+        fi            
+    done
+    printf "\nwait 1m before displaying tanzu-tap-repository installation status...\n"
+    sleep 1m
     tanzu package repository get tanzu-tap-repository --namespace tap-install
     printf "\nDONE\n\n"
+
+    if [[ -z $checkReconcileStatusForTapRepository || $checkReconcileStatusForTapRepository != *@("succeeded")* ]]
+    then
+        printf "\n\nERROR: tanzu-tap-repository did not install correctly. Stop installation...\n"
+        sed -i '/INSTALL_TAP_PACKAGE_REPOSITORY/d' $HOME/.env
+        sleep 2
+        returnOrexit || return 1
+    fi
 
     printf "Extracting latest tap package version in 10s..."
     sleep 10s
