@@ -3,6 +3,7 @@ test -f $HOME/tokenfile && export $(cat $HOME/tokenfile | xargs) || true
 
 addContourBlockAccordinglyInProfileFile()
 {
+    test -f $HOME/.env && export $(cat $HOME/.env | xargs) || true
     # new logic add: when it is K8s in AWS then add a different block for contour. https://docs.vmware.com/en/VMware-Tanzu-Application-Platform/1.5/tap/install-online-profile.html#full-profile-3
     # when not then add the regular block
 
