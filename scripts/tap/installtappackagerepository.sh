@@ -13,7 +13,7 @@ installTapPackageRepository()
 
     printf "\n\n\n********* Checking pre-requisites *************\n\n\n"
     sleep 1
-    printf "\nChecking Access to Tanzu Net..."
+    printf "\nChecking TanzuNet authentication presence..."
     if [[ -z $INSTALL_REGISTRY_USERNAME || -z $INSTALL_REGISTRY_PASSWORD ]]
     then
         printf "\nERROR: Tanzu Net username or password missing.\n"
@@ -195,8 +195,13 @@ installTapPackageRepository()
             printf "\ndocker login to private install registry ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}...\n"
         fi
     fi
+    if [[ $myregistryserver == "index.docker.io" ]]
+    then
+        docker login "https://${myregistryserver}/v1/" -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
+    else
+        docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
+    fi
     
-    docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     sleep 2
 
     confirmed=''
@@ -273,7 +278,12 @@ installTapPackageRepository()
         export INSTALL_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
     fi
     printf "\nCreate registry secret (tap-registry) for install registry: ${PVT_INSTALL_REGISTRY_SERVER}...\n"
-    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
+    local tapregitryserver=$myregistryserver
+    if [[ $myregistryserver == "index.docker.io" ]]
+    then
+        tapregitryserver="https://$myregistryserver/v1/"
+    fi
+    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${tapregitryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
     printf "\n...DONE\n\n"
 
     local appendForSilentMode=""

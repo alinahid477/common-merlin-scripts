@@ -171,7 +171,7 @@ installTapProfile()
         local myregistryserver=$PVT_PROJECT_REGISTRY_SERVER
         if [[ -n $PVT_PROJECT_REGISTRY_SERVER && $PVT_PROJECT_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
         then
-            myregistryserver="index.docker.io"
+            myregistryserver="https://index.docker.io/v1/"
         fi
         if [[ -z $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE ]]
         then
@@ -193,7 +193,7 @@ installTapProfile()
                     export BUILD_SERVICE_REPO=$KP_DEFAULT_REPO
                 fi
                 printf "\n\nIMPORTANT: Same container registry server is used for both Build Service and Workload images. (This is normal)\n"
-                printf "    Build Service Repository: $myregistryserver/$BUILD_SERVICE_REPO\n"
+                printf "    Build Service Registry: $KP_REGISTRY_SERVER\n"
                 printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER.\n"
                 printf "    If a separate registry for Build Service is required please update the tap values files accordingly and create the an appropriate secret in the K8s cluster accordingly.\n\n\n"
                 sleep 3
@@ -202,7 +202,7 @@ installTapProfile()
                 local mykpregistryserver=$KP_REGISTRY_SERVER
                 if [[ $KP_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
                 then
-                    mykpregistryserver="index.docker.io"
+                    mykpregistryserver="https://index.docker.io/v1/"
                 fi
                 printf "\nCreate a registry secret ($KP_REGISTRY_SECRET_NAME) for accessing build service registry: $mykpregistryserver/$KP_DEFAULT_REPO...\n"
                 tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
@@ -219,33 +219,25 @@ installTapProfile()
             then
                 printf "\n\nNOTE: TAP Package version is $tapPackageVersion. Local Source Proxy is not supported. Local Source Proxy is only support from 1.6 and above.\n\n"
             else
+                local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
+                if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                then
+                    mylpregistryserver="https://index.docker.io/v1/"
+                fi
                 if [[ (-z $LOCAL_PROXY_REGISTRY_SERVER || $LOCAL_PROXY_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER) && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
                     printf "\n\nIMPORTANT: Same container registry server is used for both Workload and Local Source Proxy (This is normal for non-prod environment).\n"
-                    printf "    Local Source Proxy Registry: $myregistryserver\n"
+                    printf "    Local Source Proxy Registry: $LOCAL_PROXY_REGISTRY_SERVER\n"
                     printf "    Workload: $PVT_PROJECT_REGISTRY_SERVER\n"
                     printf "    If a separate registry for Local Source Proxy is required please update the tap values files accordingly and create the appropriate secret in the K8s cluster accordingly.\n\n\n"
-                    
-                    local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
-                    if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
-                    then
-                        mylpregistryserver="index.docker.io"
-                    fi
-                    printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
-                    tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
-                    printf "\n...DONE\n\n"
-                    sleep 3
-                elif [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
+                fi
+                if [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
-                    local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
-                    if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
-                    then
-                        mylpregistryserver="index.docker.io"
-                    fi
                     printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
                     tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
                     printf "\n...DONE\n\n"
                     sleep 3
+                fi
                 else
                     printf "\nERROR: Failed to create Local Source Proxy registry credentials.\n    Cause: missing required parameters for creating K8s secret OR clashing credential name.\n"
                     sleep 5
@@ -418,8 +410,15 @@ installTapProfile()
             
             source $HOME/binaries/scripts/tap/extract-tap-ingress.sh
             extractTAPIngress
-            updateWithNIPIO $profilefilename $TAP_PACKAGE_VERSION
-
+            # update 8/9/2023
+            local isitNodePort=$(cat $HOME/configs/output | grep "GENERATEDNODEPORT")
+            if [[ -n $isitNodePort ]]
+            then
+                printf "\nIMPORTANT: Detected usage of NodePort. No need to change domain name. Assuming user will port forward.\n"
+                sleep 5
+            else
+                updateWithNIPIO $profilefilename $TAP_PACKAGE_VERSION
+            fi
 
             export INSTALL_TAP_PROFILE='COMPLETED'
             sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
