@@ -85,6 +85,12 @@ installTapProfile()
             $HOME/binaries/scripts/tap/adjust-excluded-packages-in-values-file.sh $profilefilename "fluxcd.source.controller.tanzu.vmware.com"
         fi
 
+        # update 10/09/2023
+        if [[ -n $METADATA_STORE_STORAGE_CLASS_NAME ]]
+        then
+            $HOME/binaries/scripts/tap/adjust-storage-class-in-values-file.sh $profilefilename $METADATA_STORE_STORAGE_CLASS_NAME
+        fi
+
         confirmed='n'
         printf "\n\nChecking installed tap package version....."
         local tapPackageVersion=$(tanzu package available list tap.tanzu.vmware.com --namespace tap-install -o json | jq -r '[ .[] | {version: .version, released: .["released-at"]|split(" ")[0]} ] | sort_by(.released) | reverse[0] | .version')
