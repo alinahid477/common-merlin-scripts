@@ -217,13 +217,8 @@ installTapProfile()
             # LOCAL SOURCE PROXY
             if [[ $tapPackageVersion < 1.6.0 ]]
             then
-                printf "\n\nNOTE: TAP Package version is $tapPackageVersion. Local Source Proxy is not supported. Local Source Proxy is only support from 1.6 and above.\n\n"
+                printf "\n\nNOTE: TAP Package version is $tapPackageVersion. Local Source Proxy is only support from 1.6 and above.\n\n"
             else
-                local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
-                if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
-                then
-                    mylpregistryserver="https://index.docker.io/v1/"
-                fi
                 if [[ (-z $LOCAL_PROXY_REGISTRY_SERVER || $LOCAL_PROXY_REGISTRY_SERVER == $PVT_PROJECT_REGISTRY_SERVER) && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
                     printf "\n\nIMPORTANT: Same container registry server is used for both Workload and Local Source Proxy (This is normal for non-prod environment).\n"
@@ -233,15 +228,19 @@ installTapProfile()
                 fi
                 if [[ -n $LOCAL_PROXY_REGISTRY_SERVER && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME && -n $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE && -n $LOCAL_PROXY_REGISTRY_USERNAME && -n $LOCAL_PROXY_REGISTRY_PASSWORD && $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME != $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME ]]
                 then
+                    local mylpregistryserver=$LOCAL_PROXY_REGISTRY_SERVER
+                    if [[ $LOCAL_PROXY_REGISTRY_SERVER =~ .*"index.docker.io".* ]]
+                    then
+                        mylpregistryserver="https://index.docker.io/v1/"
+                    fi
                     printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
                     tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
                     printf "\n...DONE\n\n"
                     sleep 3
-                fi
                 else
                     printf "\nERROR: Failed to create Local Source Proxy registry credentials.\n    Cause: missing required parameters for creating K8s secret OR clashing credential name.\n"
                     sleep 5
-                fi
+                fi                
             fi
             
         fi
