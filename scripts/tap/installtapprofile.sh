@@ -184,7 +184,14 @@ installTapProfile()
             export PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE="tap-install"
         fi
         printf "\nCreate registry secret ($PVT_PROJECT_REGISTRY_CREDENTIALS_NAME) for accessing registry: $PVT_PROJECT_REGISTRY_SERVER...\n"
-        tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+        if [[ $PVT_PROJECT_REGISTRY_TYPE == "gcr" || $PVT_PROJECT_REGISTRY_TYPE == "artifactcr" ]]
+        then
+            printf "Creating secret using keyfile: $PVT_PROJECT_REGISTRY_PASSWORD...\n"
+            tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password "$(cat $PVT_PROJECT_REGISTRY_PASSWORD)" --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+        else
+            tanzu secret registry add $PVT_PROJECT_REGISTRY_CREDENTIALS_NAME --username ${PVT_PROJECT_REGISTRY_USERNAME} --password ${PVT_PROJECT_REGISTRY_PASSWORD} --server ${myregistryserver} --export-to-all-namespaces --yes --namespace $PVT_PROJECT_REGISTRY_CREDENTIALS_NAMESPACE
+        fi
+        
         printf "\n...DONE\n\n"
         sleep 5
         
@@ -211,7 +218,13 @@ installTapProfile()
                     mykpregistryserver="https://index.docker.io/v1/"
                 fi
                 printf "\nCreate a registry secret ($KP_REGISTRY_SECRET_NAME) for accessing build service registry: $mykpregistryserver/$KP_DEFAULT_REPO...\n"
-                tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
+                if [[ $KP_REGISTRY_TYPE == "gcr" ||  $KP_REGISTRY_TYPE == "artifactcr" ]]
+                then
+                    printf "Creating secret using keyfile: $KP_DEFAULT_REPO_PASSWORD...\n"
+                    tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password "$(cat $KP_DEFAULT_REPO_PASSWORD)" --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
+                else
+                    tanzu secret registry add $KP_REGISTRY_SECRET_NAME --username ${KP_DEFAULT_REPO_USERNAME} --password ${KP_DEFAULT_REPO_PASSWORD} --server ${mykpregistryserver} --yes --namespace $KP_REGISTRY_SECRET_NAMESPACE
+                fi
                 printf "\n...DONE\n\n"
             else
                 printf "\nERROR: Failed to create BuildService credentials.\n"
@@ -240,7 +253,13 @@ installTapProfile()
                         mylpregistryserver="https://index.docker.io/v1/"
                     fi
                     printf "\nCreate a registry secret ($LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME) for accessing local source proxy registry: $mylpregistryserver...\n"
-                    tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
+                    if [[ $LOCAL_PROXY_REGISTRY_TYPE == "gcr" || $LOCAL_PROXY_REGISTRY_TYPE == "artifactcr" ]]
+                    then
+                        printf "Creating secret using keyfile: $LOCAL_PROXY_REGISTRY_PASSWORD...\n"
+                        tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password "$(cat $LOCAL_PROXY_REGISTRY_PASSWORD)" --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
+                    else
+                        tanzu secret registry add $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAME --username ${LOCAL_PROXY_REGISTRY_USERNAME} --password ${LOCAL_PROXY_REGISTRY_PASSWORD} --server ${mylpregistryserver} --yes --namespace $LOCAL_PROXY_REGISTRY_CREDENTIALS_NAMESPACE
+                    fi
                     printf "\n...DONE\n\n"
                     sleep 3
                 else

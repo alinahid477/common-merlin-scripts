@@ -157,6 +157,10 @@ installTapPackageRepository()
         myregistryserver="index.docker.io"
     fi
 
+    # UPDATE: 22/9/2023
+    # this is for GCR distinction. This is so that we can use keyfile for docker login and tanzu secret create.
+    local myregistryservertype=$PVT_INSTALL_REGISTRY_TYPE
+
     # UPDATE: 6/9/2023
     # Hard coding the below. AS I don't know if having a different name will work or not.
     export PVT_INSTALL_REGISTRY_REPO=tap-packages
@@ -168,6 +172,8 @@ installTapPackageRepository()
 
         export PVT_INSTALL_REGISTRY_SERVER=$INSTALL_REGISTRY_HOSTNAME
         myregistryserver=$INSTALL_REGISTRY_HOSTNAME
+        myregistryservertype='tanzunet'
+        export PVT_INSTALL_REGISTRY_TYPE=$myregistryservertype
         export PVT_INSTALL_REGISTRY_USERNAME=$INSTALL_REGISTRY_USERNAME
         export PVT_INSTALL_REGISTRY_PASSWORD=$INSTALL_REGISTRY_PASSWORD
         export PVT_INSTALL_REGISTRY_PROJECT=$INSTALL_REGISTRY_PROJECT
@@ -198,6 +204,10 @@ installTapPackageRepository()
     if [[ $myregistryserver == "index.docker.io" ]]
     then
         docker login "https://${myregistryserver}/v1/" -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
+    elif [[ $myregistryservertype == "gcr" || $myregistryservertype == "artifactcr" ]]
+    then
+        printf "performing docker login using keyfile: $PVT_INSTALL_REGISTRY_PASSWORD...\n"
+        cat ${PVT_INSTALL_REGISTRY_PASSWORD} | docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} --password-stdin && printf "DONE.\n"
     else
         docker login ${myregistryserver} -u ${PVT_INSTALL_REGISTRY_USERNAME} -p ${PVT_INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
     fi
@@ -283,7 +293,15 @@ installTapPackageRepository()
     then
         tapregitryserver="https://$myregistryserver/v1/"
     fi
-    tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${tapregitryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
+
+    if [[ $myregistryservertype == "gcr" || $myregistryservertype == "artifactcr" ]]
+    then
+        printf "Creating secret using keyfile: $PVT_INSTALL_REGISTRY_PASSWORD...\n"
+        tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password "$(cat $PVT_INSTALL_REGISTRY_PASSWORD)" --server ${tapregitryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
+    else
+        tanzu secret registry add tap-registry --username ${PVT_INSTALL_REGISTRY_USERNAME} --password ${PVT_INSTALL_REGISTRY_PASSWORD} --server ${tapregitryserver} --export-to-all-namespaces --yes --namespace $INSTALL_REGISTRY_CREDENTIALS_NAMESPACE
+    fi
+    
     printf "\n...DONE\n\n"
 
     local appendForSilentMode=""

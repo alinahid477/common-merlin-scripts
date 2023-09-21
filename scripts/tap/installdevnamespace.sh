@@ -240,7 +240,11 @@ createDevNS () {
         local cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
         if [[ $PVT_PROJECT_REGISTRY_SERVER == "index.docker.io" ]]
         then
-            cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server http://<PVT_PROJECT_REGISTRY_SERVER>/v1/ --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"                
+            cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server http://<PVT_PROJECT_REGISTRY_SERVER>/v1/ --username <PVT_PROJECT_REGISTRY_USERNAME> --password <PVT_PROJECT_REGISTRY_PASSWORD> --yes --namespace ${namespacename}"
+        elif [[ $PVT_PROJECT_REGISTRY_TYPE == "gcr" || $PVT_PROJECT_REGISTRY_TYPE == "artifactcr" ]]
+        then
+            printf "Creating secret using keyfile: $PVT_PROJECT_REGISTRY_PASSWORD...\n"
+            cmdTemplate="tanzu secret registry add <PVT_PROJECT_REGISTRY_CREDENTIALS_NAME> --server <PVT_PROJECT_REGISTRY_SERVER> --username <PVT_PROJECT_REGISTRY_USERNAME> --password \"\$(cat <PVT_PROJECT_REGISTRY_PASSWORD>)\" --yes --namespace ${namespacename}"
         fi
         
 
