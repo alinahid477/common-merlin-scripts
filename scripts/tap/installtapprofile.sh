@@ -454,7 +454,7 @@ installTapProfile()
             sed -i '/INSTALL_TAP_PROFILE/d' $HOME/.env
             printf "\nINSTALL_TAP_PROFILE=TIMEOUT\n" >> $HOME/.env
             printf "\n\n********TAP profile deployment....TIMEOUT**********\n" 
-            printf "\n\nERROR: tap.tanzu.vmware.com deployment status: $reconcileStatus\nTry re-installing again later.\n"
+            printf "\n\nTIMEOUT: tap.tanzu.vmware.com deployment. Try re-installing again later.\n"
         fi
     fi
 }
