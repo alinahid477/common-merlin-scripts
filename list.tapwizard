@@ -9,3 +9,4 @@ installtapguiviewer.sh
 adjust-excluded-packages-in-values-file.sh
 removetap.sh
 extract-tap-ingress.sh
+adjust-cacertdata-in-values-file.sh

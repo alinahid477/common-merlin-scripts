@@ -11,6 +11,10 @@ addContourBlockAccordinglyInProfileFile()
     # if contour block already exists means user had put it in the file (so he/she must have done it correctly) OR 
     # it is backward compatibility of this script.
     local profilefilename=$1
+    if [[ -z $profilefilename ]]
+    then
+        profilefilename=$TAP_PROFILE_FILE_NAME
+    fi
     if [[ -f $profilefilename ]]
     then
         
