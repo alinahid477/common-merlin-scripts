@@ -298,11 +298,27 @@ function createBasicAuthSecret () {
         fi
         export K8S_BASIC_SECRET_USERNAME=$GIT_USERNAME
         export K8S_BASIC_SECRET_PASSWORD=$GIT_PASSWORD
+        if [[ -n $GIT_CA_FILE ]]
+        then
+            printf "\nDetected CA Cert file to be used for git secret. Reading content of the file: $GIT_CA_FILE...\n"
+            sleep 2
+            if [[ -f $GIT_CA_FILE ]]
+            then
+                local pemFileContent=$(cat $GIT_CA_FILE | while read line; do echo "    ${line}"; done)
+                export K8S_BASIC_SECRET_CA_CERT=$pemFileContent
+            else
+                printf "File not found for GIT_CA_FILE: $GIT_CA_FILE\n"
+                printf "$GITOPS_SECRET_NAME Secret creation (in SILENTMODE)...FAILED\n"
+                sleep 3
+                returnOrexit || return 1    
+            fi
+        fi
         sleep 1
         if [[ -z $K8S_BASIC_SECRET_NAME || -z $K8S_BASIC_SECRET_GIT_SERVER || -z $K8S_BASIC_SECRET_USERNAME || -z $K8S_BASIC_SECRET_PASSWORD ]]
         then
             printf "${redcolot}empty value found for one of the required fields (K8S_BASIC_SECRET_NAME, K8S_BASIC_SECRET_GIT_SERVER, K8S_BASIC_SECRET_USERNAME, K8S_BASIC_SECRET_PASSWORD).${normalcolor}\n"
             printf "$GITOPS_SECRET_NAME Secret creation (in SILENTMODE)...FAILED${normalcolor}\n"
+            sleep 3
             returnOrexit || return 1
         fi 
         printf "\nSecret details:\n\tname:$K8S_BASIC_SECRET_NAME\n\tserver:$K8S_BASIC_SECRET_GIT_SERVER\n\tusername:$K8S_BASIC_SECRET_USERNAME\n\n"
@@ -311,6 +327,10 @@ function createBasicAuthSecret () {
     fi
     
     local secretTemplateName="k8s-basic-auth-git-secret"
+    if [[ -n $K8S_BASIC_SECRET_CA_CERT ]]
+    then
+        secretTemplateName="k8s-basic-auth-git-secret-with-cacert"
+    fi
     local secretFile=$filesaveDir/$secretTemplateName.$filename.tmp
     cp $HOME/binaries/templates/$secretTemplateName.template $secretFile
     sleep 1
