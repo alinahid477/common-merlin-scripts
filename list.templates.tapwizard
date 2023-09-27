@@ -1,5 +1,6 @@
 gitops-secret.yaml
 k8s-basic-auth-git-secret.template
+k8s-basic-auth-git-secret-with-cacert.template
 k8s-service-account-secrets.template
 k8s-service-account.template
 prompts-for-files.json
