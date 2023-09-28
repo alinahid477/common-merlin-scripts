@@ -323,6 +323,11 @@
         "hint": "Password for the git repo"
     },
     {
+        "name": "<K8S_BASIC_SECRET_CA_CERT>",
+        "hint": "CA Cert content for git login",
+        "use_special_replace": true
+    },
+    {
         "name": "<K8S_SERVICE_ACCOUNT_NAME>",
         "hint": "Name of the service account",
         "isRecordAsEnvVar": true
