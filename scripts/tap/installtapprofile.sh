@@ -91,6 +91,12 @@ installTapProfile()
             $HOME/binaries/scripts/tap/adjust-storage-class-in-values-file.sh $profilefilename $METADATA_STORE_STORAGE_CLASS_NAME
         fi
 
+        # update 19/09/2023
+        if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
+        then
+            $HOME/binaries/scripts/tap/adjust-tbs-dependencies-in-values-file.sh $profilefilename
+        fi
+
         confirmed='n'
         printf "\n\nChecking installed tap package version....."
         local tapPackageVersion=$(tanzu package available list tap.tanzu.vmware.com --namespace tap-install -o json | jq -r '[ .[] | {version: .version, released: .["released-at"]|split(" ")[0]} ] | sort_by(.released) | reverse[0] | .version')
@@ -431,7 +437,15 @@ installTapProfile()
 
         if [[ $confirmed == 'y' ]]
         then
-            
+
+            if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
+            then
+                printf "\ninstalling TBS full dependencies...\n"
+                sleep 2
+                tanzu package install full-deps -p full-deps.buildservice.tanzu.vmware.com -v "> 0.0.0" -n tap-install --values-file $profilefilename
+                printf "COMPLETE\n"
+            fi
+
             source $HOME/binaries/scripts/tap/extract-tap-ingress.sh
             extractTAPIngress
             # update 8/9/2023

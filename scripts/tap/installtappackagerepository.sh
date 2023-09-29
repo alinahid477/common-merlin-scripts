@@ -13,12 +13,18 @@ installTapPackageRepository()
 
     printf "\n\n\n********* Checking pre-requisites *************\n\n\n"
     sleep 1
-    printf "\nChecking TanzuNet authentication presence..."
-    if [[ -z $INSTALL_REGISTRY_USERNAME || -z $INSTALL_REGISTRY_PASSWORD ]]
+    if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
     then
-        printf "\nERROR: Tanzu Net username or password missing.\n"
-        returnOrexit || return 1
+        printf "\nAirGap installtion mode detected. Skipping TanzuNet credential..."
+    else
+        printf "\nChecking TanzuNet authentication presence..."
+        if [[ -z $INSTALL_REGISTRY_USERNAME || -z $INSTALL_REGISTRY_PASSWORD ]]
+        then
+            printf "\nERROR: Tanzu Net username or password missing.\n"
+            returnOrexit || return 1
+        fi
     fi
+    
     sleep 1
     printf "COMPLETED.\n\n"
     # printf "\nChecking Cluster Specific Registry...\n"
@@ -184,7 +190,8 @@ installTapPackageRepository()
         # export PVT_INSTALL_REGISTRY_REPO=$INSTALL_REGISTRY_REPO --> I have now hardcoded this value above.
         # If there exist PVT_INSTALL_REGISTRY_PROJECT then we MUST keep it intact (because that's the user input projectid).
         #   and tap-packages repo should go under the projectid.
-    else        
+    elif [[ -z $AIRGAP_TAP_PACKAGES_TAR  ]]
+    then
         printf "\ndocker login to TanzuNet: $INSTALL_REGISTRY_HOSTNAME...\n"
         docker login ${INSTALL_REGISTRY_HOSTNAME} -u ${INSTALL_REGISTRY_USERNAME} -p ${INSTALL_REGISTRY_PASSWORD} && printf "DONE.\n"
         sleep 1
@@ -245,7 +252,7 @@ installTapPackageRepository()
         fi
     fi
     
-
+    export PVT_INSTALL_REGISTRY_TBS_DEPS_REPO=full-deps-package-repo
     if [[ $confirmed == 'y' ]]
     then
         printf "\nChecking imgpkg..."
@@ -258,25 +265,75 @@ installTapPackageRepository()
             sleep 1
             printf "FOUND.\n"
         fi
-        printf "\nExecuting imgpkg copy from registry.tanzu.vmware.com to $myregistryserver...\n"
+
+        if [[ -n $AIRGAP_TAP_PACKAGES_TAR ]] 
+        then
+            printf "\nExecuting imgpkg copy from tar: $AIRGAP_TAP_PACKAGES_TAR...\n"
+        else
+            printf "\nExecuting imgpkg copy from registry.tanzu.vmware.com to $myregistryserver...\n"
+        fi
         printf "\nThis may take few mins (30mins - 40mins depending on your speed of internet and image registries)..\n"
         if [[ $myregistryserver == "index.docker.io" ]]
         then
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
-            imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
-            printf "\n...IMG RELOCATION FINISHED...\n"
+            if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
+            then
+                imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+            else
+                imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n";
+            fi
             kill "$progressloop_pid" > /dev/null 2>&1 || true
+            printf "\n...IMG RELOCATION FINISHED...\n"
+            sleep 3
+            
+            if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
+            then
+                printf "\nExecuting imgpkg copy from tar: $AIRGAP_TBS_PACKAGES_TAR...\n"
+                printf "\nThis may take few mins (30mins - 40mins depending on your speed of internet and image registries)..\n"
+                $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tbs-dependencies-relocation" & progressloop_pid=$!
+                imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"            
+                kill "$progressloop_pid" > /dev/null 2>&1 || true
+                printf "\n...IMG RELOCATION FINISHED...\n"
+                sleep 3
+            fi
         else
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "image-relocation" & progressloop_pid=$!
             # echo "imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO}/tap-packages -y";
             if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
             then
-                imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
+                then
+                    imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                else
+                    imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                fi                
             else
-                imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo=${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
+                then
+                    imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                else
+                    imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                fi                
             fi            
-            printf "\n....IMG RELOCATION FINISHED...\n"
             kill "$progressloop_pid" > /dev/null 2>&1 || true
+            printf "\n....IMG RELOCATION FINISHED...\n"
+            sleep 3
+
+            if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
+            then
+                printf "\nExecuting imgpkg copy from tar: $AIRGAP_TBS_PACKAGES_TAR...\n"
+                printf "\nThis may take few mins (30mins - 40mins depending on your speed of internet and image registries)..\n"
+                $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tbs-dependencies-relocation" & progressloop_pid=$!
+                if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+                then
+                    imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                else
+                    imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                fi
+                kill "$progressloop_pid" > /dev/null 2>&1 || true
+                printf "\n...IMG RELOCATION FINISHED...\n"
+                sleep 3
+            fi
         fi
     else
         printf "\nSkipping image relocation for this installation\n"
@@ -392,6 +449,24 @@ installTapPackageRepository()
     sleep 20s
     tanzu package available list --namespace tap-install
     printf "\nDONE\n\n"
+    sleep 3
+    printf "\n\n"
+
+
+    if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
+    then
+        printf "\nDetected full-deps-package-repo to be added to tanzu repository.\nAdding full-deps-package-repo to tanzu package repository...\n"
+        if [[ $myregistryserver == "index.docker.io" ]]
+        then
+            tanzu package repository add full-deps-package-repo --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_USERNAME}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO}:${TAP_VERSION} --namespace tap-install
+        elif [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
+        then
+            tanzu package repository add full-deps-package-repo --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO}:${TAP_VERSION} --namespace tap-install
+        else
+            tanzu package repository add full-deps-package-repo --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO}:${TAP_VERSION} --namespace tap-install
+        fi
+        printf "repository add...COMPLETED.\n"
+    fi
 }
 
 
