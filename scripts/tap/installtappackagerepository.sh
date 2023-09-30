@@ -303,17 +303,37 @@ installTapPackageRepository()
             then
                 if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
                 then
-                    imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    else
+                        imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    fi
                 else
-                    imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
-                fi                
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    else
+                        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    fi
+                fi
             else
                 if [[ -n $AIRGAP_TAP_PACKAGES_TAR && -f $AIRGAP_TAP_PACKAGES_TAR ]]
                 then
-                    imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    else
+                        imgpkg copy --tar $AIRGAP_TAP_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} --include-non-distributable-layers -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    fi
                 else
-                    imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
-                fi                
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    else
+                        imgpkg copy -b registry.tanzu.vmware.com/tanzu-application-platform/tap-packages:${TAP_VERSION} --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETE.\n\n";
+                    fi
+                fi
             fi            
             kill "$progressloop_pid" > /dev/null 2>&1 || true
             printf "\n....IMG RELOCATION FINISHED...\n"
@@ -326,9 +346,19 @@ installTapPackageRepository()
                 $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tbs-dependencies-relocation" & progressloop_pid=$!
                 if [[ -n $PVT_INSTALL_REGISTRY_PROJECT ]]
                 then
-                    imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    else
+                        imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_PROJECT}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    fi
                 else
-                    imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    if [[ -n $IMGPKG_REGISTRY_CA_CERT && -f $IMGPKG_REGISTRY_CA_CERT ]]
+                    then
+                        imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} --registry-ca-cert-path $IMGPKG_REGISTRY_CA_CERT -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    else
+                        imgpkg copy --tar $AIRGAP_TBS_PACKAGES_TAR --to-repo ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO} -y && printf "\n\nCOPY SUCCESSFULLY COMPLETED.\n\n"
+                    fi                    
                 fi
                 kill "$progressloop_pid" > /dev/null 2>&1 || true
                 printf "\n...IMG RELOCATION FINISHED...\n"
