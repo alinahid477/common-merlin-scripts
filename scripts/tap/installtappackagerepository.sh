@@ -153,7 +153,7 @@ installTapPackageRepository()
         printf "FOUND. Skipping creating NS: tap-install.\n"
     fi
     
-    printf "\nPerforming docker login for pvt registry and tanzu-net...\n"
+    printf "\nPerforming docker login for pvt registry and install registry...\n"
     sleep 2
     # PATCH: Dockerhub is special case
     # This patch is so that 
@@ -448,10 +448,7 @@ installTapPackageRepository()
     printf "\nListing available packages in 20s...\n"
     sleep 20s
     tanzu package available list --namespace tap-install
-    printf "\nDONE\n\n"
     sleep 3
-    printf "\n\n"
-
 
     if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
     then
@@ -465,8 +462,11 @@ installTapPackageRepository()
         else
             tanzu package repository add full-deps-package-repo --url ${myregistryserver}/${PVT_INSTALL_REGISTRY_TBS_DEPS_REPO}:${TAP_VERSION} --namespace tap-install
         fi
-        printf "repository add...COMPLETED.\n"
+        printf "\nRepository: full-deps-package-repo add...COMPLETED.\n"
     fi
+    printf "\nDONE\n\n"
+    sleep 3
+    printf "\n\n"
 }
 
 

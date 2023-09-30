@@ -437,13 +437,13 @@ installTapProfile()
 
         if [[ $confirmed == 'y' ]]
         then
-
             if [[ -n $AIRGAP_TBS_PACKAGES_TAR && -f $AIRGAP_TBS_PACKAGES_TAR ]]
             then
                 printf "\ninstalling TBS full dependencies...\n"
                 sleep 2
                 tanzu package install full-deps -p full-deps.buildservice.tanzu.vmware.com -v "> 0.0.0" -n tap-install --values-file $profilefilename
                 printf "COMPLETE\n"
+                sleep 3
             fi
 
             source $HOME/binaries/scripts/tap/extract-tap-ingress.sh
