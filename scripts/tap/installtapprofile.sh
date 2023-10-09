@@ -313,7 +313,7 @@ installTapProfile()
             #printf "DEBUG: tanzu package install tap -p tap.tanzu.vmware.com -v $TAP_PACKAGE_VERSION --values-file $profilefilename -n tap-install --poll-interval 5s --poll-timeout 15m0s"
 
             $HOME/binaries/scripts/tiktok-progress.sh $$ 7200 "tap.tanzu.vmware.com-install" & progressloop_pid=$!
-            local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install)
+            local isSuccess=$(tanzu package install tap -p tap.tanzu.vmware.com -v $tapPackageVersion --values-file $profilefilename -n tap-install 2>&1 | grep -i -v 'Warn')
             printf "\nStatus from tap.tanzu.vmware.com install...RETRIEVED.\n"
             kill "$progressloop_pid" > /dev/null 2>&1 || true
 

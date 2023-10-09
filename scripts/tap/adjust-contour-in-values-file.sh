@@ -22,9 +22,17 @@ addContourBlockAccordinglyInProfileFile()
         if [[ -z $isexistpn ]]
         then
 
-            if [[ -n $USE_LOAD_BALANCER && $USE_LOAD_BALANCER == false ]]
+            if [[ -n $INGRESS_TYPE && $INGRESS_TYPE == 'NodePort' ]]
             then
-                cat $HOME/binaries/templates/tap-contour-block-nodeport.template >> $profilefilename
+                if [[ -n $NODEPORT_HTTP_PORT && -n $NODEPORT_HTTPS_PORT ]]
+                then
+                    local portValues="\n      nodePorts:\n        http: $NODEPORT_HTTP_PORT\n        https: $NODEPORT_HTTPS_PORT\n"
+                    cp $HOME/binaries/templates/tap-contour-block-nodeport.template /tmp/tap-contour-block-nodeport.template.tmp
+                    printf "$portValues vla bla" >> /tmp/tap-contour-block-nodeport.template.tmp
+                    cat /tmp/tap-contour-block-nodeport.template.tmp >> $profilefilename
+                else
+                    cat $HOME/binaries/templates/tap-contour-block-nodeport.template >> $profilefilename
+                fi
             else
                 local isUseAWSNLB=''
                 if [[ -n $USE_AWS_NLB && $USE_AWS_NLB == 'YES' ]]
