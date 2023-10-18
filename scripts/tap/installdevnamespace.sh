@@ -14,10 +14,27 @@ createDevNS () {
 
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
-    local tapvaluesfile=$1
     local confirmed=''
 
+    local tapvaluesfile=''
+    local namespacename=''
+
+    if [[ -n $1 && -n $2 ]]
+    then
+        tapvaluesfile=$1
+        namespacename=$2
+    else
+        local tmp='.yaml'
+        if [[ $1 == *"$tmp"* ]]
+        then
+            tapvaluesfile=$1
+        else
+            namespacename=$1
+        fi
+    fi
+
     printf "\nCreating Developer Namespace for TAP....\n\n"
+    printf "$namespacename\n"
     sleep 7
 
     if [[ -z $tapvaluesfile ]]
@@ -38,7 +55,7 @@ createDevNS () {
                     fi
                 done        
             else
-                printf "Invalid profile file found OR profile file is missing. Installation failed @ creating developer-namespace...\n"
+                printf "ERROR creating developer-namespace: Invalid profile file found OR profile file is missing.\n"
                 returnOrexit || return 1
             fi
         fi
@@ -64,22 +81,25 @@ createDevNS () {
         returnOrexit || return 1
     fi
 
-    local namespacename=''
-    if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+    if [[ -z $namespacename ]]
     then
-        namespacename=$DEVELOPER_NAMESPACE_NAME
-    fi
+        if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
+        then
+            namespacename=$DEVELOPER_NAMESPACE_NAME
+        fi
 
-    if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
-    then
-        while [[ -z $namespacename ]]; do
-            read -p "name of the namespace: " namespacename
-            if [[ -z $namespacename && ! $namespacename =~ ^[A-Za-z0-9_\-]+$ ]]
-            then
-                printf "empty or invalid value is not allowed.\n"
-            fi
-        done
+        if [[ -z $SILENTMODE || $SILENTMODE != 'YES' ]]
+        then
+            while [[ -z $namespacename ]]; do
+                read -p "name of the namespace: " namespacename
+                if [[ -z $namespacename && ! $namespacename =~ ^[A-Za-z0-9_\-]+$ ]]
+                then
+                    printf "empty or invalid value is not allowed.\n"
+                fi
+            done
+        fi
     fi
+    
 
     if [[ -z $namespacename ]]
     then
@@ -127,7 +147,7 @@ createDevNS () {
                 ret=$?
                 if [[ $ret == 255 ]]
                 then
-                    printf "${redcolor}No selection were made. Installation failed @ crating developer-namespace.${normalcolor}\n"
+                    printf "ERROR: crating developer-namespace: No cluster-spplychain type selection were made.\n"
                     returnOrexit || return 1
                 else
                     # selected option
@@ -141,7 +161,7 @@ createDevNS () {
     
     if [[ -z $selectedSupplyChainType ]]
     then
-        printf "${redcolor}No selection were made. Installation failed @ crating developer-namespace.${normalcolor}\n"
+        printf "ERROR: crating developer-namespace: No cluster-supplychain type selected.${normalcolor}\n"
         returnOrexit || return 1
     fi
     printf "\nselected supply chain type: $selectedSupplyChainType\n"

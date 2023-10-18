@@ -12,7 +12,14 @@ createDevNS () {
     local bluecolor=$(tput setaf 4)
     local normalcolor=$(tput sgr0)
     local tapvaluesfile=$1
+    local namespacename=''
     local confirmed=''
+
+    if [[ -n $1 && -n $2 ]]
+    then
+        tapvaluesfile=$1
+        namespacename=$2
+    fi
 
     printf "\nCreating Developer Namespace for TAP....\n\n"
     sleep 7
@@ -61,7 +68,7 @@ createDevNS () {
         returnOrexit || return 1
     fi
 
-    local namespacename=''
+    
     if [[ -n $SILENTMODE && $SILENTMODE == 'YES' ]]
     then
         namespacename=$DEVELOPER_NAMESPACE_NAME
