@@ -150,11 +150,25 @@ installTanzuCLI () {
             # TANZU CLI has changed to different one. TANZU CORE CLI.
             local tanzucliinstallbinaryname=$(ls | head -1 | grep tanzu-cli)
             if [[ -f $tanzucliinstallbinaryname ]]
-            then                
-                printf "installing $tanzucliinstallbinaryname...\n\n"
-                install $tanzucliinstallbinaryname /usr/local/bin/tanzu || return 1
-                chmod +x /usr/local/bin/tanzu || return 1
-                printf "installed /usr/local/bin/tanzu.\n"
+            then
+                local currentUser=$(whoami)
+                printf "installing $tanzucliinstallbinaryname as $currentUser...\n\n"
+                if [[ $currentUser == "root" ]]
+                then
+                    install $tanzucliinstallbinaryname /usr/local/bin/tanzu || return 1
+                    chmod +x /usr/local/bin/tanzu || return 1
+                    printf "installed /usr/local/bin/tanzu.\n"
+                else
+                    if [[ ":$PATH:" == *":$HOME/.local/bin:"* && -d $HOME/.local/bin ]]
+                    then
+                        install $tanzucliinstallbinaryname $HOME/.local/bin/tanzu || return 1
+                        chmod +x $HOME/.local/bin/tanzu || return 1
+                        printf "installed $HOME/.local/bin/tanzu.\n"
+                    else
+                        printf "\nERROR: $currentUser does not have $HOME/.local/bin in the PATH or $HOME/.local/bin directory does not exist.\n"
+                        return 1
+                    fi
+                fi
                 installTanzuCLIPlugins
                 printf "Tanzu Install...COMPLETE.\n"
             else
