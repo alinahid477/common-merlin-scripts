@@ -22,4 +22,5 @@ printf "\ndownloading merlin tanzucli list...\n"
 printf "\nexecuting /tmp/install-tanzu-cli.sh /tmp...\n"
 source /tmp/install-tanzu-cli.sh 
 installTanzuCLI /tmp
-rm /tmp/$filename
+rm /tmp/$filename || echo "cannot remove /tmp/$filename"
+echo "..stand alone tanzu cli installation complete.."
