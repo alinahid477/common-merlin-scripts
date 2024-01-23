@@ -1,6 +1,7 @@
 #!/bin/bash
 
 installTanzuCLIPlugins () {
+    export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER=yes
     printf "\nInstalling Tanzu Cli Plugins...\nAccepting EULA...\n"
     tanzu config eula accept
     printf "installing tanzu plugins: package, secret, apps, accelerator...\n"
