@@ -1,7 +1,7 @@
 #!/bin/bash
 
 installTanzuCLIPlugins () {
-    printf "\nAccepting CEIP=yes by setting env TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER=yes\n\n"
+    printf "\n\nAccepting CEIP=yes by setting env TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER=yes\n\n"
     export TANZU_CLI_CEIP_OPT_IN_PROMPT_ANSWER=yes
     printf "\nInstalling Tanzu Cli Plugins...\nAccepting EULA...\n"
     tanzu config eula accept
