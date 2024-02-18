@@ -46,7 +46,7 @@ installTanzuCLI () {
 
 
     
-    printf "\nChecking Tanzu CLI binary..."
+    printf "\nChecking Tanzu CLI binary...\n"
     sleep 1
     local isinflatedTZ='n'
     local DIR="$HOME/tanzu"
@@ -62,7 +62,7 @@ installTanzuCLI () {
     local tanzuclibinary=''
     if [[ $isinflatedTZ == 'n' ]]
     then
-        printf "\nFinding tanzu cli binaries...."
+        printf "....\n"
         # default look for: tanzu tap cli
         local tarfilenamingpattern="tanzu-framework-linux-amd64*"
         tanzuclibinary=$(ls $tanzuclitarfiledir/$tarfilenamingpattern)
@@ -131,7 +131,7 @@ installTanzuCLI () {
             return 1
         fi
         printf "Extracting $tanzuclibinary in $DIR....\n"
-        tar -xvfz $tanzuclibinary -C $HOME/tanzu/ || return 1
+        tar xvfz $tanzuclibinary -C $HOME/tanzu/ || return 1
         printf "$tanzuclibinary extracted in $DIR......COMPLETED.\n\n"
     fi
     sleep 1
