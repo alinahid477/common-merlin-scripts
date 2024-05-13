@@ -10,16 +10,28 @@ installTanzuCLIPlugins () {
     tanzu plugin install secret --target k8s
     tanzu plugin install apps --target k8s
     tanzu plugin install accelerator --target k8s
+    if [[ -n $1 ]]
+    then
+        tanzu plugin install --group $1
+    fi
     printf "\n\nTanzu Plugin Install....COMPLETE.\n"
 }
 
 installTanzuCLI () {
 
     local tanzuclitarfiledir=$HOME/binaries
+    local installPackageGroup=""
     if [[ -n $1 ]]
     then
-        tanzuclitarfiledir=$1
+        if [[ $1 == \/* ]]
+        then
+            tanzuclitarfiledir=$1
+        elif [[ $1 =~ ^packagegroup=* ]]
+        then
+            installPackageGroup=$(echo $1 | awk -F'=' '{ print $2 }')            
+        fi
     fi
+
 
     local isTanzuCLIInstalled=$(which tanzu)
     if [[ -n $isTanzuCLIInstalled ]]
@@ -31,7 +43,7 @@ installTanzuCLI () {
             local totaltanzuplugins=$(tanzu plugin list -o json | jq length)
             if [[ -z $totaltanzuplugins || $totaltanzuplugins < 4 ]]
             then
-                installTanzuCLIPlugins
+                installTanzuCLIPlugins $installPackageGroup
             fi
             tanzu plugin list
         else
@@ -171,7 +183,7 @@ installTanzuCLI () {
                         return 1
                     fi
                 fi
-                installTanzuCLIPlugins
+                installTanzuCLIPlugins $installPackageGroup
                 printf "Tanzu Install...COMPLETE.\n"
             else
                 # TCE Tanzu CLI install
