@@ -12,6 +12,7 @@ installTanzuCLIPlugins () {
     tanzu plugin install accelerator --target k8s
     if [[ -n $1 ]]
     then
+        printf "\nInstalling group plugin $1...\n"
         tanzu plugin install --group $1
     fi
     printf "\n\nTanzu Plugin Install....COMPLETE.\n"
